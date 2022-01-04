@@ -1,0 +1,56 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>MoonJelly Simulator</title>
+    <script type="text/javascript" src="./gameengine.js"></script>
+    <script type="text/javascript" src="./assetmanager.js"></script>
+    <script type="text/javascript" src="./main.js"></script>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!--
+    style="margin-left:100px;margin-top:50px"
+    -->
+    <canvas id="gameWorld" tabindex="1" width="800" height="500"></canvas>
+    <button class="button" id="soundButton" onclick="musicControl()"><img id="image" src="img/UI/MusicOn.png"></button>
+    <p id="difficulty">Choose the difficulty</p>
+    <button class="button" id="easyButton" onclick="easyMode()">Easy</button>
+    <button class="button" id="mediumButton" onclick="mediumMode()">Medium</button>
+    <button class="button" id="hardButton" onclick="hardMode()">Hard</button>
+    <pre>
+Welcome to MoonJelly Simulator
+by Maygi#4987
+
+"Welcome to a day in the life of
+Moon Jelly."
+
+Please DM me on Discord with any
+questions or feedback ♥
+
+WASD / Arrow Keys - Move
+Z / Spacebar -> Attack
+X -> Hyper / Ultimate
+
+Scoring Multipliers:
+Hard: 100%
+Medium: 75%
+Easy: 50%
+
+Scoring:
+Spider = 100 pts
+Boss = Up to 15000 pts*
+
+*decays 60 points per second, and
+10 points per damage inflicted
+
+    </pre>
+	<p>
+	Credits: <br />
+	Portrait Art: @nijimono_skeb <br />
+	Square Chat Art: @Uu3cm <br />
+	Hyper cut-in Art: @tsuyusa100mrUT <br />
+	</p>
+</body>
+</html>
