@@ -151,6 +151,8 @@ var cutSound = new Audio("./sounds/cuteffect.wav");
 var energyMaxSound = new Audio("./sounds/energymax.mp3");
 var autoSound = new Audio("./sounds/electric.wav");
 var energyUpSound = new Audio("./sounds/energyup.wav");
+var thunderboltSound = new Audio("./sounds/pikachu.wav");
+var dieSound = new Audio("./sounds/aiya.wav");
 energyUpSound.volume = 0.07;
 
 /**
@@ -1182,6 +1184,11 @@ Bullet.prototype.update = function () {
 				this.mode = 1;
 			}
 		}
+		if (this.type === 2) { //petal torrent
+			if (this.step % 5 === 0) {
+				this.vspeed *= -1;
+			}
+		}
 		this.hspeed += this.haccel;
 		this.vspeed += this.vaccel;
 		this.x += this.hspeed;
@@ -1201,9 +1208,8 @@ Bullet.prototype.update = function () {
 						dissipate = true;
 						addEnergy(that.game, 0.5);
 					} else if (that.type === 2) { //petal torrent
-						applyDamage(entity.x, entity.y, that.game, 50, entity);
+						applyDamage(entity.x, entity.y, that.game, 9999, entity);
 						playSound(airHitSound);
-						
 						addEnergy(that.game, Math.min(5, entity.maxHealth / 10));
 					} else if (that.type === 3) { //spiral bullet
 						applyDamage(entity.x, entity.y, that.game, 8, entity);
@@ -1213,13 +1219,15 @@ Bullet.prototype.update = function () {
 			}
 		});
 		if (this.type === 2) { //petal torrent
-			var newParticle = new Particle(PART_SECONDARY, this.x + 40, this.y + 41, 
-					-5, 5, -2.5, 2.5, 0, 0, 20, 0, 0, 30, .7, .2, true, this.game);
-			var element = new CircleElement(50 + Math.random() * 6, "#ffffff", "#ae9fcc");
-			newParticle.other = element;
-			newParticle.acceleration = 0.15;
-			newParticle.grow = true;
-			this.game.addEntity(newParticle);
+			for (var i = 0; i < 3; i++) {
+				var newParticle = new Particle(PART_SECONDARY, this.x + 40, this.y + 41, 
+						-5, 5, -2.5, 2.5, 0, 0, 20, 0, 0, 30, .7, .2, true, this.game);
+				var element = new CircleElement(20 + 10 * (3 - i) + Math.random() * 6, "#c9fffc", "#fff9ab");
+				newParticle.other = element;
+				newParticle.acceleration = 0.1 * i;
+				newParticle.grow = true;
+				this.game.addEntity(newParticle);
+			}
 		}
 	} else {
 	    this.removeFromWorld = true;
@@ -2651,11 +2659,32 @@ function cutEffect(game, ultiName, imageName) {
 			game.addEntity(textParticle);
 		}, 500);
 	if (imageName.includes("jelly")) {
-	setTimeout(
-		function() {			
-			game.player1.canControl = true;
-			game.player1.ultiTimer = 600;
-		}, 1500);
+		setTimeout(
+			function() {			
+				game.player1.ultiTimer = 100;
+				playSound(thunderboltSound);
+			}, 1500);
+		setTimeout(
+			function() {			
+				game.addEntity(new Bullet(game, game.player1.x, game.player1.y, 12, 22, 2, 0));
+				playSound(laserSound);
+			}, 2500);
+		setTimeout(
+			function() {			
+				game.addEntity(new Bullet(game, game.player1.x, game.player1.y, -12, 22, 2, 0));
+				playSound(laserSound);
+			}, 2700);
+		setTimeout(
+			function() {			
+				game.addEntity(new Bullet(game, game.player1.x, game.player1.y, 12, 22, 2, 0));
+				playSound(laserSound);
+			}, 2900);
+		setTimeout(
+			function() {			
+				game.addEntity(new Bullet(game, game.player1.x, game.player1.y, -12, 22, 2, 0));
+				playSound(laserSound);
+				game.player1.canControl = true;
+			}, 3100);
 	}
 }
 
@@ -2828,7 +2857,7 @@ Character.prototype.update = function () {
 			}
 		}
         if (this.currentHealth <= 0 && !this.dead) {
-            playSound(lightningSound);
+            playSound(dieSound);
             this.dead = true;
             this.vulnerable = false;
             var particle = new Particle(PART_GENERATOR,
@@ -2896,11 +2925,17 @@ Character.prototype.update = function () {
 				}
 				if (this.canControl)
 					this.ultiTimer--;
-				if (this.ultiTimer % 2 == 0) {
-					var newParticle = new Particle(PART_SECONDARY, this.x + 10 + Math.random() * this.hitBoxDef.width, this.y + 10 + Math.random() * this.hitBoxDef.height, 
-							-2, 2, -2, 2, 0, 0.1, 0, 0, 0, 50, .3, .15, true, this.game);
-					element = new SquareElement(20 + Math.random() * 10, 20 + Math.random() * 10, "#a6f9ff", "#6ae2eb");
+				if (this.ultiTimer % 1 == 0) {
+					var chosenX = this.x - 30 + Math.random() * 60 + this.hitBoxDef.offsetX;
+					var chosenY =  this.y - 30 + Math.random() * 60 + this.hitBoxDef.height + this.hitBoxDef.offsetY;
+					var theDistance = getDistance(chosenX, chosenY, this.game.player1.x, this.game.player1.y);
+					var newParticle = new Particle(PART_SECONDARY, chosenX, chosenY, 
+							-2, 2, -2, 2, 0, 0.3, 0, 0, 0, 50, .3, .15, true, this.game);
+					element = new SquareElement(20 + Math.random() * 20, 20 + Math.random() * 20, "#a6f9ff", "#6ae2eb");
 					newParticle.other = element;
+					newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.hitBoxDef.offsetX;
+					newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.hitBoxDef.offsetY;
+					newParticle.targetSpeed = 3 * (theDistance / 60);
 					this.game.addEntity(newParticle);
 				}
 			}
@@ -3241,19 +3276,19 @@ Character.prototype.draw = function (ctx) {
 			ctx.align = "Left";
 			ctx.fillText(this.petalTorrentHits, this.x + 20 + 32, this.y - 10 + 6);
 		}
-		if (this.attacking && this.attackAnimation != null) { // Attacking
+		if (!this.vulnerable) {
+			if (this.game.step % 4 === 0) {
+				this.hurtAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.hurtAnimation.offsetX, this.y + this.hurtAnimation.offsetY, 1, true);
+				this.currentAnimation = this.hurtAnimation;  
+			}
+		} else if (this.attacking && this.attackAnimation != null) { // Attacking
 	        this.attackAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.attackAnimation.offsetX, this.y + this.attackAnimation.offsetY);
 	        this.currentAnimation = this.attackAnimation;
 	    } else if (this.running) { // Running
 			this.walkAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.walkAnimation.offsetX, this.y + this.walkAnimation.offsetY);	
 	        this.currentAnimation = this.walkAnimation;
 	    } else {
-			if (!this.vulnerable) {
-				if (this.game.step % 4 === 0) {
-					this.hurtAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.hurtAnimation.offsetX, this.y + this.hurtAnimation.offsetY, 1, true);
-					this.currentAnimation = this.hurtAnimation;  
-				}
-			} else if (!this.dead) { // Idle
+			if (!this.dead) { // Idle
 				this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY);
 				this.currentAnimation = this.idleAnimation;
 			}
