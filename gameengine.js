@@ -100,18 +100,18 @@ GameEngine.prototype.startInput = function () {
     var that = this;
 	
     this.ctx.canvas.addEventListener("keydown", function (e) {
-		if (String.fromCharCode(e.which) === 'D' || String.fromCharCode(e.which) === '\'' ) { 
+		if (String.fromCharCode(e.which) === '\'' ) { 
 			that.player1.rightDown = true;
-		} else if (String.fromCharCode(e.which) === 'A' || String.fromCharCode(e.which) === '%') {
+		} else if (String.fromCharCode(e.which) === '%') {
 			that.player1.leftDown = true;
 		}
-		if (String.fromCharCode(e.which) === 'W' || String.fromCharCode(e.which) === '&') {
+		if (String.fromCharCode(e.which) === '&') {
 			that.player1.upDown = true;
 		}
-		if (String.fromCharCode(e.which) === 'S' || String.fromCharCode(e.which) === '(') {
+		if (String.fromCharCode(e.which) === '(') {
 			that.player1.downDown = true;
 		}
-		if (String.fromCharCode(e.which) === ' ') {
+		if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
 			that.player1.jumpDown = true;
             that.textSpeed = 1;
 		}
@@ -119,7 +119,7 @@ GameEngine.prototype.startInput = function () {
 			that.player1.attackInput = 1;
         } else if (String.fromCharCode(e.which) === 'Z') {
 			that.player1.attackInput = 1;
-        } else if (String.fromCharCode(e.which) === 'C') {
+        } else if (String.fromCharCode(e.which) === 'R') {
 			if (that.player1.dead) { //revive
 				that.player1.dead = false;
 				that.player1.currentHealth = that.player1.maxHealth;
@@ -134,7 +134,7 @@ GameEngine.prototype.startInput = function () {
 			}
         } else if (String.fromCharCode(e.which) === 'Q') {
 			that.player1.attackInput = 2;
-        } else if (String.fromCharCode(e.which) === 'X') {
+        } else if (String.fromCharCode(e.which) === 'C') {
 			if (that.player1.currentStamina >= 100) { //ulti
 				that.player1.currentStamina = 0;
 				cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
@@ -185,7 +185,7 @@ GameEngine.prototype.startInput = function () {
 		if (String.fromCharCode(e.which) === 'W' || String.fromCharCode(e.which) === '&') {
 			that.player1.upDown = false;
 		}
-		if (String.fromCharCode(e.which) === ' ') {
+		if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
 			that.player1.jumpDown = false;
             that.textSpeed = 5;
 		}
