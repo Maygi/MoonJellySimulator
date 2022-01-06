@@ -152,7 +152,11 @@ var energyMaxSound = new Audio("./sounds/energymax.mp3");
 var autoSound = new Audio("./sounds/electric.wav");
 var energyUpSound = new Audio("./sounds/energyup.wav");
 var thunderboltSound = new Audio("./sounds/pikachu.wav");
-var dieSound = new Audio("./sounds/aiya.wav");
+var dieSound = new Audio("./sounds/jelly_breakdown.wav");
+var dieSound2 = new Audio("./sounds/aiya.wav");
+var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
+var slapSound = new Audio("./sounds/slap.wav");
+cannedTunaSound.volume = 0.03;
 energyUpSound.volume = 0.07;
 
 /**
@@ -197,8 +201,10 @@ function checkCollision(entity1, entity2, xbonus, ybonus) {
     var hitBox2 = entity2.hitBox;
 	var displacementX = entity2.displacementX || 0;
 	var displacementY = entity2.displacementY || 0;
-    return (hitBox1.x + hitBox1.width + (xbonus > 0 ? xbonus : 0) > hitBox2.x + displacementX && hitBox1.x + (xbonus < 0 ? xbonus : 0) < hitBox2.x + hitBox2.width + displacementX
+	return (hitBox1.x + hitBox1.width + (xbonus > 0 ? xbonus : 0) > hitBox2.x + displacementX && hitBox1.x + (xbonus < 0 ? xbonus : 0) < hitBox2.x + hitBox2.width + displacementX
          && hitBox1.y + (ybonus < 0 ? ybonus : 0) < hitBox2.y + hitBox2.height + displacementY && hitBox1.y + hitBox1.height + (ybonus > 0 ? ybonus : 0) > hitBox2.y + displacementY);
+    /*return (hitBox1.x + hitBox1.width + (xbonus > 0 ? xbonus : 0) > hitBox2.x + displacementX && hitBox1.x + (xbonus < 0 ? xbonus : 0) < hitBox2.x + hitBox2.width + displacementX
+         && hitBox1.y + (ybonus < 0 ? ybonus : 0) < hitBox2.y + hitBox2.height + displacementY && hitBox1.y + hitBox1.height + (ybonus > 0 ? ybonus : 0) > hitBox2.y + displacementY);*/
 }
 
 // Returns the distance along the x-axis between two entities. If they collide, the distance is 0
@@ -520,6 +526,11 @@ Animation.prototype.currentFrame = function () {
 // Returns whether or not the animation is done
 Animation.prototype.isDone = function () {
     return (this.elapsedTime >= this.totalTime);
+};
+
+// Returns whether or not the animation is done
+Animation.prototype.restart = function () {
+    this.elapsedTime = 0;
 };
 
 /**
@@ -2152,7 +2163,7 @@ Particle.prototype.update = function() {
 				applyDamage(this.game.player1.x, this.game.player1.y, this.game, 15, this.game.player1);
 				this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
 				this.game.player1.hitByAttack = true;
-				playSound(hitSound);
+				playSound(slapSound);
 			}
 		}
 		if (this.attackId === ALPHA_SHOT) {
@@ -2524,6 +2535,8 @@ function Character(game) {
     // Number Variables
 	this.runSpeed = 5;
 	this.jumpSpeed = 0; // X Velocity when jumping
+	this.displacementXSpeed = 0;
+	this.displacementFriction = 0.4;
     this.yVelocity = 0;
     this.xVelocity = 0; // X Velocity when hit
 	this.destinationX = -1;
@@ -2951,6 +2964,16 @@ Character.prototype.update = function () {
                 this.x += this.xVelocity;
 				this.y += this.yVelocity;
             }
+			this.x += this.displacementXSpeed;
+			if (this.displacementXSpeed > 0) {
+				this.displacementXSpeed -= this.displacementFriction;			
+				if (this.displacementXSpeed < 0)
+					this.displacementXSpeed = 0;
+			} else {
+				this.displacementXSpeed += this.displacementFriction;			
+				if (this.displacementXSpeed > 0)
+					this.displacementXSpeed = 0;
+			}
             if ((this.rightDown || this.leftDown) && this.canControl) {
                 if (this.rightDown) {
 					this.running = true;
@@ -3159,10 +3182,26 @@ Character.prototype.update = function () {
             }
             var noSnap = false;
             var collision = false;
-            if (this.attacking) {
+            if (this.attacking) { //hit enemy
                 this.game.entities.forEach(function(entity) {
                     if (entity.attackable && that.targetHit.indexOf(entity) === -1 && that.targetHit.length == 0) {
-                        if (checkCollision(that, entity, xBonus, yBonus)) {
+                        if (checkCollision(that, entity, xBonus, yBonus) && !checkCollision(that, entity)) {
+							var createX;
+							var createY;
+							if (Math.abs(xBonus) > 20) {
+								createX = that.x + (xBonus > 0 ? that.hitBoxDef.width : 0) + xBonus + that.hitBoxDef.offsetX;
+								createY = that.y + that.hitBoxDef.height / 2 + that.hitBoxDef.offsetY;
+							} else {
+								createX = that.x + that.hitBoxDef.width / 2 + that.hitBoxDef.offsetX;
+								createY = that.y + (yBonus > 0 ? that.hitBoxDef.height : 0) + that.hitBoxDef.offsetY;
+							}
+							for (var i = 0; i < 6; i++) {
+								var newParticle = new Particle(PART_SECONDARY, createX, createY, 
+										-5, 5, -5, 5, 0, 0.15, 0, 0, 0, 50, .75, .15, true, that.game);
+								element = new CircleElement(5 + Math.random() * 3, "#f7ffba", "#faf6be");
+								newParticle.other = element;
+								that.game.addEntity(newParticle);
+							}
                             that.targetHit.push(entity);
 							applyDamage(entity.x, entity.y, that.game, 25, entity);
 							playSound(lightningSound);
@@ -3171,17 +3210,23 @@ Character.prototype.update = function () {
 								case 1: //side hit
 									//entity.displacementXTarget = 64;
 									//entity.displacementTimeMax = 10;
-									if (that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2 < entity.x + entity.displacementX + entity.hitBoxDef.offsetX + entity.hitBoxDef.width / 2)
+									console.log("side hit! your X: " + (that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2) + "; their X: " + (entity.x + entity.displacementX + entity.hitBoxDef.offsetX + entity.hitBoxDef.width / 2));
+									if (that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2 < entity.x + entity.displacementX + entity.hitBoxDef.offsetX + entity.hitBoxDef.width / 2) {
 										entity.displacementXSpeed = 6;
-									else 
+										that.displacementXSpeed = -6;
+									} else {
 										entity.displacementXSpeed = -6;
+										that.displacementXSpeed = 6;
+									}
 								break;
 								case 2: //down hit
 									that.yVelocity = 10;
+									entity.displacementYSpeed = 5;
 								break;
 								case 3: //up hit
+									entity.displacementYSpeed = -5;
 									if (that.falling || that.jumping) {
-										that.yVelocity = -4;
+										that.yVelocity = -5;
 									}
 								break;
 							}
@@ -4359,6 +4404,9 @@ new Platform(game, -728, 224),
 			];
 			var enemies = [
 			new SeaSlug(game, -1944, 426, 1, 96),
+			new Isopod(game, -1844, 426 - 32, 1, 96),
+			new Eel(game, -1744, 426, 1, 0, 96),
+			new TopRamen(game, -1644, 326, 1, 0, 96),
 			
 			new Chicken(game, -1944, 336, 0, 0, 0, 0, 0),
 
@@ -4643,6 +4691,27 @@ ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_dead_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_dead_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/topramen.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/topramen_dead.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/cannedtuna.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_roll_1.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_roll_2.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_roll_3.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_roll_4.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_roll_5.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_roll_6.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_curl_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_curl_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_uncurl_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_uncurl_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_dead_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/isopod_dead_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/eel_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/eel_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/eel_dead_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/eel_dead_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/chicken.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/boar_idle.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/boar_prep.png");
