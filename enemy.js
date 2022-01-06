@@ -45,6 +45,22 @@ class Enemy {
 		this.groundlocked = false;
 	}
 	
+	getX() {
+		return this.x + this.displacementX;
+	}
+	
+	getY() {
+		return this.y + this.displacementY;
+	}
+	
+	getXMidpoint() {
+		return this.x + this.displacementX + this.hitBoxDef.offsetX + this.hitBoxDef.width / 2;
+	}
+	
+	getYMidpoint() {
+		return this.y + this.displacementY + this.hitBoxDef.offsetY + this.hitBoxDef.height / 2;
+	}
+	
 	update() {
 		if (this.displacementXSpeed != 0) {
 			this.displacementX += this.displacementXSpeed;
@@ -77,7 +93,6 @@ class Enemy {
 			} else {
 				this.displacementX = this.displacementXTarget - (this.displacementXTarget * (this.displacementTime - 0.3 * this.displacementTimeMax) / (0.7 * this.displacementTimeMax));
 			}
-			console.log("tick: " + this.displacementTime + " - " + this.displacementX);
 			if (this.displacementTime >= this.displacementTimeMax) {
 				this.displacementTime = 0;
 				this.displacementTimeMax = 0;
@@ -101,15 +116,45 @@ class Enemy {
 			this.currentAnimation = this.aniLeft;
 		if (checkCollision(this.game.player1, this) && !this.game.player1.hitByAttack) {
 			if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
+				var createX;
+				var createY;
+				if (this.getXMidpoint() > this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) {
+					createX = this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width;
+				} else if (this.getXMidpoint() > this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) {
+					createX = this.game.player1.x + this.game.player1.hitBoxDef.offsetX;
+				} else {
+					createX = this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2;
+				}
+				if (this.getYMidpoint() > this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2) {
+					createY = this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height;
+				} else if (this.getYMidpoint() < this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2) {
+					createY = this.game.player1.y + this.game.player1.hitBoxDef.offsetY;
+				} else {
+					createY = this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2;
+				}
+				for (var i = 0; i < 18; i++) {
+					var newParticle = new Particle(PART_SECONDARY, createX, createY, 
+							-20, 20, -20, 20, 0, 0.5, 0, 0, 0, 50, .75, .15, true, this.game);
+					var element = new CircleElement(10 + Math.random() * 3, "#b7f7f3", "#fbcfff");
+					newParticle.other = element;
+					this.game.addEntity(newParticle);
+				}
 				this.game.player1.vulnerable = false;
 				applyDamage(this.game.player1.x, this.game.player1.y, this.game, this.autoDamage, this.game.player1);
 				this.game.player1.hitByAttack = true;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
+                this.game.player1.stunTimer = this.game.player1.invulnTimerMax;
+                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax * 2;
+				this.game.player1.stunned = true;
 				playSound(hitSound);
+				this.game.player1.yVelocity = 7;
+				this.game.player1.jumping = true;
+				this.game.pauseTime = 8;
 				if (this.game.player1.lastDirection == "Left") {
 					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
+					this.game.player1.xVelocity = 2;
 				} else {
 					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
+					this.game.player1.xVelocity = -2;
 				}
 			}
 		}
@@ -396,7 +441,7 @@ class TopRamen extends Enemy {
 			if (this.activated) {
 				if (this.attackCooldown == 0) {
 					this.attackCooldown = 90;
-					var newParticle = new Particle(IMG_PART, this.x + this.displacementX + this.hitBoxDef.width / 2, this.y + this.displacementY + this.hitBoxDef.height / 2, 0, 0, 0, 0, 0.1, 0, 30, 5, 0, 50, 1, 0, false, this.game,
+					var newParticle = new Particle(IMG_PART, this.x + this.displacementX + this.hitBoxDef.width / 2, this.y + this.displacementY + this.hitBoxDef.height / 2, 0, 0, 0, 0, 0.1, 0, 10, 5, 0, 50, 1, 0, false, this.game,
 						new Animation(ASSET_MANAGER.getAsset("./img/Enemy/cannedtuna.png"), 0, 0, 32, 32, 1, 1, true, false, 0, 0));
 					newParticle.attackId = AYA_SHOT;
 					newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2;
@@ -406,6 +451,15 @@ class TopRamen extends Enemy {
 					playSound(cannedTunaSound);
 				} else {
 					this.attackCooldown--;
+				}
+				this.lineUpTargetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.game.player1.hitBoxDef.offsetY - 128;
+				if (this.lineUpTargetY > this.y + this.displacementY + this.hitBoxDef.height / 2 + this.hitBoxDef.offsetY) {
+					this.vspeed = 1;
+				} else if (this.lineUpTargetY < this.y + this.displacementY + this.hitBoxDef.height / 2 + this.hitBoxDef.offsetY) {
+					this.vspeed = -1;
+				}
+				if (this.game.player1.dead) {
+					this.vspeed = 0;
 				}
 			}
 			if (this.bounceCd == 0 && this.hspeed < 0 && this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX > this.x + this.displacementX + this.hitBoxDef.width / 2 + this.hitBoxDef.offsetX) {

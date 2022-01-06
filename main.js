@@ -152,7 +152,7 @@ var energyMaxSound = new Audio("./sounds/energymax.mp3");
 var autoSound = new Audio("./sounds/electric.wav");
 var energyUpSound = new Audio("./sounds/energyup.wav");
 var thunderboltSound = new Audio("./sounds/pikachu.wav");
-var dieSound = new Audio("./sounds/jelly_breakdown.wav");
+var dieSound = new Audio("./sounds/aiya.wav");
 var dieSound2 = new Audio("./sounds/aiya.wav");
 var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
 var slapSound = new Audio("./sounds/slap.wav");
@@ -433,6 +433,10 @@ function applyDamage(x, y, game, damage, victim) {
 	var color = "white";
 	if (victim.isPlayer) {
 		color = "red";
+		if (game.player1.currentHealth - damage <= 0) {
+			game.player1.dead = true;
+			handleDie(game);
+		}
 	} else {
 		victim.hurtTimer = 5;
 		if (victim.maxHealth < 80)
@@ -1590,6 +1594,7 @@ function Particle(particleId, x, y, minHSpeed, maxHSpeed, minVSpeed, maxVSpeed,
 	this.canHit = true;
 	this.extra = 0;
 	this.textContent = null;
+	this.highPriority = 0.1;
 	
 	this.targetX = null;
 	this.targetY = null;
@@ -2561,6 +2566,8 @@ function Character(game) {
     this.comboTime = 0; // The timer before the combo drops off
     this.invulnTimerMax = 40;
     this.invulnTimer = 0;
+	this.stunTimer = 0;
+	this.stunned = false;
 	this.speedTimer = 0;
 	this.ultiTimer = 0;
 	this.zoomTimer = 0;
@@ -2605,8 +2612,8 @@ function Character(game) {
     // Animations    	
 	
 	//function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDuration, frames, loop, reverse, offsetX, offsetY)
-    this.idleAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
-    this.idleAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.idleAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_right.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
+    this.idleAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_left.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
 	this.idleAnimation = this.idleAnimationRight;
     this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_right.png"), 0, 0, 128, 128, .25, 4, true, false, 0, 0);
     this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_left.png"), 0, 0, 128, 128, .25, 4, true, false, 0, 0);
@@ -2715,6 +2722,19 @@ function handleCut(game) {
 	game.addEntity(cutLeft);
 	game.addEntity(cutRight);
 	
+}
+
+function handleDie(game) {
+	game.pauseTime = 0;
+	playSound(dieSound);
+	game.player1.vulnerable = false;
+	var particle = new Particle(PART_GENERATOR,
+			game.player1.hitBox.x + game.player1.hitBox.width / 2,
+			game.player1.hitBox.y + game.player1.hitBox.height / 2, 
+			0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, false, game);
+	var element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#00f6cb", "#70fe37");
+	particle.other = element;
+	game.addEntity(particle);
 }
 
 Character.prototype.update = function () {
@@ -2874,19 +2894,11 @@ Character.prototype.update = function () {
 			}
 		}
         if (this.currentHealth <= 0 && !this.dead) {
-            playSound(dieSound);
             this.dead = true;
-            this.vulnerable = false;
-            var particle = new Particle(PART_GENERATOR,
-                    this.game.player1.hitBox.x + this.game.player1.hitBox.width / 2,
-                    this.game.player1.hitBox.y + this.game.player1.hitBox.height / 2, 
-                    0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, false, this.game);
-            var element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#00f6cb", "#70fe37");
-            particle.other = element;
-            this.game.addEntity(particle);
+			handleDie(this.game);
         }
         if (!this.dead) {
-            if (!this.vulnerable) {
+            if (this.stunned) {
 				if (this.xVelocity !== 0) { //knockback equates to stun
 					this.canControl = false;
 				}
@@ -2954,15 +2966,20 @@ Character.prototype.update = function () {
                 this.invulnTimer--;
                 if (this.invulnTimer <= 0) {
                     this.vulnerable = true;
-                    this.canControl = true;
-                    this.xVelocity = 0;
                     this.hurt = false;
                     this.hitByAttack = false;
                 }
             }
-            if (!this.canControl && !this.vulnerable) {
+            if (this.stunTimer > 0) {
+                this.stunTimer--;
+                if (this.stunTimer <= 0) {
+					this.stunned = false;
+                    this.canControl = true;
+                    this.xVelocity = 0;
+                }
+            }
+            if (!this.canControl && this.stunned) { 
                 this.x += this.xVelocity;
-				this.y += this.yVelocity;
             }
 			this.x += this.displacementXSpeed;
 			if (this.displacementXSpeed > 0) {
@@ -3337,22 +3354,27 @@ Character.prototype.draw = function (ctx) {
 			ctx.align = "Left";
 			ctx.fillText(this.petalTorrentHits, this.x + 20 + 32, this.y - 10 + 6);
 		}
-		if (!this.vulnerable) {
-			if (this.game.step % 4 === 0) {
-				this.hurtAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.hurtAnimation.offsetX, this.y + this.hurtAnimation.offsetY, 1, true);
-				this.currentAnimation = this.hurtAnimation;  
-			}
+		var doNotDraw = false;
+		if (this.stunned) {
+			this.currentAnimation = this.hurtAnimation;
 		} else if (this.attacking && this.attackAnimation != null) { // Attacking
-	        this.attackAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.attackAnimation.offsetX, this.y + this.attackAnimation.offsetY);
 	        this.currentAnimation = this.attackAnimation;
 	    } else if (this.running) { // Running
-			this.walkAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.walkAnimation.offsetX, this.y + this.walkAnimation.offsetY);	
 	        this.currentAnimation = this.walkAnimation;
 	    } else {
-			if (!this.dead) { // Idle
-				this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY);
-				this.currentAnimation = this.idleAnimation;
+			this.currentAnimation = this.idleAnimation;
+		}
+		if (!this.vulnerable) {
+			if (this.game.step % 4 !== 0) {
+				doNotDraw = true;
 			}
+		}
+		if (!doNotDraw)
+			this.currentAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.currentAnimation.offsetX, this.y + this.currentAnimation.offsetY, 1, true);
+		else {
+			ctx.globalAlpha = 0.1;
+			this.currentAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.currentAnimation.offsetX, this.y + this.currentAnimation.offsetY, 1, true);
+			ctx.globalAlpha = 1;
 		}
 	    drawHitBox(this, ctx);
 	}
@@ -4408,7 +4430,7 @@ new Platform(game, -728, 224),
 			new Eel(game, -1744, 426, 1, 0, 96),
 			new TopRamen(game, -1644, 326, 1, 0, 96),
 			
-			new Chicken(game, -1944, 336, 0, 0, 0, 0, 0),
+			/*new Chicken(game, -1944, 336, 0, 0, 0, 0, 0),
 
 			new Chicken(game, -1864, 336, 0, 0, 0, 0, 0),
 
@@ -4433,7 +4455,7 @@ new Platform(game, -728, 224),
 			new Chicken(game, -792, 352, 0, 0, 0, 0, 0),
 
 			new Chicken(game, -648, 352, 0, 0, 0, 0, 0),
-
+			*/
 
 
 
