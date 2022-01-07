@@ -144,6 +144,12 @@ class Enemy {
 					newParticle.other = element;
 					this.game.addEntity(newParticle);
 				}
+				if (this.game.player1.asttacking) {
+					this.game.player1.elapsedTime = 0;
+					this.game.player1.attacking = false;
+					this.game.player1.attackIndex = 0;
+				}
+				
 				this.game.player1.vulnerable = false;
 				applyDamage(this.game.player1.x, this.game.player1.y, this.game, this.autoDamage, this.game.player1);
 				this.game.player1.hitByAttack = true;
@@ -168,10 +174,10 @@ class Enemy {
 			this.removeFromWorld = true;
 			if (this.hspeed > 0)
 				this.currentAnimation = this.deadAnimationRight;
-			else if (this.hspeed < 0)
+			else
 				this.currentAnimation = this.deadAnimationLeft;
 			this.game.addEntity(new Particle(IMG_PART, this.x + this.displacementX, this.y + this.displacementY,
-				0, 0, 0, 0, 0, 0, 0, 30, 0, 10, 0.5, 0, false, this.game, this.currentAnimation));
+				0, 0, 0, 0, 0, 0, 0, 30, 0, 10, 1, 0, false, this.game, this.currentAnimation));
 			addScore(this.game, this.scoreValue);
 		}
 	}
@@ -600,18 +606,15 @@ class Uni extends Enemy {
 	}
 	
 	
-	update() {
-		console.log(!this.changing && this.changeTime == 0 && !this.unchanging);				
+	update() {		
 		if (this.changeCooldown > 0)
 			this.changeCooldown--;
 		if (this.changeCooldown == 0 && !this.changing && this.changeTime == 0 && !this.unchanging) {
-			console.log("CHANGING");
 			this.changing = true;
 			this.aniLeft = this.changeAnimationLeft;
 			this.aniRight = this.changeAnimationRight;
 		}
 		if (this.changing && this.currentAnimation.isDone()) {
-			console.log("CHANGE DONE");
 			this.changing = false;
 			this.currentAnimation.restart();
 			this.changeTime = 150;
@@ -622,7 +625,6 @@ class Uni extends Enemy {
 			this.aniRight = this.changedAnimationRight;
 		}
 		if (this.unchanging && this.currentAnimation.isDone()) {
-			console.log("unCHANGE DONE");
 			this.unchanging = false;
 			this.changeCooldown = 150;
 			this.currentAnimation.restart();
@@ -633,7 +635,6 @@ class Uni extends Enemy {
 		if (this.changeTime > 0) {
 			this.changeTime--;
 			if (this.changeTime == 0) {
-				console.log("time to unchange DONE");
 				this.unchanging = true;
 				this.aniLeft = this.unchangeAnimationLeft;
 				this.aniRight = this.unchangeAnimationRight;

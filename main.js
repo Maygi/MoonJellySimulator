@@ -2616,8 +2616,8 @@ function Character(game) {
     this.idleAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_right.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
     this.idleAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_left.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
 	this.idleAnimation = this.idleAnimationRight;
-    this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_right.png"), 0, 0, 128, 128, .25, 4, true, false, 0, 0);
-    this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_left.png"), 0, 0, 128, 128, .25, 4, true, false, 0, 0);
+    this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_right.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
+    this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_left.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
 	this.walkAnimation = this.walkAnimationRight;
     this.jumpAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
     this.jumpAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
@@ -3219,6 +3219,7 @@ Character.prototype.update = function () {
 				if (targetEntity != null) {
 					if (targetEntity.meleeInvuln) {
 						playSound(hitMetal);
+						this.game.player1.targetHit.push(targetEntity);
 					} else {
 						var createX;
 						var createY;
@@ -3256,7 +3257,7 @@ Character.prototype.update = function () {
 							}
 						break;
 						case 2: //down hit
-							this.game.player1.yVelocity = 10;
+							this.game.player1.yVelocity = 8;
 							targetEntity.displacementYSpeed = 5;
 						break;
 						case 3: //up hit
@@ -3272,9 +3273,6 @@ Character.prototype.update = function () {
                     this.attacking = false;
                     this.attackIndex = 0;
                     noSnap = true;
-                    this.hitBoxDef.growthX = 0; //reset
-                    this.hitBoxDef.growthY = 0; //reset
-                    this.hitBoxDef.offsetX = this.hitBoxDef.originalOffsetX;
 					console.log("attack done");
                 }
             }
@@ -4739,6 +4737,7 @@ ASSET_MANAGER.queueDownload("./img/Enemy/uni.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/uni_spiking.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/uni_unspike.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/uni_spiked.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/uni_dead.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_dead_right.png");
