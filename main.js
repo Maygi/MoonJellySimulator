@@ -156,6 +156,7 @@ var dieSound = new Audio("./sounds/aiya.wav");
 var dieSound2 = new Audio("./sounds/aiya.wav");
 var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
 var slapSound = new Audio("./sounds/slap.wav");
+var hitMetal = new Audio("./sounds/metalHit.wav");
 cannedTunaSound.volume = 0.03;
 energyUpSound.volume = 0.07;
 
@@ -3199,57 +3200,73 @@ Character.prototype.update = function () {
             }
             var noSnap = false;
             var collision = false;
+			var targetEntity = null;
+			var lowestDistance = 99999999;
             if (this.attacking) { //hit enemy
                 this.game.entities.forEach(function(entity) {
                     if (entity.attackable && that.targetHit.indexOf(entity) === -1 && that.targetHit.length == 0) {
                         if (checkCollision(that, entity, xBonus, yBonus) && !checkCollision(that, entity)) {
-							var createX;
-							var createY;
-							if (Math.abs(xBonus) > 20) {
-								createX = that.x + (xBonus > 0 ? that.hitBoxDef.width : 0) + xBonus + that.hitBoxDef.offsetX;
-								createY = that.y + that.hitBoxDef.height / 2 + that.hitBoxDef.offsetY;
-							} else {
-								createX = that.x + that.hitBoxDef.width / 2 + that.hitBoxDef.offsetX;
-								createY = that.y + (yBonus > 0 ? that.hitBoxDef.height : 0) + that.hitBoxDef.offsetY;
-							}
-							for (var i = 0; i < 6; i++) {
-								var newParticle = new Particle(PART_SECONDARY, createX, createY, 
-										-5, 5, -5, 5, 0, 0.15, 0, 0, 0, 50, .75, .15, true, that.game);
-								element = new CircleElement(5 + Math.random() * 3, "#f7ffba", "#faf6be");
-								newParticle.other = element;
-								that.game.addEntity(newParticle);
-							}
-                            that.targetHit.push(entity);
-							applyDamage(entity.x, entity.y, that.game, 25, entity);
-							playSound(lightningSound);
-							addEnergy(that.game, 20);
-							switch(that.attackIndex) {
-								case 1: //side hit
-									//entity.displacementXTarget = 64;
-									//entity.displacementTimeMax = 10;
-									console.log("side hit! your X: " + (that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2) + "; their X: " + (entity.x + entity.displacementX + entity.hitBoxDef.offsetX + entity.hitBoxDef.width / 2));
-									if (that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2 < entity.x + entity.displacementX + entity.hitBoxDef.offsetX + entity.hitBoxDef.width / 2) {
-										entity.displacementXSpeed = 6;
-										that.displacementXSpeed = -6;
-									} else {
-										entity.displacementXSpeed = -6;
-										that.displacementXSpeed = 6;
-									}
-								break;
-								case 2: //down hit
-									that.yVelocity = 10;
-									entity.displacementYSpeed = 5;
-								break;
-								case 3: //up hit
-									entity.displacementYSpeed = -5;
-									if (that.falling || that.jumping) {
-										that.yVelocity = -5;
-									}
-								break;
+							var playerMidpointX = that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2;
+							var playerMidpointY = that.y + that.hitBoxDef.offsetY + that.hitBoxDef.height / 2;
+							var distance = getDistance(playerMidpointX, playerMidpointY, entity.getXMidpoint(), entity.getYMidpoint());
+							if (distance < lowestDistance || targetEntity == null) {
+								targetEntity = entity;
+								lowestDistance = distance;
 							}
                         }
                     }
                 });
+				if (targetEntity != null) {
+					if (targetEntity.meleeInvuln) {
+						playSound(hitMetal);
+					} else {
+						var createX;
+						var createY;
+						if (Math.abs(xBonus) > 20) {
+							createX = this.game.player1.x + (xBonus > 0 ? this.game.player1.hitBoxDef.width : 0) + xBonus + this.game.player1.hitBoxDef.offsetX;
+							createY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.game.player1.hitBoxDef.offsetY;
+						} else {
+							createX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
+							createY = this.game.player1.y + (yBonus > 0 ? this.game.player1.hitBoxDef.height : 0) + this.game.player1.hitBoxDef.offsetY;
+						}
+						for (var i = 0; i < 6; i++) {
+							var newParticle = new Particle(PART_SECONDARY, createX, createY, 
+									-5, 5, -5, 5, 0, 0.15, 0, 0, 0, 50, .75, .15, true, this.game);
+							element = new CircleElement(5 + Math.random() * 3, "#f7ffba", "#faf6be");
+							newParticle.other = element;
+							this.game.addEntity(newParticle);
+						}
+						this.game.player1.targetHit.push(targetEntity);
+						applyDamage(targetEntity.x, targetEntity.y, this.game, 25, targetEntity);
+						playSound(lightningSound);
+						addEnergy(this.game, 20);
+					}
+					switch(this.game.player1.attackIndex) {
+						case 1: //side hit
+							//targetEntity.displacementXTarget = 64;
+							//targetEntity.displacementTimeMax = 10;
+							//console.log("side hit! your X: " + (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) + "; their X: " + (targetEntity.x + targetEntity.displacementX + targetEntity.hitBoxDef.offsetX + targetEntity.hitBoxDef.width / 2));
+							targetEntity.handleSideHit();
+							if (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2 < targetEntity.x + targetEntity.displacementX + targetEntity.hitBoxDef.offsetX + targetEntity.hitBoxDef.width / 2) {
+								targetEntity.displacementXSpeed = 6;
+								this.game.player1.displacementXSpeed = -6;
+							} else {
+								targetEntity.displacementXSpeed = -6;
+								this.game.player1.displacementXSpeed = 6;
+							}
+						break;
+						case 2: //down hit
+							this.game.player1.yVelocity = 10;
+							targetEntity.displacementYSpeed = 5;
+						break;
+						case 3: //up hit
+							targetEntity.displacementYSpeed = -5;
+							if (this.game.player1.falling || this.game.player1.jumping) {
+								this.game.player1.yVelocity = -5;
+							}
+						break;
+					}
+				}
                 if (this.attackAnimation != null && this.attackAnimation.isDone()) {
                     this.attackAnimation.elapsedTime = 0;
                     this.attacking = false;
@@ -4429,6 +4446,11 @@ new Platform(game, -728, 224),
 			new Isopod(game, -1844, 426 - 32, 1, 96),
 			new Eel(game, -1744, 426, 1, 0, 96),
 			new TopRamen(game, -1644, 326, 1, 0, 96),
+			new Pirahna(game, -1444, 326, 1, 96),
+			new Pirahna(game, -1444 + 48 * 2, 326, 1, 96),
+			new Pirahna(game, -1444 + 48 * 3, 326, 1, 96),
+			new Pirahna(game, -1444 + 48 * 4, 326, 1, 96),
+			new Uni(game, -1944, 400),
 			
 			/*new Chicken(game, -1944, 336, 0, 0, 0, 0, 0),
 
@@ -4713,6 +4735,14 @@ ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_dead_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_dead_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/uni.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/uni_spiking.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/uni_unspike.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/uni_spiked.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_dead_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_dead_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/topramen.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/topramen_dead.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/cannedtuna.png");
