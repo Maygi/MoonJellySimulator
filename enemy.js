@@ -5,6 +5,7 @@ class Enemy {
 		this.y = y;
 		this.hspeed = 0;
 		this.vspeed = 0;
+		this.hFriction = 0;
 		this.displacementX = 0;
 		this.displacementY = 0;
 		this.displacementXTarget = 0;
@@ -29,6 +30,7 @@ class Enemy {
 		this.scoreValue = 1;
 		this.maxHealth = 10.0;
 		this.initialX = x;
+		this.initialY = y;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;   
 		// String Variables
@@ -112,6 +114,13 @@ class Enemy {
 				this.vspeed = 0;
 			else if (this.vspeed < 0 && this.vspeed + this.y + this.displacementY < this.lineUpTargetY)
 				this.vspeed = 0;
+		}
+		if (this.hFriction > 0) {
+			if (this.hspeed > 0) {
+				this.hspeed = Math.max(0, this.hspeed - this.hFriction);
+			} else {
+				this.hspeed = Math.min(0, this.hspeed + this.hFriction);
+			}
 		}
 		this.x += this.hspeed;
 		this.y += this.vspeed;
@@ -642,6 +651,60 @@ class Uni extends Enemy {
 				this.hitBoxDef = this.hitBoxSmall;
 			}
 		}
+		super.update();
+	}
+}
+
+class Squid extends Enemy {
+	
+	constructor(game, x, y) {
+		super(game, x, y);
+		
+		this.scoreValue = 200;
+		this.maxHealth = 150.0;
+		this.autoDamage = 25;
+		this.currentHealth = this.maxHealth;
+		this.currentHealthTemp = this.currentHealth;
+		this.displacementFriction = 0.4; //basically, how "heavy" a mob is
+		this.hFriction = 0.05;
+		
+		// Animations
+		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/squid.png"), 0, 0, 64, 64, 0.3, 4, true, false, 0, 0);
+		this.walkAnimationRight = this.walkAnimationLeft;
+		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/squid_dead.png"), 0, 0, 64, 64, 1, 1, true, false, 0, 0);
+		this.deadAnimationRight = this.deadAnimationLeft;
+		this.aniLeft = this.walkAnimationLeft;
+		this.aniRight = this.walkAnimationRight;
+		this.currentAnimation = this.aniLeft;
+		
+		this.hitBoxDef = {
+			width: 56, height: 56, offsetX: 4, offsetY: 4, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	
+	update() {
+		if (this.bounceCd == 0) {
+			this.bounceCd = 90;
+			this.vspeed = Math.random() * (this.y / 500) * -4 - 3;
+			if (this.getY() + 100 >= this.game.player1.ground)
+				this.vspeed = Math.random() * -3 * (this.y / 500) - 3;
+			if (this.getY() <= this.initialY - 100)
+				this.vspeed = -3;
+			this.hspeed = -4 + Math.random() * 8;
+			var delta = this.getX() - this.initialX;
+			if (delta < -100)
+				this.hspeed = Math.random() * 4;
+			if (delta > 100)
+				this.hspeed = Math.random() * -4;
+			
+		}
+		this.vspeed += 0.08;
+		if (this.vspeed < 0 && this.getY() < 0)
+			this.vspeed = 0;
+		if (this.vspeed > 0 && this.getY() + this.hitBoxDef.height / 2 >= this.game.player1.ground)
+			this.vspeed = 0;
 		super.update();
 	}
 }

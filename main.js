@@ -2733,7 +2733,7 @@ function handleDie(game) {
 			game.player1.hitBox.x + game.player1.hitBox.width / 2,
 			game.player1.hitBox.y + game.player1.hitBox.height / 2, 
 			0, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, false, game);
-	var element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#00f6cb", "#70fe37");
+	var element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#b7f7f3", "#fbcfff");
 	particle.other = element;
 	game.addEntity(particle);
 }
@@ -4449,6 +4449,7 @@ new Platform(game, -728, 224),
 			new Pirahna(game, -1444 + 48 * 3, 326, 1, 96),
 			new Pirahna(game, -1444 + 48 * 4, 326, 1, 96),
 			new Uni(game, -1944, 400),
+			new Squid(game, -2000, 400),
 			
 			/*new Chicken(game, -1944, 336, 0, 0, 0, 0, 0),
 
@@ -4733,6 +4734,8 @@ ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_dead_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_dead_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/squid.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/squid_dead.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/uni.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/uni_spiking.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/uni_unspike.png");
