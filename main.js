@@ -2286,7 +2286,7 @@ Powerup.prototype.update = function () {
 	this.step++;
 	if (isOnScreen(this)) {
 		if (this.type === 0) { //health powerup
-			this.game.addEntity(new Particle(IMG_PART, this.x, this.y - 10, 0.2, -0.2, 0.2, -0.2, 0, 0, 5, 5, 10, 50, 0.7, 0.2, true, this.game,
+			this.game.addEntity(new Particle(IMG_PART, this.x, this.y - 10, -0.2, 0.2, -0.2, 0.2, 0, 0, 5, 5, 10, 50, 0.7, 0.2, true, this.game,
 				new Animation(ASSET_MANAGER.getAsset("./img/Particle/pink_flare.png"), 0, 0, 64, 64, 0.03, 16, true, false, 0, 0)));
 	        if (checkCollision(this, this.game.player1)) {
 	            playSound(healSound);
