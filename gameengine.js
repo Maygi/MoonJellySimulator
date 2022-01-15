@@ -141,38 +141,15 @@ GameEngine.prototype.startInput = function () {
 			}
         }
         if (String.fromCharCode(e.which) === 'O') {
-			/*that.camera.x = 7300;
-			that.liveCamera.x = 7300;
-			that.camera.minX = 1100;
-			that.camera.maxX = 16200;
-			that.cameraSpeed = 10000;
-			that.currentPhase = 5;
-			that.player1.x = 7500;
-			that.player1.y = 250;
-			startMusic.pause();*/
-			
-			that.camera.x = 15200;
-			that.liveCamera.x = 15200;
-			that.camera.minX = 15200;
-			that.camera.maxX = 30000;
-			that.cameraSpeed = 5;
-			that.currentPhase = 13;
-			//that.player1.x = 15400;
-			that.player1.x = 15300;
-			that.player1.y = 250;
-			
-			/*that.camera.x = 19800;
-			that.liveCamera.x = 19800;
-			that.camera.minX = 19800;
-			that.camera.maxX = 19800;
-			that.cameraSpeed = 5;
-			that.currentPhase = 14;
-			//that.player1.x = 15400;
-			that.player1.x = 19850;
-			that.player1.y = 250;*/
-			startMusic.pause();
-			part2Music.play();
-			spawnWave(gameEngine, 2);
+			playSound(healSound);
+			var damageParticle = new Particle(TEXT_PART, that.player1.hitBox.x, that.player1.hitBox.y, 
+					0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, that);
+			var damageText = new TextElement("", "Lucida Console", 25, "#ffd43a", "black");
+			damageText.text = "Attack range upgraded!";
+			damageParticle.other = damageText;
+			that.addEntity(damageParticle);
+			that.player1.equipment[LONG_RANGE] = true;
+			that.player1.longRangeAnimations();
 		}
         e.preventDefault();
     }, false);

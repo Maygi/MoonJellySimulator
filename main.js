@@ -156,6 +156,7 @@ var dieSound = new Audio("./sounds/aiya.wav");
 var dieSound2 = new Audio("./sounds/aiya.wav");
 var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
 var slapSound = new Audio("./sounds/slap.wav");
+slapSound.volume = 0.05;
 var hitMetal = new Audio("./sounds/metalHit.wav");
 cannedTunaSound.volume = 0.03;
 energyUpSound.volume = 0.07;
@@ -2533,13 +2534,16 @@ Powerup.prototype.draw = function (ctx) {
 }
 
 
+// equipment ID
+var LONG_RANGE = 0;
+
 /**
     Character (Character ID)
 */
 
 function Character(game) {
     // Number Variables
-	this.runSpeed = 5;
+	this.runSpeed = 4;
 	this.jumpSpeed = 0; // X Velocity when jumping
 	this.displacementXSpeed = 0;
 	this.displacementFriction = 0.4;
@@ -2584,6 +2588,7 @@ function Character(game) {
     this.wDamage = 6;
     // String Variables
 	this.lastDirection = "Right";
+	this.attackDirection = "Right";
     // Boolean Variables
 	this.running = false;
 	this.runningVertical = false;
@@ -2609,6 +2614,11 @@ function Character(game) {
     this.timesHit = 0;
     
     this.targetHit = []; // The targets you've currently hit with your attack
+	
+	//equipment states
+	this.equipment = [
+		false
+	];
       
     // Animations    	
 	
@@ -2622,22 +2632,49 @@ function Character(game) {
     this.jumpAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
     this.jumpAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
 	this.jumpAnimation = this.jumpAnimationRight;
+    this.fallAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_fall_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.fallAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_fall_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+	this.fallAnimation = this.fallAnimationRight;
 	
-    this.attackAnimationAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_air_left.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_air_right.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_ground_left.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_ground_right.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationUpAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_air_left.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationUpAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_air_right.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationUpGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_ground_left.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationUpGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_ground_right.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
-    this.attackAnimationDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
+	//default attack animations
+    this.attackAnimationDefAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_air_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
+    this.attackAnimationDefAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_air_right.png"), 0, 0, 128, 128, .10, 4, false, false, 32, 32);
+    this.attackAnimationDefGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_ground_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
+    this.attackAnimationDefGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_ground_right.png"), 0, 0, 128, 128, .10, 4, false, false, 32, 32);
+    this.attackAnimationDefUpAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_air_left.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationDefUpAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_air_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationDefUpGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_ground_left.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationDefUpGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_ground_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationDefDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 128, 128, .64, 2, false, false, 0, 0);
+    this.attackAnimationDefDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
+	
+	//long attack animations
+    this.attackAnimationLongAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attacklong_air_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
+    this.attackAnimationLongAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attacklong_air_right.png"), 0, 0, 128, 128, .10, 4, false, false, 32, 32);
+    this.attackAnimationLongGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attacklong_ground_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 0);
+    this.attackAnimationLongGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attacklong_ground_right.png"), 0, 0, 128, 128, .10, 4, false, false, 32, 0);
+    this.attackAnimationLongUpAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackuplong_air_left.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationLongUpAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackuplong_air_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationLongUpGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackuplong_ground_left.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationLongUpGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackuplong_ground_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
+    this.attackAnimationLongDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 128, 128, .2, 2, false, false, 0, 0);
+    this.attackAnimationLongDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 128, 128, .2, 2, false, false, 0, 0);
 	this.attackAnimation = this.attackAnimationGroundLeft;
+	
+    this.attackAnimationAirLeft = this.attackAnimationDefAirLeft;
+    this.attackAnimationAirRight = this.attackAnimationDefAirRight;
+    this.attackAnimationGroundLeft = this.attackAnimationDefGroundLeft;
+    this.attackAnimationGroundRight = this.attackAnimationDefGroundRight;
+    this.attackAnimationUpAirLeft = this.attackAnimationDefUpAirLeft;
+    this.attackAnimationUpAirRight = this.attackAnimationDefUpAirRight;
+    this.attackAnimationUpGroundLeft = this.attackAnimationDefUpGroundLeft;
+    this.attackAnimationUpGroundRight = this.attackAnimationDefUpGroundRight;
+    this.attackAnimationDownLeft = this.attackAnimationDefDownLeft;
+    this.attackAnimationDownRight = this.attackAnimationDefDownRight;	
     
     // Hurt
-    this.hurtAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_right.png"), 0, 0, 128, 128, 1, 1, false, false, 0, 0);
-    this.hurtAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_left.png"), 0, 0, 128, 128, 1, 1, false, false, 0, 0);
+    this.hurtAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_hurt_right.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
+    this.hurtAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_hurt_left.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
     this.hurtAnimation = this.hurtAnimationLeft;
     
     this.currentAnimation = this.idleAnimationRight; // Setting starting animation
@@ -2645,7 +2682,7 @@ function Character(game) {
     Entity.call(this, game, -2300, 300);
     
     this.hitBoxDef = {
-    	width: 26, height: 60, offsetX: 52, offsetY: 40, growthX: 0, growthY: 0, originalOffsetX: 52
+    	width: 26, height: 53, offsetX: 52, offsetY: 40, growthX: 0, growthY: 0, originalOffsetX: 52
     };
     drawHitBox(this);
 }
@@ -2659,6 +2696,32 @@ Character.prototype.constructor = Character;
  */
 Character.prototype.canCancel = function() {
 	return (this.attacking && this.attackAnimation.elapsedTime >= 0.25);
+}
+
+Character.prototype.defaultAnimations = function() {
+    this.attackAnimationAirLeft = this.attackAnimationDefAirLeft;
+    this.attackAnimationAirRight = this.attackAnimationDefAirRight;
+    this.attackAnimationGroundLeft = this.attackAnimationDefGroundLeft;
+    this.attackAnimationGroundRight = this.attackAnimationDefGroundRight;
+    this.attackAnimationUpAirLeft = this.attackAnimationDefUpAirLeft;
+    this.attackAnimationUpAirRight = this.attackAnimationDefUpAirRight;
+    this.attackAnimationUpGroundLeft = this.attackAnimationDefUpGroundLeft;
+    this.attackAnimationUpGroundRight = this.attackAnimationDefUpGroundRight;
+    this.attackAnimationDownLeft = this.attackAnimationDefDownLeft;
+    this.attackAnimationDownRight = this.attackAnimationDefDownRight;	
+}
+
+Character.prototype.longRangeAnimations = function() {
+    this.attackAnimationAirLeft = this.attackAnimationLongAirLeft;
+    this.attackAnimationAirRight = this.attackAnimationLongAirRight;
+    this.attackAnimationGroundLeft = this.attackAnimationLongGroundLeft;
+    this.attackAnimationGroundRight = this.attackAnimationLongGroundRight;
+    this.attackAnimationUpAirLeft = this.attackAnimationLongUpAirLeft;
+    this.attackAnimationUpAirRight = this.attackAnimationLongUpAirRight;
+    this.attackAnimationUpGroundLeft = this.attackAnimationLongUpGroundLeft;
+    this.attackAnimationUpGroundRight = this.attackAnimationLongUpGroundRight;
+    this.attackAnimationDownLeft = this.attackAnimationLongDownLeft;
+    this.attackAnimationDownRight = this.attackAnimationLongDownRight;	
 }
 
 function cutEffect(game, ultiName, imageName) {
@@ -3060,23 +3123,6 @@ Character.prototype.update = function () {
                     this.jumpSpeed = 0;
                 }
             }
-			if (!platformFound && !this.jumping) {
-				if (!this.falling) {
-					this.falling = true;
-					if (!this.attacking) {
-						if (this.rightDown) {
-							this.lastDirection = "Right";
-							this.jumpSpeed = this.runSpeed;
-						} else if (this.leftDown) {
-							this.lastDirection = "Left";
-							this.jumpSpeed = -this.runSpeed;
-						} else {
-							this.jumpSpeed = 0;
-						}
-					}
-				}
-			}
-			
             // Process the raw attack input into the appropriate skill
             if (this.attackInput > 0 && this.canControl) {
                 switch(this.attackInput) {
@@ -3086,11 +3132,17 @@ Character.prototype.update = function () {
 								if (this.lastComboType != this.attackInput) { // Last Combo was different (e.g. AA vs Q) - drop combo
 									this.lastComboStage = 0;		    				
 								}
-								this.cooldown = 20;
+								this.cooldown = 30;
 								playSound(autoSound);
 								this.targetHit = [];
 								this.attacking = true;
 								this.attackIndex = 1;
+								if (this.leftDown)
+									this.attackDirection = "Left";
+								else if (this.rightDown)
+									this.attackDirection = "Right";
+								else
+									this.attackDirection = this.lastDirection;
 								if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
 									this.attackIndex = 2;
 								else if (this.upDown)
@@ -3136,30 +3188,34 @@ Character.prototype.update = function () {
 			//extended hitboxes
 			var xBonus = 0;
             var yBonus = 0;
+			var attackRange = 48;
+			if (this.equipment[LONG_RANGE]) {
+				attackRange = 72;
+			}
             if (this.attackIndex > 0 && this.canControl) {
                 switch(this.attackIndex) {
                     case 1: //side attack
 						if (this.falling || this.jumping) {
-							if (this.lastDirection === "Right") {
+							if (this.attackDirection === "Right") {
 								this.attackAnimation = this.attackAnimationAirRight;
-								xBonus = 48;
+								xBonus = attackRange;
 							} else {
 								this.attackAnimation = this.attackAnimationAirLeft;
-								xBonus = -48;
+								xBonus = -1 * attackRange;
 							}
 						} else {
-							if (this.lastDirection === "Right") {
+							if (this.attackDirection === "Right") {
 								this.attackAnimation = this.attackAnimationGroundRight;
-								xBonus = 48;
+								xBonus = attackRange;
 							} else {
 								this.attackAnimation = this.attackAnimationGroundLeft;
-								xBonus = -48;
+								xBonus = -1 * attackRange;
 							}
 						}
                     break;
                     case 2: //down attack
-						yBonus = 48;
-                        if (this.lastDirection === "Right") {
+						yBonus = attackRange;
+                        if (this.attackDirection === "Right") {
 							xBonus = 12;
                             this.attackAnimation = this.attackAnimationDownRight;
                         } else {
@@ -3168,9 +3224,9 @@ Character.prototype.update = function () {
                         }
                     break;
                     case 3: //up attack
-						yBonus = -48;
+						yBonus = -1 * attackRange;
 						if (this.falling || this.jumping) {
-							if (this.lastDirection === "Right") {
+							if (this.attackDirection === "Right") {
 								xBonus = 12;
 								this.attackAnimation = this.attackAnimationUpAirRight;
 							} else {
@@ -3178,7 +3234,7 @@ Character.prototype.update = function () {
 								this.attackAnimation = this.attackAnimationUpAirLeft;
 							}
 						} else {
-							if (this.lastDirection === "Right") {
+							if (this.attackDirection === "Right") {
 								xBonus = 12;
 								this.attackAnimation = this.attackAnimationUpGroundRight;
 							} else {
@@ -3189,6 +3245,23 @@ Character.prototype.update = function () {
                     break;
                 }
             }
+			
+			if (!platformFound && !this.jumping) {
+				if (!this.falling) {
+					this.falling = true;
+					if (!this.attacking) {
+						if (this.rightDown) {
+							this.lastDirection = "Right";
+							this.jumpSpeed = this.runSpeed;
+						} else if (this.leftDown) {
+							this.lastDirection = "Left";
+							this.jumpSpeed = -this.runSpeed;
+						} else {
+							this.jumpSpeed = 0;
+						}
+					}
+				}
+			}
             
             // Animation Direction Control
             if (this.lastDirection === "Right") {
@@ -3293,10 +3366,12 @@ Character.prototype.update = function () {
 	
 	if (this.lastDirection === "Right") {
 		this.jumpAnimation = this.jumpAnimationRight;
+		this.fallAnimation = this.fallAnimationRight;
 		this.idleAnimation = this.idleAnimationRight;
 		this.walkAnimation = this.walkAnimationRight;
 	} else {
 		this.jumpAnimation = this.jumpAnimationLeft;
+		this.fallAnimation = this.fallAnimationLeft;
 		if (this.canControl) {
 			this.idleAnimation = this.idleAnimationLeft;
 		}
@@ -3374,7 +3449,11 @@ Character.prototype.draw = function (ctx) {
 			this.currentAnimation = this.hurtAnimation;
 		} else if (this.attacking && this.attackAnimation != null) { // Attacking
 	        this.currentAnimation = this.attackAnimation;
-	    } else if (this.running) { // Running
+	    } else if (this.jumping) {
+			this.currentAnimation = this.jumpAnimation;
+		} else if (this.falling) {
+			this.currentAnimation = this.fallAnimation;
+		} else if (this.running) { // Running
 	        this.currentAnimation = this.walkAnimation;
 	    } else {
 			this.currentAnimation = this.idleAnimation;
@@ -4716,8 +4795,15 @@ ASSET_MANAGER.queueDownload("./img/Chat/BrandongSquare.png");
 
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_idle_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_idle_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_jump_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_jump_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_fall_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_fall_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_hurt_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_hurt_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_right.png");
+
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attack_air_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attack_air_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attack_ground_left.png");
@@ -4728,6 +4814,15 @@ ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackup_ground_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackup_ground_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackdown_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackdown_right.png");
+
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attacklong_air_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attacklong_air_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attacklong_ground_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attacklong_ground_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_air_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_air_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_ground_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_ground_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/JellyPortrait.png");
 
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_right.png");
