@@ -132,7 +132,7 @@ laserSound.volume = 0.04;
 var jumpSound = new Audio("./sounds/jumpSound.mp3");
 jumpSound.volume = 0.3;
 var breakSound = new Audio("./sounds/rock_break.wav");
-breakSound.volume = 0.3;
+breakSound.volume = 0.1;
 
 var shotHitSound = new Audio("./sounds/shot_hit.wav");
 shotHitSound.volume = 0.1;
@@ -160,6 +160,7 @@ var dieSound2 = new Audio("./sounds/aiya.wav");
 var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
 var coinSound = new Audio("./sounds/coin.wav");
 var slapSound = new Audio("./sounds/slap.wav");
+var beepSound = new Audio("./sounds/beep.mp3");
 var beepsSound = new Audio("./sounds/beeps.wav");
 var wooshSound = new Audio("./sounds/woosh.wav");
 var slashSound = new Audio("./sounds/slash.mp3");
@@ -612,7 +613,7 @@ function UI(game) {
 	this.staminaWidth = this.bar2Width - 8;
 	this.staminaHeight = this.bar2Height - 21;
     // Boss Portrait
-    this.bossPortraitX = 150;
+    this.bossPortraitX = 280;
     this.bossPortraitY = 20;
     this.bossPortraitWidth = 80;
     this.bossPortraitHeight = 80;
@@ -679,6 +680,13 @@ UI.prototype.draw = function (ctx) { //draw ui
     ctx.font = "20px Calibri";
     //ctx.fillText("Moon Jelly  "/* + Math.floor(this.game.player1.currentHealth) + " / " + this.game.player1.maxHealth*/,this.portraitX + 90 + this.game.liveCamera.x, this.globalY + this.portraitY + 90 + this.game.liveCamera.y);
     ctx.fillText("Score: " + this.game.score, this.scoreX + this.game.liveCamera.x, this.scoreY + this.game.liveCamera.y);
+    if (this.game.currentPhase === 2) {
+        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
+        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
+        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBar.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealth / this.game.currentBoss.maxHealth), this.bossHealthHeight);
+    	//ctx.drawImage(ASSET_MANAGER.getAsset("./img/Enemy/brandong_portrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
+        ctx.fillText("Living Kelp                      " + this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
+    }
     if (this.game.currentPhase === 7 || this.game.currentPhase === 8) {
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
@@ -1305,6 +1313,7 @@ function TextBox(game, image, text) {
 	this.progress = 0;
 	this.step = 0;
 	this.life = -1;
+	this.nextText = null;
     Entity.call(this, game, 0, 0);
 }
 
@@ -1316,6 +1325,7 @@ function TextBox(game, image, text, pause) {
 	this.progress = 0;
 	this.step = 0;
 	this.life = -1;
+	this.nextText = null;
     Entity.call(this, game, 0, 0);
 }
 
@@ -1347,124 +1357,8 @@ TextBox.prototype.update = function() {
 		this.life--;
 		if (this.life <= 0) {
 			this.removeFromWorld = true;
-            if (this.game.currentPhase === 2) { //what's this? free tree?
-                //this.game.currentBoss.attackEnabled = true;
-                this.game.player1.canControl = true;
-        	}
-			if (this.game.currentPhase === 3) { //i sense something...
-				playSound(alertSound);
-				forestMusic.pause();
-				brandongMusic.play();
-				var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-						0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-				var damageText = new TextElement("", "Lucida Console", 50, "#ffd43a", "black");
-				damageText.text = "!";
-				damageParticle.other = damageText;
-				this.game.addEntity(damageParticle);
-				this.game.currentBoss.x = 800;
-				this.game.currentBoss.y = 0;
-				this.game.currentPhase = 4;
-				this.game.player1.lastDirection = "Left";
-				this.game.player1.idleAnimation = this.game.player1.idleAnimationLeft;
-			} else if (this.game.currentPhase === 4) { //brandong grrrr
-				brandongMusic.pause();
-				chaseMusic.play();
-				this.game.player1.phaseTimer = 50;
-				this.game.addEntity(new Particle(IMG_FLASH_PART, this.game.player1.x - 100, 250, 0, 0, 0, 0, 0, 0, 0, 500, 0, 0, 1, 0, false, this.game,
-						new Animation(ASSET_MANAGER.getAsset("./img/ArrowGoRight.png"), 0, 0, 269, 83, 1, 1, true, false, 0, 0)));
-			} else if (this.game.currentPhase === 6) { // i think i lost him
-				chaseMusic.pause();
-				playSound(teleportSound);
-				this.game.player1.phaseTimer = 180;				
-			} else if (this.game.currentPhase === 7) { // are you serious?
-				this.game.player1.canControl = true;
-				this.game.cameraLock = true;
-				this.game.currentPhase = 8;
-			} else if (this.game.currentPhase === 9) { // stop griefing me at tree
-				var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "Who is the one griefing again?");
-				this.game.addEntity(chat);
-				this.game.currentPhase = 10;
-			} else if (this.game.currentPhase === 10) { 
-				var chat = new TextBox(this.game, "./img/Chat/BrandongSquare.png", "Grrrr!!!!!!");
-				this.game.addEntity(chat);
-				this.game.currentPhase = 11;
-			} else if (this.game.currentPhase === 11) { //brandong SPECIAL MOVE
-				this.game.currentBoss.energy = 101;
-			} else if (this.game.currentPhase === 12) { //next phase
-				this.game.currentPhase = 13;
-				this.game.step = 0;
-				part2Music.play();
-				this.game.player1.canControl = true;
-				this.game.cameraLock = false;
-				this.game.cameraSpeed = 5;
-				this.game.camera.minX = 15200;
-				this.game.camera.maxX = 30000;
-				spawnWave(gameEngine, 2);
-			}
-			/*else if (this.game.currentPhase === 3) {
-                if (soundOn) {
-                	forestMusic.pause();
-                    climbMusic.play();
-                }
-        		var chat = new TextBox(this.game, "./img/Chat/MalzSquare.png", "You think you've WON?");
-        		this.game.addEntity(chat);
-        		this.game.currentPhase = 4;
-        	} else if (this.game.currentPhase === 4) {
-        		//var chat = new TextBox(this.game, "./img/Chat/MalzSquare.png", "All must bow down to the void... or be CONSUMED by it!");
-        		var chat = new TextBox(this.game, "./img/Chat/MalzSquare.png", "I have become one with the void! It bends to my will!");
-        		this.game.addEntity(chat);
-        		this.game.currentPhase = 5;
-        	} else if (this.game.currentPhase === 5) {
-        		this.game.currentPhase = 6;
-        		this.game.step = 0;
-                if (soundOn) {
-                    earthRumble.play();
-                }
-        	} else if (this.game.currentPhase === 8) {
-         		var chat = new TextBox(this.game, "./img/Chat/RivenSquare.png", "Not good! Better get out of here!");
-         		this.game.addEntity(chat);
-         		this.game.currentPhase = 9;
-         		this.game.addEntity(new Particle(IMG_FLASH_PART, 1000, 300, 0, 0, 0, 0, 0, 0, 0, 500, 0, 0, 1, 0, false, this.game,
-         				new Animation(ASSET_MANAGER.getAsset("./img/ArrowGoUp.png"), 0, 0, 269, 83, 1, 1, true, false, 0, 0)));
-        	} else if (this.game.currentPhase === 9) {
-         		this.game.currentPhase = 10;
-        		this.game.step = 0;
-        		this.game.cameraLock = false;
-        		createPlatforms(this.game);
-        	} else if (this.game.currentPhase === 12 || this.game.currentPhase === 13) {
-                this.game.currentPhase = 14;
-                this.game.player1.canControl = true;
-                this.game.currentBoss.attackEnabled = true;
-                this.game.currentBoss.maxHealth = 100;
-                this.game.currentBoss.attackable = true;
-                this.game.currentBoss.currentHealth = 100;
-                this.game.currentBoss.currentHealthTemp = 100;
-                this.game.currentBoss.dead = false;
-            } else if (this.game.currentPhase === 15) {
-        		var chat = new TextBox(this.game, "./img/Chat/MalzSquare.png", "All must bow down to the void... or be CONSUMED by it!");
-        		this.game.addEntity(chat);
-        		this.game.currentPhase = 16;
-        	} else if (this.game.currentPhase === 16) {
-         		var chat = new TextBox(this.game, "./img/Chat/RivenSquare.png", "... Here we go again!");
-         		this.game.addEntity(chat);
-        		this.game.currentPhase = 17;
-        		this.game.step = 0;
-        		this.game.cameraLock = false;
-                if (soundOn) {
-                    earthRumble.play();
-                }
-        		createPlatforms2(this.game);
-        	} else if (this.game.currentPhase === 20) {
-                this.game.currentPhase = 21;
-                this.game.player1.canControl = true;
-                this.game.currentBoss.attackEnabled = true;
-                this.game.currentBoss.maxHealth = 200;
-                this.game.currentBoss.attackable = true;
-                this.game.currentBoss.currentHealth = 200;
-                this.game.currentBoss.currentHealthTemp = 200;
-                this.game.currentBoss.dead = false;
-        		this.game.cameraLock = true;
-        	}*/
+			if (this.nextText != null)
+				this.game.addEntity(this.nextText);
 		}
 	}
 	if (this.step % this.game.textSpeed === 0) {
@@ -2720,6 +2614,7 @@ function Character(game) {
 	this.alternate = 0;
 	this.queuedAction = "";
 	this.queuedTime = 0;
+	this.binded = false;
 	
 	this.lastX = 0;
 	this.lastY = 0;
@@ -2759,6 +2654,7 @@ function Character(game) {
     this.attackAnimationDefUpGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_ground_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
     this.attackAnimationDefDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
     this.attackAnimationDefDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
+    this.bindAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_binded.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
 	
 	//baby jelly
     this.idleAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_idle_right.png"), 0, 0, 128, 128, .1, 32, true, false, 0, 0);
@@ -2832,14 +2728,6 @@ function Character(game) {
 
 Character.prototype = new Entity();
 Character.prototype.constructor = Character;
-
-/**
- * Whether or not you can animation-cancel (the last 50% of an attack animation)
- * You can animation cancel any skill with W and E, except themself (W can cancel E or Q, it can't cancel itself).
- */
-Character.prototype.canCancel = function() {
-	return (this.attacking && this.attackAnimation.elapsedTime >= 0.25);
-}
 
 Character.prototype.notBaby = function() { 
     this.idleAnimationRight = this.idleAnimationDefRight;
@@ -3218,12 +3106,11 @@ Character.prototype.update = function () {
             } else {
 				this.running = false;
             }
-
-            this.comboTime -= this.game.clockTick; // Combo Timer
-            if (this.comboTime <= 0 && this.lastComboStage > 0) {
-                this.lastComboStage = 0;
-            }
-            
+			if (this.binded && this.game.step % 30 == 0) {
+				this.game.cameraShakeTime = 10;
+				this.game.cameraShakeAmount = 10;
+				this.game.cameraShakeDecay = 1;
+			}
 	
 			var platformFound = false;
 			var wallFound = false;
@@ -3455,7 +3342,10 @@ Character.prototype.update = function () {
 							this.game.addEntity(newParticle);
 						}
 						this.game.player1.targetHit.push(targetEntity);
-						applyDamage(targetEntity.x, targetEntity.y, this.game, 25, targetEntity);
+						var damage = 25;
+						if (this.currentForm == 0) //baby
+							damage = 15;
+						applyDamage(targetEntity.x, targetEntity.y, this.game, 15, targetEntity);
 						playSound(this.currentForm > 0 ? lightningSound : shotHitSound);
 						addEnergy(this.game, this.currentForm > 0 ? 20 : 0);
 					}
@@ -3612,7 +3502,9 @@ Character.prototype.draw = function (ctx) {
 			ctx.fillText(this.petalTorrentHits, this.x + 20 + 32, this.y - 10 + 6);
 		}
 		var doNotDraw = false;
-		if (this.stunned) {
+		if (this.binded) {
+			this.currentAnimation = this.bindAnimation;
+		} else if (this.stunned) {
 			this.currentAnimation = this.hurtAnimation;
 		} else if (this.attacking && this.attackAnimation != null) { // Attacking
 	        this.currentAnimation = this.attackAnimation;
@@ -4651,6 +4543,7 @@ function spawnWave(game, number) {
 		case 1:
 			var objects = [		
 				new Spaceship(game, -2400, 370),
+				new LivingKelp(game, -2100, 208),
 			];
 			var powerups = [
 			];
@@ -5323,6 +5216,7 @@ ASSET_MANAGER.queueDownload("./img/Jelly/jelly_hurt_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_hurt_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_binded.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_jump_left.png");

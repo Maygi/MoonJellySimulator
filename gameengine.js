@@ -67,6 +67,7 @@ GameEngine.prototype.init = function (ctx) {
     this.cameraSpeed = 5;
 	this.cutTime = 0; // the time where the black cross-screen cut effect is in play
 	this.pauseTime = 0;
+	this.buttonChallenge = null;
 	this.tipsShown = [
 		false, false, false
 	];
@@ -123,8 +124,27 @@ GameEngine.prototype.showTip = function (idx) {
 GameEngine.prototype.startInput = function () {
     console.log("Starting input");
     var that = this;
+	var buttonOptions = ["↑","↓","←","→","x","z","c"];
+	var buttonKeys = ['&','(','%','\'' ,'X','Z','C'];
 	
     this.ctx.canvas.addEventListener("keydown", function (e) {
+		if (that.buttonChallenge != null) {
+			if (that.buttonChallenge.cooldown == 0) {
+				for (var i = 0; i < buttonOptions.length; i++) {
+					if (that.buttonChallenge.currentButtons.length > 0) {
+						if (that.buttonChallenge.currentButtons[0] == buttonOptions[i]) {
+							if (String.fromCharCode(e.which) == buttonKeys[i]) {
+								that.buttonChallenge.success();
+								break;
+							} else {
+								that.buttonChallenge.fail();
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
 		if (String.fromCharCode(e.which) === '\'' ) { 
 			that.player1.rightDown = true;
 		} else if (String.fromCharCode(e.which) === '%') {
@@ -337,8 +357,8 @@ GameEngine.prototype.update = function () {
 	if (this.cameraShakeTime > 0) {
 		this.cameraShakeTime--;
 		this.cameraShakeAmount -= this.cameraShakeDecay;
-		this.liveCamera.x = this.camera.minX -this.cameraShakeAmount / 2 + Math.random() * this.cameraShakeAmount / 2;
-		this.liveCamera.y = this.camera.minY + this.cameraShakeAmount / 2 + Math.random() * this.cameraShakeAmount / 2;
+		this.liveCamera.x = this.camera.x - this.cameraShakeAmount / 2 + Math.random() * this.cameraShakeAmount / 2;
+		this.liveCamera.y = this.camera.y - this.cameraShakeAmount / 2 + Math.random() * this.cameraShakeAmount / 2;
 		if (this.cameraShakeAmount <= 0) {
 			this.cameraShakeTime = 0;
             this.liveCamera.x = this.camera.x;

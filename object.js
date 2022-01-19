@@ -22,6 +22,7 @@ class BackgroundObject {
 		this.textDelay = 0; //a delay time before the text appears, in ms
 		this.sound = null;
 		this.tick = 0;
+		this.phase = 0;
 	}
 	
 	getX() {
@@ -156,6 +157,57 @@ class Kelp extends BackgroundObject {
 	}
 }
 
+class LivingKelp extends BackgroundObject {
+	constructor(game, x, y) {
+		super(game, x, y);
+		this.interactDistance = 25;
+		this.cooldown = 5;
+		this.backgroundObject = true;
+		this.currentHealth = 100;
+		this.maxHealth = 100;
+		this.currentAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Misc/kelp.png"), 0, 0, 32, 264, 0.5, 20, true, false, 0, 0);
+		this.hitBoxDef = {
+			width: 32, height: 264, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	update() {
+		if (this.tick % 10 == 0) {
+			var newParticle = new Particle(PART_SECONDARY, (this.x + this.hitBoxDef.width / 2), (this.y + this.hitBoxDef.height), 
+					-1, 1, -4.5, -5, 0.03, 0.03, 0, 0, 0, 180, .3, .15, true, this.game);
+			var element = new CircleElement(6 + Math.random() * 2, "#0e4533", "#156373");
+			newParticle.other = element;
+			this.game.addEntity(newParticle);
+		}
+		if (this.distanceToPlayer() <= this.interactDistance && this.phase == 0) { 
+			var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
+					0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
+			var damageText = new TextElement("!", "Lucida Console", 50, "#ffd43a", "black");
+			damageParticle.other = damageText;
+			this.game.addEntity(damageParticle);
+			this.game.player1.currentStamina = this.game.player1.maxStamina;
+			this.game.currentBoss = this;
+			this.game.currentPhase = 2;
+			this.phase = 1;
+			this.game.player1.canControl = false;
+			this.game.player1.binded = true;
+			this.game.pauseTime = 300;
+			var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "Huh...?");
+			var chat2 = new TextBox(this.game, "./img/Chat/JellySquare.png", "I can't move...!");
+			this.game.addEntity(new InfoBox(this.game, "Struggle to survive!"));
+			chat.nextText = chat2;
+			this.game.addEntity(chat);
+			var buttonChallenge = new ButtonChallenge(this.game);
+			buttonChallenge.kelp = this;
+			this.game.buttonChallenge = buttonChallenge;			
+			this.game.addEntity(buttonChallenge);
+			playSound(alertSound);
+		}
+		super.update();
+	}
+}
+
 class TunaChargeDropper extends BackgroundObject {
 	constructor(game, x, y) {
 		super(game, x, y);
@@ -171,15 +223,82 @@ class TunaChargeDropper extends BackgroundObject {
 		if (!isOnScreen(this))
 			return;
 		if (this.tick % 150 == 0) {
-			var tuna = new Particle(IMG_PART, this.x, this.y - 32, 0, 0, 2, 2, 0.02, 0, 32, 240, 0, 0, 1.0, 0, false, this.game,
+			var tuna = new Particle(IMG_PART, this.x, this.y - 32, 0, 0, 2, 2, 0.02, 0, 0, 240, 0, 0, 1.0, 0, false, this.game,
 				new Animation(ASSET_MANAGER.getAsset("./img/Misc/tuna_charge.png"), 0, 0, 32, 32, 0.08, 13, true, false, 0, 0));
 			tuna.attackId = TUNA_CHARGE;
 			this.game.addEntity(tuna);
 		}
-		if (this.distanceToPlayer() <= this.interactDistance) { //restore O2
-			addEnergy(this.game, 1);
-			this.game.showTip(TIP_KELP);
+		super.update();
+	}
+}
+
+class ButtonChallenge extends BackgroundObject {
+	constructor(game) {
+		super(game, 0, 0);
+		this.backgroundObject = true;
+		this.currentAnimation = null;
+		this.kelp = null;
+		this.hitBoxDef = {
+			width: 32, height: 32, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+		};
+		this.buttonOptions = ["↑","↓","←","→","x","z","c"];
+		this.currentButtons = [];
+		this.completedButtons = [];
+		this.buttonScrollTime = 0;
+		this.buttonScrollSpeed = 0;
+		this.buttonScrollAmount = 0;
+		for (var i = 0; i < 5; i++) {
+			this.currentButtons.push(this.buttonOptions[Math.floor(Math.random() * this.buttonOptions.length)]);
+		}
+		console.log(this.currentButtons);
+		drawHitBox(this);
+	}
+	success() {
+		var particle = new Particle(TEXT_PART, 300 + this.game.liveCamera.x + 6, 150 + this.game.liveCamera.y, 
+				0, 0, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
+		var damageText = new TextElement(this.currentButtons[0], "Lucida Console", 25, "green");
+		particle.other = damageText;
+		this.game.addEntity(particle);
+		this.currentButtons.shift();
+		this.currentButtons.push(this.buttonOptions[Math.floor(Math.random() * this.buttonOptions.length)]);
+		this.buttonScrollSpeed = 15;
+		this.buttonScrollAmount = 0;
+		this.cooldown = 5;
+		if (this.kelp != null)
+			this.kelp.currentHealth -= 1;
+		playSound(beepSound);
+	}
+	fail() {
+		var particle = new Particle(TEXT_PART, 300 + this.game.liveCamera.x + 6, 150 + this.game.liveCamera.y, 
+				0, 0, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
+		var damageText = new TextElement("Miss", "Lucida Console", 25, "red");
+		particle.other = damageText;
+		this.game.addEntity(particle);
+		this.cooldown = 30;
+		playSound(breakSound);
+	}
+	update() {
+		if (this.buttonScrollSpeed > 0) {
+			this.buttonScrollAmount += this.buttonScrollSpeed;
+			this.buttonScrollSpeed *= 0.72;
+			if (this.buttonScrollSpeed < 1) {
+				this.buttonScrollSpeed = 0;
+				this.buttonScrollAmount = 0;
+			}
 		}
 		super.update();
+	}
+	draw(ctx) {
+		ctx.font = "24px Font";
+		if (this.cooldown > 0)
+			ctx.fillStyle = "gray";
+		else
+			ctx.fillStyle = "white";
+		ctx.textAlign = "left"; 
+		for (var i = 0; i < 5; i++) {
+			ctx.fillText(this.currentButtons[i], (300 + this.game.liveCamera.x + 50 * (this.buttonScrollSpeed > 0 ? i + 1 : i)) - this.buttonScrollAmount,
+				150 + this.game.liveCamera.y);
+		}
+		Entity.prototype.draw.call(this);
 	}
 }

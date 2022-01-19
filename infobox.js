@@ -97,9 +97,9 @@ class InfoBox {
 		ctx.fillStyle = "black";
 		if (truerWidth == MAX_X_SIZE) {
 			ctx.globalAlpha = Math.min(1, this.tick / 100) * Math.max(1 - (this.fadeTick * 3 / 100), 0);
-			wrapText(ctx, this.showText, 400 + this.game.liveCamera.x + 13, 100 + this.game.liveCamera.y + truerHeight / 2 - 15, MAX_X_SIZE, MIN_Y_SIZE);
+			wrapText(ctx, this.showText, 400 + this.game.liveCamera.x + 13, 100 + this.game.liveCamera.y + 32 - truerHeight / 2 - 15, MAX_X_SIZE, MIN_Y_SIZE);
 			ctx.fillStyle = "white";
-			wrapText(ctx, this.showText, 400 + this.game.liveCamera.x + 12, 100 + this.game.liveCamera.y  + truerHeight / 2 - 1 - 15, MAX_X_SIZE, MIN_Y_SIZE);
+			wrapText(ctx, this.showText, 400 + this.game.liveCamera.x + 12, 100 + this.game.liveCamera.y + 32 - truerHeight / 2 - 1 - 15, MAX_X_SIZE, MIN_Y_SIZE);
 		}
 		ctx.globalAlpha = 1;
 		ctx.textAlign = "left";
