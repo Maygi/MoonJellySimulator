@@ -35,7 +35,7 @@ class Enemy {
 		this.currentHealthTemp = this.currentHealth;   
 		// String Variables
 		this.state = "idle";
-		this.lastDirection = "Left";    
+		this.lastDirection = "Left";
 		// Boolean Variables
 		this.attackEnabled = false;
 		this.dead = false;
@@ -46,6 +46,8 @@ class Enemy {
 		this.hit = false;
 		this.groundlocked = false;
 		this.meleeInvuln = false;
+		this.invulnFromTop = 0;
+		
 	}
 	
 	getX() {
@@ -64,13 +66,29 @@ class Enemy {
 		return this.y + this.displacementY + this.hitBoxDef.offsetY + this.hitBoxDef.height / 2;
 	}
 	
+	isLeftOfPlayer() {
+		return this.getXMidpoint() < this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2;
+	}
+	
+	distanceToPlayer() {
+		return Math.abs(this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2));
+	}
+	
 	handleSideHit() {
 		
 	}
 	
+	flip() {
+		if (this.bounceCd == 0) {
+			this.hspeed *= -1;
+			this.bounceCd = 30;
+		}
+	}
+	
 	update() {
+		if (!isOnScreen(this))
+			return;
 		if (this.displacementXSpeed != 0) {
-			this.displacementX += this.displacementXSpeed;
 			if (this.displacementXSpeed > 0) {
 				this.displacementXSpeed -= this.displacementFriction;			
 				if (this.displacementXSpeed < 0)
@@ -80,9 +98,9 @@ class Enemy {
 				if (this.displacementXSpeed > 0)
 					this.displacementXSpeed = 0;
 			}
+			this.displacementX += this.displacementXSpeed;
 		}
 		if (this.displacementYSpeed != 0 && !this.groundlocked) {
-			this.displacementY += this.displacementYSpeed;
 			if (this.displacementYSpeed > 0) {
 				this.displacementYSpeed -= this.displacementFriction;			
 				if (this.displacementYSpeed < 0)
@@ -92,6 +110,7 @@ class Enemy {
 				if (this.displacementYSpeed > 0)
 					this.displacementYSpeed = 0;
 			}
+			this.displacementY += this.displacementYSpeed;
 		}
 		if (this.displacementXTarget != 0) { //legacy snap-displacement implementation (snap back to original after 30% travel time)
 			this.displacementTime++;
@@ -107,6 +126,7 @@ class Enemy {
 				this.displacementXTarget = 0;
 			}
 		}
+		
 		if (this.bounceCd > 0)
 			this.bounceCd--;
 		if (this.lineUpTargetY != -1) {
@@ -124,17 +144,25 @@ class Enemy {
 		}
 		this.x += this.hspeed;
 		this.y += this.vspeed;
-		if (this.hspeed > 0)
+		if (this.hspeed > 0) {
 			this.currentAnimation = this.aniRight;
-		else
+			this.lastDirection = "Right";
+		} else if (this.hspeed < 0) {
 			this.currentAnimation = this.aniLeft;
-		if (checkCollision(this.game.player1, this) && !this.game.player1.hitByAttack) {
+			this.lastDirection = "Left";
+		} else {
+			if (this.lastDirection == "Left")
+				this.currentAnimation = this.aniLeft;
+			else
+				this.currentAnimation = this.aniRight;
+		}
+		if (this.autoDamage > 0 && checkCollision(this.game.player1, this) && !this.game.player1.hitByAttack) {
 			if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
 				var createX;
 				var createY;
 				if (this.getXMidpoint() > this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) {
 					createX = this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width;
-				} else if (this.getXMidpoint() > this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) {
+				} else if (this.getXMidpoint() < this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) {
 					createX = this.game.player1.x + this.game.player1.hitBoxDef.offsetX;
 				} else {
 					createX = this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2;
@@ -153,7 +181,7 @@ class Enemy {
 					newParticle.other = element;
 					this.game.addEntity(newParticle);
 				}
-				if (this.game.player1.asttacking) {
+				if (this.game.player1.attacking) {
 					this.game.player1.elapsedTime = 0;
 					this.game.player1.attacking = false;
 					this.game.player1.attackIndex = 0;
@@ -169,7 +197,7 @@ class Enemy {
 				this.game.player1.yVelocity = 7;
 				this.game.player1.jumping = true;
 				this.game.pauseTime = 8;
-				if (this.game.player1.lastDirection == "Left") {
+				if (this.lastDirection == "Right") {
 					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
 					this.game.player1.xVelocity = 2;
 				} else {
@@ -187,7 +215,20 @@ class Enemy {
 				this.currentAnimation = this.deadAnimationLeft;
 			this.game.addEntity(new Particle(IMG_PART, this.x + this.displacementX, this.y + this.displacementY,
 				0, 0, 0, 0, 0, 0, 0, 30, 0, 10, 1, 0, false, this.game, this.currentAnimation));
-			addScore(this.game, this.scoreValue);
+			var coins = this.scoreValue / 25;
+			var bigCoins = 0;
+			console.log("Value: " + this.scoreValue + "; Coins: " + coins + "; big coins: " + bigCoins);
+			if (coins >= 8) {
+				bigCoins = this.scoreValue / 100;
+				coins = (this.scoreValue % 100) / 25;
+			}
+			for (var i = 0; i < bigCoins; i++) {
+				this.game.addEntity(new Powerup(this.game, this.getXMidpoint(), this.getYMidpoint(), JELLY_COIN, 1));
+			}
+			for (var i = 0; i < coins; i++) {
+				this.game.addEntity(new Powerup(this.game, this.getXMidpoint(), this.getYMidpoint(), JELLY_COIN_SM, 1));
+			}
+			//addScore(this.game, this.scoreValue);
 		}
 	}
 	
@@ -207,7 +248,7 @@ class SeaSlug extends Enemy {
 
 		this.hspeed = hspeed || 0;
 		this.walkDistance = walkDistance || 0;
-		this.scoreValue = 100;
+		this.scoreValue = 50;
 		this.maxHealth = 30.0;
 		this.autoDamage = 15;
 		this.currentHealth = this.maxHealth;
@@ -239,13 +280,48 @@ class SeaSlug extends Enemy {
 				this.hspeed *= -1;
 				this.bounceCd = 30;
 			}
-		} else if (Math.abs(this.initialX - this.x) >= this.walkDistance && this.bounceCd == 0) {
+		} else if (this.walkDistance != 0 && Math.abs(this.initialX - this.x) >= this.walkDistance && this.bounceCd == 0) {
 			this.hspeed *= -1;
 			this.bounceCd = 10;
 		}
 		super.update();
 	}
 }
+
+class ShellSnail extends SeaSlug {
+	
+	constructor(game, x, y, hspeed, walkDistance) {
+		super(game, x, y, hspeed, walkDistance);
+
+		this.scoreValue = 200;
+		this.maxHealth = 75.0;
+		this.autoDamage = 20;
+		this.currentHealth = this.maxHealth;
+		this.currentHealthTemp = this.currentHealth;
+		this.displacementFriction = 0.50; //basically, how "heavy" a mob is
+		this.groundlocked = true;
+		this.invulnFromTop = 48;
+		
+		// Animations
+		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/shellsnail_left.png"), 0, 0, 64, 64, 0.5, 2, true, false, 0, 0);
+		this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/shellsnail_right.png"), 0, 0, 64, 64, 0.5, 2, true, false, 0, 0);
+		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/shellsnail_dead_left.png"), 0, 0, 64, 64, 1, 1, true, false, 0, 0);
+		this.deadAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/shellsnail_dead_right.png"), 0, 0, 64, 64, 1, 1, true, false, 0, 0);
+		this.aniLeft = this.walkAnimationLeft;
+		this.aniRight = this.walkAnimationRight;
+		this.currentAnimation = this.aniLeft;
+		
+		this.hitBoxDef = {
+			width: 56, height: 60, offsetX: 2, offsetY: 4, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	update() {
+		super.update();
+	}
+}
+
 
 class Pirahna extends SeaSlug {
 	
@@ -290,7 +366,7 @@ class Pirahna extends SeaSlug {
 				this.hspeed *= -1;
 				this.bounceCd = 30;
 			}
-		} else if (Math.abs(this.initialX - this.x) >= this.walkDistance && this.bounceCd == 0) {
+		} else if (this.walkDistance != 0 && Math.abs(this.initialX - this.x) >= this.walkDistance && this.bounceCd == 0) {
 			this.hspeed *= -1;
 			this.bounceCd = 10;
 		}
@@ -648,6 +724,119 @@ class Uni extends Enemy {
 				this.aniLeft = this.unchangeAnimationLeft;
 				this.aniRight = this.unchangeAnimationRight;
 				this.meleeInvuln = false;
+				this.hitBoxDef = this.hitBoxSmall;
+			}
+		}
+		super.update();
+	}
+}
+
+class Tentacle extends Enemy {
+	
+	constructor(game, x, y) {
+		super(game, x, y);
+		
+		this.scoreValue = 200;
+		this.maxHealth = 22200.0;
+		this.autoDamage = 30;
+		this.currentHealth = this.maxHealth;
+		this.currentHealthTemp = this.currentHealth;
+		this.displacementFriction = 1000; //basically, how "heavy" a mob is
+		this.groundlocked = true;
+		
+		//unique vars
+		this.changing = false;
+		this.unchanging = false;
+		this.changeTime = 0;
+		this.changeCooldown = 0;
+		
+		// Animations
+		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_idle_left.png"), 0, 0, 280, 160, 0.5, 4, true, false, -75, 0);
+		this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_idle_right.png"), 0, 0, 280, 160, 0.5, 4, true, false, 75, 0);
+		this.changeAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_slam_left.png"), 0, 0, 280, 160, 0.08, 12, false, false, -75, 0);
+		this.changeAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_slam_right.png"), 0, 0, 280, 160, 0.08, 12, false, false, 75, 0);
+		this.changedAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_slammed_left.png"), 0, 0, 280, 160, 1, 1, true, false, -75, 0);
+		this.changedAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_slammed_right.png"), 0, 0, 280, 160, 1, 1, true, false, 75, 0);
+		this.unchangeAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_raise_left.png"), 0, 0, 280, 160, 0.12, 4, false, false, -75, 0);
+		this.unchangeAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_raise_right.png"), 0, 0, 280, 160, 0.12, 4, false, false, 75, 0);
+		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_slammed_left.png"), 0, 0, 280, 160, 1, 1, true, false, -75, 0);
+		this.deadAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/tentacle_slammed_right.png"), 0, 0, 280, 160, 1, 1, true, false, 75, 0);
+		this.aniLeft = this.walkAnimationLeft;
+		this.aniRight = this.walkAnimationRight;
+		this.currentAnimation = this.aniLeft;
+		
+		this.hitBoxSmall = {
+			width: 32, height: 160, offsetX: 125, offsetY: 0, growthX: 0, growthY: 0
+		};
+		this.hitBoxDefBigL = {
+			width: 220, height: 24, offsetX: -60, offsetY: 136, growthX: 0, growthY: 0
+		};
+		this.hitBoxDefBigR = {
+			width: 220, height: 24, offsetX: 125, offsetY: 136, growthX: 0, growthY: 0
+		};
+		this.hitBoxDef = this.hitBoxSmall;
+		this.hitBoxInitial = this.hitBoxDef;
+		drawHitBox(this);
+	}
+	
+	
+	update() {
+		var inRange = this.distanceToPlayer() <= 200;
+		if (this.changeCooldown > 0)
+			this.changeCooldown--;
+		if (this.changing) {
+			if (this.currentAnimation.elapsedTime >= 0.56) {
+				if (this.lastDirection == "Right")
+					this.hitBoxDef.growthX += 7.5;
+				else
+					this.hitBoxDef.growthX -= 7.5;
+				this.hitBoxDef.growthY -= 4;
+			}
+		}
+		if (this.unchanging) {
+			if (this.lastDirection == "Right")
+				this.hitBoxDef.growthX -= 6;
+			else
+				this.hitBoxDef.growthX += 6;
+			this.hitBoxDef.growthY += 4;
+		}
+		if (inRange && this.changeCooldown == 0 && !this.changing && this.changeTime == 0 && !this.unchanging) {
+			this.changing = true;
+			this.aniLeft = this.changeAnimationLeft;
+			this.aniRight = this.changeAnimationRight;
+			if (this.isLeftOfPlayer()) { 
+				this.lastDirection = "Right";
+			} else {
+				this.lastDirection = "Left";
+			}
+		}
+		if (this.changing && this.currentAnimation.isDone()) {
+			this.changing = false;
+			this.currentAnimation.restart();
+			this.changeTime = 60;
+			if (this.lastDirection == "Right")
+				this.hitBoxDef = this.hitBoxDefBigR;
+			else
+				this.hitBoxDef = this.hitBoxDefBigL;
+			this.aniLeft = this.changedAnimationLeft;
+			this.aniRight = this.changedAnimationRight;
+			
+		}
+		if (this.unchanging && this.currentAnimation.isDone()) {
+			this.unchanging = false;
+			this.changeCooldown = 150;
+			this.currentAnimation.restart();
+			this.hitBoxDef.growthX = 0;
+			this.hitBoxDef.growthY = 0;
+			this.aniLeft = this.walkAnimationLeft;
+			this.aniRight = this.walkAnimationRight;
+		}
+		if (this.changeTime > 0) {
+			this.changeTime--;
+			if (this.changeTime == 0) {
+				this.unchanging = true;
+				this.aniLeft = this.unchangeAnimationLeft;
+				this.aniRight = this.unchangeAnimationRight;
 				this.hitBoxDef = this.hitBoxSmall;
 			}
 		}

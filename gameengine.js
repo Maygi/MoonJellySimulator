@@ -67,11 +67,14 @@ GameEngine.prototype.init = function (ctx) {
     this.cameraSpeed = 5;
 	this.cutTime = 0; // the time where the black cross-screen cut effect is in play
 	this.pauseTime = 0;
+	this.tipsShown = [
+		false, false, false
+	];
     this.camera = { //where the camera wants to be
     	x: -2400,
     	y: 0,
     	minX: -2400,
-    	maxX: 0,
+    	maxX: 2000,
     	minY: 0,
     	maxY: 0,
     	width: 800,
@@ -95,6 +98,28 @@ GameEngine.prototype.start = function () {
     })();
 };
 
+var TIP_KELP = 0;
+var TIP_ATTACK = 1;
+var TIP_DROPTHROUGH = 2;
+
+GameEngine.prototype.showTip = function (idx) {
+	if (!this.tipsShown[idx]) {
+		this.tipsShown[idx] = true;
+		switch(idx) {
+			case TIP_KELP:
+				this.addEntity(new InfoBox(this, "Stand inside kelp to restore oxygen."));
+				break;
+			case TIP_ATTACK:
+				this.addEntity(new InfoBox(this, "Press Z to attack."));
+				break;
+			case TIP_DROPTHROUGH:
+				this.addEntity(new InfoBox(this, "Press ↓ + Jump on a platform to drop through."));
+				break;
+			default:
+				break;
+		}
+	}
+};
 GameEngine.prototype.startInput = function () {
     console.log("Starting input");
     var that = this;
@@ -114,6 +139,9 @@ GameEngine.prototype.startInput = function () {
 		if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
 			that.player1.jumpDown = true;
             that.textSpeed = 1;
+		}
+		if (String.fromCharCode(e.which) === 'T') {
+			that.interactDown = true;
 		}
 		if (String.fromCharCode(e.which) === 'Y') {
 			that.player1.attackInput = 1;
@@ -149,6 +177,7 @@ GameEngine.prototype.startInput = function () {
 			damageParticle.other = damageText;
 			that.addEntity(damageParticle);
 			that.player1.equipment[LONG_RANGE] = true;
+			that.player1.notBaby();
 			that.player1.longRangeAnimations();
 		}
         e.preventDefault();
@@ -171,6 +200,9 @@ GameEngine.prototype.startInput = function () {
 		}
         if (String.fromCharCode(e.which) === 'Y' || String.fromCharCode(e.which) === 'U') {
 			that.player1.attackInput = 0;
+		}
+		if (String.fromCharCode(e.which) === 'T') {
+			that.interactDown = false;
 		}
         if (String.fromCharCode(e.which) === 'Z') {
 			that.player1.attackInput = 0;
@@ -316,7 +348,7 @@ GameEngine.prototype.update = function () {
     var entitiesCount = this.entities.length;
     for (var i = 0; i < entitiesCount; i++) {
         var entity = this.entities[i];
-        if (!entity.removeFromWorld && this.pauseTime === 0 || entity.highPriority > 0) {
+        if (!entity.removeFromWorld && (this.pauseTime === 0 || (entity.highPriority > 0 || entity instanceof TextBox))) {
             entity.update();
         }
     }

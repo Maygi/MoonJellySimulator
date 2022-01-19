@@ -36,11 +36,14 @@ var VOID_LIGHTNING = 14;
 var BRANDONG_SPIN = 15;
 var BRANDONG_WHIP = 16;
 
+
 //attack ids for particles
 var BRANDONG_WHIPWALL = 7;
 var BRANDONG_WHIPLINE = 8;
 var AYA_SHOT = 9;
 var ALPHA_SHOT = 10;
+var TUNA_CHARGE = 11;
+var TUNA_CHARGE_EXPLODE = 12;
 
 var gameStarted = false;
 var mode = "hard";
@@ -95,7 +98,7 @@ lightningExSound.volume = 0.2;
 var lightningFallSound = new Audio("./sounds/comet_fall.wav");
 lightningFallSound.volume = 0.5;
 var explosionSound = new Audio("./sounds/explosion.wav");
-explosionSound.volume = 0.4;
+explosionSound.volume = 0.1;
 var burnSound = new Audio("./sounds/burn.wav");
 burnSound.volume = 0.2;
 var hitSound = new Audio("./sounds/punch.mp3");
@@ -155,11 +158,18 @@ var thunderboltSound = new Audio("./sounds/pikachu.wav");
 var dieSound = new Audio("./sounds/aiya.wav");
 var dieSound2 = new Audio("./sounds/aiya.wav");
 var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
+var coinSound = new Audio("./sounds/coin.wav");
 var slapSound = new Audio("./sounds/slap.wav");
+var beepsSound = new Audio("./sounds/beeps.wav");
+var wooshSound = new Audio("./sounds/woosh.wav");
+var slashSound = new Audio("./sounds/slash.mp3");
+wooshSound.volume = 0.05;
 slapSound.volume = 0.05;
+beepsSound.volume = 0.05;
 var hitMetal = new Audio("./sounds/metalHit.wav");
 cannedTunaSound.volume = 0.03;
 energyUpSound.volume = 0.07;
+
 
 /**
     Useful methods
@@ -224,9 +234,9 @@ function getXDistance(entity1, entity2) {
 function createHitBox(entity) {
     entity.hitBox = {
     	x: entity.x + entity.hitBoxDef.offsetX + (entity.hitBoxDef.growthX < 0 ? entity.hitBoxDef.growthX : 0), 
-		y: entity.y + entity.hitBoxDef.offsetY, // + (entity.hitBoxDef.growthY < 0 ? entity.hitBoxDef.growthY : 0),
+		y: entity.y + entity.hitBoxDef.offsetY + (entity.hitBoxDef.growthY < 0 ? -1 * entity.hitBoxDef.growthY : 0),
 		width: entity.hitBoxDef.width + Math.abs(entity.hitBoxDef.growthX), 
-		height: entity.hitBoxDef.height// + Math.abs(entity.hitBoxDef.growthY)
+		height: entity.hitBoxDef.height + (entity.hitBoxDef.growthY)
 	};
 }
 
@@ -235,9 +245,9 @@ function drawHitBox(entity, ctx) {
     if (entity.hitBoxDef) {
         entity.hitBox = {
             x: entity.x + entity.hitBoxDef.offsetX + (entity.hitBoxDef.growthX < 0 ? entity.hitBoxDef.growthX : 0), 
-            y: entity.y + entity.hitBoxDef.offsetY, // + (entity.hitBoxDef.growthY < 0 ? entity.hitBoxDef.growthY : 0),
+            y: entity.y + entity.hitBoxDef.offsetY + (entity.hitBoxDef.growthY < 0 ? -1 * entity.hitBoxDef.growthY : 0),
             width: entity.hitBoxDef.width + Math.abs(entity.hitBoxDef.growthX), 
-            height: entity.hitBoxDef.height// + Math.abs(entity.hitBoxDef.growthY)
+            height: entity.hitBoxDef.height +(entity.hitBoxDef.growthY)
         };
     }
     if (showHitBox) {
@@ -390,10 +400,16 @@ function addEnergy(game, amount) {
 	var y = game.UI.staminaY + game.UI.globalY;
 	var width = game.UI.staminaWidth;
 	var height = game.UI.staminaHeight;
-	if (game.player1.currentStamina < game.player1.maxStamina) {
+	if (game.player1.currentStamina + amount < 0) {
+		game.player1.currentStamina = 0;
+		applyDamage(game.player1.x, game.player1.y, game, Math.abs(amount), game.player1);
+	} else if (amount < 0) {
+		game.player1.currentStamina += amount;
+	}
+	if (game.player1.currentStamina < game.player1.maxStamina && amount > 0) {
 		var oldStamina = game.player1.currentStamina;
 		game.player1.currentStamina += amount;
-		if (oldStamina <= game.player1.maxStamina && game.player1.currentStamina >= game.player1.maxStamina) {
+		if (game.player1.currentForm > 0 && oldStamina <= game.player1.maxStamina && game.player1.currentStamina >= game.player1.maxStamina) {
 			playSound(energyMaxSound);
 			game.player1.currentStamina = game.player1.maxStamina;
 			for (var i = 0; i < 50; i++) {
@@ -827,10 +843,10 @@ function hardMode() {
     gameStarted = true;
     var elem = document.getElementById("difficulty");
     elem.parentNode.removeChild(elem);
-    elem = document.getElementById("easyButton");
+    /*elem = document.getElementById("easyButton");
     elem.parentNode.removeChild(elem);
     elem = document.getElementById("mediumButton");
-    elem.parentNode.removeChild(elem);
+    elem.parentNode.removeChild(elem);*/
     elem = document.getElementById("hardButton");
     elem.parentNode.removeChild(elem);
     document.getElementById("gameWorld").focus();
@@ -1038,8 +1054,6 @@ Wall.prototype.draw = function (ctx) {
 function Map(game) {
     // Starting Platforms
     this.platforms = [];
-    //this.platforms.push(new Wall(game, -2150, 320, 100, 150));
-    //this.platforms.push(new Wall(game, -2000, 260, 100, 150));
     var startingPlatforms = [
 	];
 	for (i = 0; i < startingPlatforms.length; i++) {
@@ -1294,6 +1308,17 @@ function TextBox(game, image, text) {
     Entity.call(this, game, 0, 0);
 }
 
+function TextBox(game, image, text, pause) {
+	this.image = image;
+	this.text = text;
+	this.pause = pause;
+	this.showText = "";
+	this.progress = 0;
+	this.step = 0;
+	this.life = -1;
+    Entity.call(this, game, 0, 0);
+}
+
 function wrapText(context, text, x, y, maxWidth, lineHeight) {
     var words = text.split(' ');
     var line = '';
@@ -1315,6 +1340,8 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
 }
 
 TextBox.prototype.update = function() {
+	if (this.pause)
+		this.game.pauseTime = 2;
 	this.step++;
 	if (this.life > 0) {
 		this.life--;
@@ -1453,8 +1480,8 @@ TextBox.prototype.update = function() {
 			if (c === '?' || (c.toLowerCase() != c.toUpperCase())) { // It's a character
                 if (soundOn) {
                     var sound = new Audio("./sounds/chat.wav");
-                    sound.volume = 0.1;
-                    if (this.image.indexOf("Jelly") !== -1) {
+                    sound.volume = 0.05;
+                    if (this.image == null || this.image.indexOf("Jelly") !== -1) {
                         sound = new Audio("./sounds/chat2.wav");
                         sound.volume = 0.05;
                     }
@@ -1470,20 +1497,36 @@ TextBox.prototype.draw = function(ctx) {
     var tempColor = ctx.fillStyle;
     var trueWidth = 220;
     var trueHeight = 64;
-    ctx.fillStyle = "#452a84";
-	ctx.globalAlpha = 0.5;
-    ctx.fillRect(285 + 64 + this.game.liveCamera.x, 420 + this.game.liveCamera.y, trueWidth, trueHeight);
-    ctx.fillStyle = tempColor;
-	ctx.globalAlpha = 1;
-	ctx.drawImage(ASSET_MANAGER.getAsset("./img/Chat/ChatSquare.png"), 285 + this.game.liveCamera.x, 
-			420 + this.game.liveCamera.y, 64, 64);
-	ctx.drawImage(ASSET_MANAGER.getAsset(this.image), 285 + this.game.liveCamera.x, 
-			420 + this.game.liveCamera.y, 64, 64);
+	if (this.image != null) {
+		ctx.fillStyle = "#452a84";
+		ctx.globalAlpha = 0.5;
+		ctx.fillRect(285 + 64 + this.game.liveCamera.x, 420 + this.game.liveCamera.y, trueWidth, trueHeight);
+		ctx.fillStyle = tempColor;
+		ctx.globalAlpha = 1;
+		ctx.drawImage(ASSET_MANAGER.getAsset("./img/Chat/ChatSquare.png"), 285 + this.game.liveCamera.x, 
+				420 + this.game.liveCamera.y, 64, 64);
+		ctx.drawImage(ASSET_MANAGER.getAsset(this.image), 285 + this.game.liveCamera.x, 
+				420 + this.game.liveCamera.y, 64, 64);
+		ctx.font = "13px Lucida Console";
+		ctx.textAlign = "left";
+		ctx.fillStyle = "black";
+		wrapText(ctx, this.showText, 285 + 64 + this.game.liveCamera.x + 12 + 1, 420 + this.game.liveCamera.y + 12 + 1, 196, 20);
+		ctx.fillStyle = "white";
+		wrapText(ctx, this.showText, 285 + 64 + this.game.liveCamera.x + 12, 420 + this.game.liveCamera.y + 12, 196, 20);
+	} else {
+		ctx.fillStyle = "#9dadc4";
+		ctx.globalAlpha = 0.5;
+		ctx.fillRect(285 + this.game.liveCamera.x, 420 + this.game.liveCamera.y, trueWidth, trueHeight);
+		ctx.fillStyle = tempColor;
+		ctx.globalAlpha = 1;
+		ctx.font = "13px Lucida Console";
+		ctx.textAlign = "left";
+		ctx.fillStyle = "black";
+		wrapText(ctx, this.showText, 285 + this.game.liveCamera.x + 13, 420 + this.game.liveCamera.y + 13, 196, 20);
+		ctx.fillStyle = "white";
+		wrapText(ctx, this.showText, 285 + this.game.liveCamera.x + 12, 420 + this.game.liveCamera.y + 12, 196, 20);
+	}
 	
-    ctx.font = "13px Lucida Console";
-    ctx.fillStyle = "white";
-    ctx.textAlign = "left";
-    wrapText(ctx, this.showText, 285 + 64 + this.game.liveCamera.x + 12, 420 + this.game.liveCamera.y + 12, 196, 20);
     Entity.prototype.draw.call(this);
 }
 
@@ -1597,6 +1640,7 @@ function Particle(particleId, x, y, minHSpeed, maxHSpeed, minVSpeed, maxVSpeed,
 	this.extra = 0;
 	this.textContent = null;
 	this.highPriority = 0.1;
+	this.hasExploded = false;
 	
 	this.targetX = null;
 	this.targetY = null;
@@ -1612,6 +1656,7 @@ function Particle(particleId, x, y, minHSpeed, maxHSpeed, minVSpeed, maxVSpeed,
 		width: this.width, 
 		height: this.width
 	};
+	this.overrideHitbox = null;
     Entity.call(this, game, x + Math.random() * (width * 2) - width, y + Math.random() * (width * 2) - width);
 }
 
@@ -1636,12 +1681,57 @@ Particle.prototype.update = function() {
 		this.targetX = null;
 		this.targetY = null;
 		this.targetSpeed = 0;
-		console.log("hspeed: " + this.hSpeed + "; vspeed: " + this.vSpeed);
+		//console.log("hspeed: " + this.hSpeed + "; vspeed: " + this.vSpeed);
 	}
 	if (this.particleId === IMG_PART) {
 		/*this.game.addEntity(new Particle(PART_SECONDARY, this.x + 20, this.y + 20, 3, -3, 3, 0,
 			0, 0, 0, 10, 10, 10, 1, 0, true, this.game,
 		new Animation(ASSET_MANAGER.getAsset("./img/small_flare.png"), 0, 0, 12, 12, 1, 1, false, false, 0, 0)));*/
+	}
+	if (this.particleId === IMG_PART && this.attackId == TUNA_CHARGE && this.life % 5 == 0) {
+	    var newParticle = new Particle(PART_SECONDARY, this.x + 14, this.y + 14, 
+				-2, 2, -2, -2, -0.03, 0.1, 0, 30, 0, 15, .5, .2, true, this.game);
+	    var element = new CircleElement(4 + Math.random() * 3, "#1d40a8", "#306085");
+	   	newParticle.other = element;
+	    this.game.addEntity(newParticle);
+		
+		if (this.explodeTime > 0) {
+			this.explodeTime--;
+			for (i = 0; i < 5 + Math.random() * 2; i++) {
+			    var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y + 16, 
+						-5, 5, -5, 5, 0, 0, 20, 0, 0, 30, .7, .2, true, this.game);
+			    var element = new CircleElement(25 + Math.random() * 6, "#f0eb65", "#cf915b");
+			   	newParticle.other = element;
+			   	newParticle.acceleration = 0.05;
+			   	newParticle.grow = true;
+			    this.game.addEntity(newParticle);
+			}
+		   	this.alpha = 0;
+		   	this.vSpeed = 0;
+		    if (this.explodeTime === 0)
+		    	this.removeFromWorld = true; //-4784
+		} else if ((!this.canHit || this.y > this.game.player1.ground) && this.explodeTime === 0) {
+	    	this.life = 0;
+	    	this.explodeTime = 5;
+			this.vSpeed = 0;
+	    	playSound(explosionSound);
+	    	/*this.game.cameraShakeTime = 20;
+	    	this.game.cameraShakeAmount = 40;
+	    	this.game.cameraShakeDecay = 1;*/
+			var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y + 16, 
+					0, 0, 0, 0, 0, 0, 0, 0, 0, 30, .5, .2, false, this.game);
+			var element = new CircleElement(100, "#f0eb65", "#cf915b");
+			newParticle.other = element;
+			newParticle.grow = true;
+			newParticle.attackId = TUNA_CHARGE_EXPLODE;
+			newParticle.overrideHitbox = {
+				x: this.x - 100 + 16, 
+				y: this.y - 100 + 16,
+				width: 200, 
+				height: 200
+			};
+			this.game.addEntity(newParticle);
+	    }
 	}
 	if (this.particleId === VOID_BALL && this.life % 2 === 0) {
 	    var newParticle = new Particle(PART_SECONDARY, this.x, this.y, 
@@ -1925,12 +2015,23 @@ Particle.prototype.update = function() {
 		this.y = this.snapEntity.y;
 	}
 
-    this.hitBox = { //update hitbox as we move
-    	x: this.x - this.width / 2 + this.width, 
-		y: this.y - this.width / 2 + this.width,
-		width: Math.max(1, this.width), 
-		height: Math.max(1, this.width)
-	};
+	if (this.overrideHitbox != null) {
+		this.hitBox = this.overrideHitbox;
+	} else if (this.particleId == IMG_PART) {
+		this.hitBox = { //update hitbox as we move
+			x: this.x, 
+			y: this.y,
+			width: Math.max(1, this.width), 
+			height: Math.max(1, this.width)
+		};
+	} else {
+		this.hitBox = { //update hitbox as we move
+			x: this.x - this.width / 2 + this.width, 
+			y: this.y - this.width / 2 + this.width,
+			width: Math.max(1, this.width), 
+			height: Math.max(1, this.width)
+		};
+	}
     if (this.particleId === VOID_LIGHTNING) {
     	this.hitBox.x += 16;
     	this.hitBox.y += 16;
@@ -1954,6 +2055,17 @@ Particle.prototype.update = function() {
 		}
 	}
     if (checkCollision(this, this.game.player1) && !this.game.player1.hitByAttack) {
+		if (this.attackId == TUNA_CHARGE && this.canHit) {
+			this.canHit = false;
+		}
+		if (this.attackId == TUNA_CHARGE_EXPLODE && this.explodeTime == 0 && this.canHit) {
+			this.canHit = false;
+			this.game.player1.vulnerable = false;
+			applyDamage(this.game.player1.x, this.game.player1.y, this.game, 25, this.game.player1);
+			this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
+			this.game.player1.hitByAttack = true;
+			playSound(hitSound);
+		}
     	if (this.particleId === VOID_LIGHTNING && this.explodeTime === 0) {
     		if (this.game.player1.attacking) {
     			this.removeFromWorld = true;
@@ -2224,8 +2336,13 @@ Particle.prototype.draw = function (ctx) {
 };
 
 /**
-    Powerup
+    Powerup ID
 */
+
+var JELLY_COIN = 2;
+var JELLY_COIN_SM = 3;
+var ENTITY_MARKER = 4; //invisible, limiting hitbox to prevent entity movement
+var TIP_MARKER = 5; //tip trigger
 
 function Powerup(game, x, y, type, specialId) {
 	this.step = 0;
@@ -2235,6 +2352,9 @@ function Powerup(game, x, y, type, specialId) {
 	this.specialId = specialId || 0;
 	this.animation = null;
 	this.gatherTime = 0;
+	this.hspeed = 0;
+	this.vspeed = 0;
+	this.phase = 0;
     Entity.call(this, game, x, y);
     this.hitBoxDef = {
     	width: 32, height: 32, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
@@ -2242,41 +2362,31 @@ function Powerup(game, x, y, type, specialId) {
     if (type === 1) { //invuln
     	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Particle/invuln.png"), 0, 0, 32, 32, 0.03, 20, true, false, 0, 0);
     }
-    if (type === 5) { //speed up
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/hermes.png"), 0, 0, 64, 64, 0.05, 10, true, false, 0, 0);
-    }
-    if (type === 6) { //petal torrent
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/petaltorrent.png"), 0, 0, 64, 64, 0.05, 10, true, false, 0, 0);
-    }
-    if (type === 7) { //tree of life
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/treeoflife.png"), 0, 0, 256, 142, 1, 1, true, false, 0, 0);
+    if (type === 2) { //jelly coin
+    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/jellycoin.png"), 0, 0, 28, 28, 0.25, 4, true, false, 0, 0);
 		this.hitBoxDef = {
-			width: 130, height: 130, offsetX: 66, offsetY: 10, growthX: 0, growthY: 0
+			width: 28, height: 28, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
 		};
+		if (specialId > 0) { //dropped coin
+			this.hspeed = -5 + Math.random() * 10;
+			this.vspeed = 5 - Math.random() * 10;
+		}
     }
-    if (type === 8) { //landmine
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/mine.png"), 0, 0, 64, 64, 0.1, 8, true, false, 0, 0);
-    }
-    if (type === 9) { //telephoto camera
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/telephoto.png"), 0, 0, 64, 64, 0.05, 10, true, false, 0, 0);
-    }
-    if (type === 10) { //speed gate
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Misc/speedgate.png"), 0, 0, 64, 500, 0.05, 3, true, false, 0, 0);
+    if (type === 3) { //jelly coin
+    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/jellycoin_sm.png"), 0, 0, 14, 14, 0.25, 4, true, false, 0, 0);
 		this.hitBoxDef = {
-			width: 130, height: 600, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+			width: 14, height: 14, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
 		};
+		if (specialId > 0) { //dropped coin
+			this.hspeed = -5 + Math.random() * 10;
+			this.vspeed = 5 - Math.random() * 10;
+		}
     }
-    if (type === 11) { //radar
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/radar.png"), 0, 0, 64, 64, 0.05, 10, true, false, 0, 0);
-    }
-    if (type === 12) { //tear of selene
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/tearofselene.png"), 0, 0, 64, 64, 0.05, 10, true, false, 0, 0);
-    }
-    if (type === 13) { //mithril quiver
-    	this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/mithril_quiver2.png"), 0, 0, 128, 128, 0.033, 84, true, false, 0, 0);
+    if (type === 5) { //tip marker
 		this.hitBoxDef = {
-			width: 64, height: 64, offsetX: 32, offsetY: 32, growthX: 0, growthY: 0
+			width: 32, height: 192, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
 		};
+    	//this.animation = new Animation(ASSET_MANAGER.getAsset("./img/Powerup/hermes.png"), 0, 0, 64, 64, 0.05, 10, true, false, 0, 0);
     }
 	
     drawHitBox(this);
@@ -2285,6 +2395,7 @@ function Powerup(game, x, y, type, specialId) {
 Powerup.prototype.update = function () {
 	// Only update when in the screen
 	this.step++;
+	var that = this;
 	if (isOnScreen(this)) {
 		if (this.type === 0) { //health powerup
 			this.game.addEntity(new Particle(IMG_PART, this.x, this.y - 10, -0.2, 0.2, -0.2, 0.2, 0, 0, 5, 5, 10, 50, 0.7, 0.2, true, this.game,
@@ -2323,68 +2434,64 @@ Powerup.prototype.update = function () {
 	            this.removeFromWorld = true;
 	        }
 		}
-		if (this.type === 2) { //void gate spawner
+		if (this.type === 2 || this.type === 3) { //jelly coin
+			if (this.specialId != 0) {
+				if (this.phase == 0) {
+					this.x += this.hspeed;
+					this.y += this.vspeed;
+					if (this.vspeed > 0) {
+						this.vspeed = Math.max(0, this.vspeed - 0.1);
+					}
+					if (this.vspeed < 0) {
+						this.vspeed = Math.min(0, this.vspeed + 0.1);
+					}
+					if (this.hspeed > 0) {
+						this.hspeed = Math.max(0, this.hspeed - 0.1);
+					} else if (this.hspeed < 0) {
+						this.hspeed = Math.min(0, this.hspeed + 0.1);
+					}
+					if (this.vspeed == 0 && this.hspeed == 0) {
+						this.phase = 1;
+					}
+				}
+				if (this.phase == 1) {
+					var dx = (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) - (this.x + this.hitBoxDef.width / 2);
+					var dy = (this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2) - (this.y + this.hitBoxDef.height / 2);
+					this.x += dx / 20;
+					this.y += dy / 20;
+				}
+			}
 	        if (checkCollision(this, this.game.player1)) {
-                var particle = new Particle(VOID_GATE, this.game.liveCamera.x + 30, this.y, 
-                        0, 0, 0, 0, 0, 0, 0, 400, 0, 10, 0, 0, false, this.game);
-                particle.direction = "Right";
-                var particle2 = new Particle(VOID_GATE, this.game.liveCamera.x + this.game.camera.width - 30, this.y, 
-                        0, 0, 0, 0, 0, 0, 0, 400, 0, 10, 0, 0, false, this.game);
-                particle2.direction = "Left";
-                var element = new CircleElement(40, "#240340", "#131d4f");
-                particle.other = element;
-                particle2.other = element;
-                playSound(voidGateSound);
-                this.game.addEntity(particle);
-                this.game.addEntity(particle2);
+				addScore(this.game, this.type == 2 ? 100 : 25);
+                playSound(coinSound);
 	            this.removeFromWorld = true;
+				var particleAmount = this.type == 2 ? 10 : 3;
+				for (var i = 0; i < particleAmount; i++) {
+					var newParticle = new Particle(PART_SECONDARY, (this.x + this.hitBoxDef.width / 2), (this.y + this.hitBoxDef.height / 2), 
+							-2, 2, -2, 2, 0, 0.15, 0, 0, 0, 50, .75, .15, true, this.game);
+					element = new CircleElement(4 + Math.random() * 2, "#73efff", "#ffb8ff");
+					newParticle.other = element;
+					this.game.addEntity(newParticle);
+				}
 	        }
 		}
-		if (this.type === 3) { //ezreal chathead
-	        if (checkCollision(this, this.game.player1)) {
-	        	if (this.specialId === 1) {
-        	 		var chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "Am I coming through? Use A & D to move, and W to jump.");
-        	 		textBox = chat;
-        	 		this.game.addEntity(chat);
-	        	}
-	        	if (this.specialId === 2) {
-        	 		var chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "Destroy those voidlings by pressing Y or U to attack!");
-        	 		if (textBox !== null)
-        	 			textBox.removeFromWorld = true;
-        	 		this.game.addEntity(chat);
-	        	}
-	        	if (this.specialId === 3) {
-        	 		var chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "Press S + U together to do an invulnerable dash!");
-        	 		if (textBox !== null)
-        	 			textBox.removeFromWorld = true;
-        	 		textBox = chat;
-        	 		this.game.addEntity(chat);
-	        	}
-	        	if (this.specialId === 4) {
-        	 		var chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "Prepare yourself! Looks like there's something ahead...");
-        	 		this.game.addEntity(chat);
-	        	}
-	            this.removeFromWorld = true;
-	        }
+		if (this.type === ENTITY_MARKER) { //entity marker
+			/*if (this.step % 4 === 0)
+				this.game.addEntity(new Particle(IMG_PART, this.x, this.y - 10, -0.2, 0.3, -0.3, 0.3, 0, 0.1, 5, 5, 10, 50, 0.7, 0.2, true, this.game,
+						new Animation(ASSET_MANAGER.getAsset("./img/Particle/orange_flare.png"), 0, 0, 64, 64, 0.03, 16, true, false, 0, 0)));*/
+			this.game.entities.forEach(function(entity) {
+				if (entity.hitBox != null) {
+					if (entity instanceof Enemy && checkCollision(that, entity)) {
+						entity.flip();
+						/*that.game.addEntity(new Particle(IMG_PART, that.x, that.y - 10, -0.2, 0.3, -0.3, 0.3, 0, 0.1, 5, 5, 10, 50, 0.7, 0.2, true, that.game,
+								new Animation(ASSET_MANAGER.getAsset("./img/Particle/orange_flare.png"), 0, 0, 64, 64, 0.03, 16, true, false, 0, 0)));*/
+					}
+				}
+			});
 		}
-		if (this.type === 4 && this.step % 3 === 0) { //perma void portal
-		    var newParticle = new Particle(PART_SECONDARY, this.x, this.y, 
-					-2, 2, -3, -5, -.5, 0.1, 0, 0, 0, 15, .7, .2, true, this.game);
-		    element = new CircleElement(10 + Math.random() * 4, "#9321c4", "#722f8e");
-		   	newParticle.other = element;
-		   	newParticle.attackId = 6;
-		    this.game.addEntity(newParticle);
-		}
-		if (this.type === 5) { //speed buff (hermes)
+		if (this.type === TIP_MARKER) {
 	        if (checkCollision(this, this.game.player1)) {
-	            playSound(healSound);
-	            var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-	                    0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-	            var damageText = new TextElement("", "Lucida Console", 25, "#ffd43a", "black");
-	            damageText.text = "Speed Boost!";
-	            damageParticle.other = damageText;
-                this.game.addEntity(damageParticle);
-	            this.game.player1.speedTimer = 600;
+	            this.game.showTip(this.specialId);
 	            this.removeFromWorld = true;
 	        }
 		}
@@ -2520,7 +2627,7 @@ Powerup.prototype.update = function () {
     Entity.prototype.update.call(this);
 };
 
-Powerup.prototype.draw = function (ctx) { 
+Powerup.prototype.draw = function (ctx) {
 	if (this.type === 8) {
 		if (this.game.player1.telephotoTimer > 0)
 			this.animation.drawFrame(this.game.clockTick, ctx, this.x + this.animation.offsetX,
@@ -2530,6 +2637,7 @@ Powerup.prototype.draw = function (ctx) {
 		this.animation.drawFrame(this.game.clockTick, ctx, this.x + this.animation.offsetX,
 				this.y + this.animation.offsetY, 1, 1);
 	}
+    drawHitBox(this);
     Entity.prototype.draw.call(this);
 }
 
@@ -2562,7 +2670,7 @@ function Character(game) {
     this.currentHealth = this.maxHealth;
     this.currentHealthTemp = this.currentHealth;
     this.maxStamina = 100.0;
-    this.currentStamina = 0;
+    this.currentStamina = 100;
     this.currentStaminaTemp = 0;
     this.attackInput = 0; // Keyboard Input for Attack, 1 = Light, 2 = Strong
 	this.attackIndex = 0;
@@ -2580,7 +2688,7 @@ function Character(game) {
 	this.petalTorrentHits = 0;
     this.invincTimer = 0; //invulnerability from powerup
     this.bounceTimer = 0;
-    this.ground = 420;
+    this.ground = 425;
     this.autoDamage = 2;
     this.autoScaling = 1;
     this.qDamage = 4;
@@ -2610,8 +2718,14 @@ function Character(game) {
 	this.isPlayer = true;
 	this.phaseTimer = 0;
 	this.alternate = 0;
+	this.queuedAction = "";
+	this.queuedTime = 0;
+	
+	this.lastX = 0;
+	this.lastY = 0;
     
     this.timesHit = 0;
+	this.currentForm = 0;
     
     this.targetHit = []; // The targets you've currently hit with your attack
 	
@@ -2623,20 +2737,18 @@ function Character(game) {
     // Animations    	
 	
 	//function Animation(spriteSheet, startX, startY, frameWidth, frameHeight, frameDuration, frames, loop, reverse, offsetX, offsetY)
-    this.idleAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_right.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
-    this.idleAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_left.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
-	this.idleAnimation = this.idleAnimationRight;
-    this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_right.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
-    this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_left.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
-	this.walkAnimation = this.walkAnimationRight;
-    this.jumpAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
-    this.jumpAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
-	this.jumpAnimation = this.jumpAnimationRight;
-    this.fallAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_fall_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
-    this.fallAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_fall_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
-	this.fallAnimation = this.fallAnimationRight;
 	
 	//default attack animations
+    this.idleAnimationDefRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_right.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
+    this.idleAnimationDefLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_idle_left.png"), 0, 0, 128, 128, .1, 46, true, false, 0, 0);
+    this.walkAnimationDefRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_right.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
+    this.walkAnimationDefLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_walk_left.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
+    this.jumpAnimationDefRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.jumpAnimationDefLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_jump_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.fallAnimationDefRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_fall_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.fallAnimationDefLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_fall_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.hurtAnimationDefRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_hurt_right.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
+    this.hurtAnimationDefLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_hurt_left.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
     this.attackAnimationDefAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_air_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
     this.attackAnimationDefAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_air_right.png"), 0, 0, 128, 128, .10, 4, false, false, 32, 32);
     this.attackAnimationDefGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attack_ground_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
@@ -2645,8 +2757,24 @@ function Character(game) {
     this.attackAnimationDefUpAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_air_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
     this.attackAnimationDefUpGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_ground_left.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
     this.attackAnimationDefUpGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackup_ground_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
-    this.attackAnimationDefDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 128, 128, .64, 2, false, false, 0, 0);
-    this.attackAnimationDefDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 128, 128, .20, 2, false, false, 0, 0);
+    this.attackAnimationDefDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
+    this.attackAnimationDefDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
+	
+	//baby jelly
+    this.idleAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_idle_right.png"), 0, 0, 128, 128, .1, 32, true, false, 0, 0);
+    this.idleAnimationBabyLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_idle_left.png"), 0, 0, 128, 128, .1, 32, true, false, 0, 0);
+    this.walkAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_walk_right.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
+    this.walkAnimationBabyLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_walk_left.png"), 0, 0, 128, 128, .2, 4, true, false, 0, 0);
+    this.jumpAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_jump_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.jumpAnimationBabyLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_jump_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.fallAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_fall_right.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.fallAnimationBabyLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_fall_left.png"), 0, 0, 128, 128, 1, 1, true, false, 0, 0);
+    this.hurtAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_hurt_right.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
+    this.hurtAnimationBabyLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_hurt_left.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
+    this.attackAnimationBabyAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_attack_air_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
+    this.attackAnimationBabyAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_attack_air_right.png"), 0, 0, 128, 128, .10, 4, false, false, 32, 32);
+    this.attackAnimationBabyGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_attack_ground_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
+    this.attackAnimationBabyGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_attack_ground_right.png"), 0, 0, 128, 128, .10, 4, false, false, 32, 32);
 	
 	//long attack animations
     this.attackAnimationLongAirLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attacklong_air_left.png"), 0, 0, 128, 128, .10, 4, false, false, -32, 32);
@@ -2657,24 +2785,39 @@ function Character(game) {
     this.attackAnimationLongUpAirRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackuplong_air_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
     this.attackAnimationLongUpGroundLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackuplong_ground_left.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
     this.attackAnimationLongUpGroundRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackuplong_ground_right.png"), 0, 0, 64, 144, .10, 4, false, false, 32, -48);
-    this.attackAnimationLongDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 128, 128, .2, 2, false, false, 0, 0);
-    this.attackAnimationLongDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 128, 128, .2, 2, false, false, 0, 0);
+    this.attackAnimationLongDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdownlong_left.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
+    this.attackAnimationLongDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdownlong_right.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
 	this.attackAnimation = this.attackAnimationGroundLeft;
 	
-    this.attackAnimationAirLeft = this.attackAnimationDefAirLeft;
-    this.attackAnimationAirRight = this.attackAnimationDefAirRight;
-    this.attackAnimationGroundLeft = this.attackAnimationDefGroundLeft;
-    this.attackAnimationGroundRight = this.attackAnimationDefGroundRight;
+	
+    this.idleAnimationRight = this.idleAnimationBabyRight;
+    this.idleAnimationLeft = this.idleAnimationBabyLeft;
+    this.walkAnimationRight = this.walkAnimationBabyRight;
+    this.walkAnimationLeft = this.walkAnimationBabyLeft;
+    this.jumpAnimationRight = this.jumpAnimationBabyRight;
+    this.jumpAnimationLeft = this.jumpAnimationBabyLeft;
+    this.fallAnimationRight = this.fallAnimationBabyRight;
+    this.fallAnimationLeft =this.fallAnimationBabyLeft;
+    this.hurtAnimationRight = this.hurtAnimationBabyRight;
+    this.hurtAnimationLeft =this.hurtAnimationBabyLeft;
+	
+    this.attackAnimationAirLeft = this.attackAnimationBabyAirLeft;
+    this.attackAnimationAirRight = this.attackAnimationBabyAirRight;
+    this.attackAnimationGroundLeft = this.attackAnimationBabyGroundLeft;
+    this.attackAnimationGroundRight = this.attackAnimationBabyGroundRight;
     this.attackAnimationUpAirLeft = this.attackAnimationDefUpAirLeft;
     this.attackAnimationUpAirRight = this.attackAnimationDefUpAirRight;
     this.attackAnimationUpGroundLeft = this.attackAnimationDefUpGroundLeft;
     this.attackAnimationUpGroundRight = this.attackAnimationDefUpGroundRight;
     this.attackAnimationDownLeft = this.attackAnimationDefDownLeft;
     this.attackAnimationDownRight = this.attackAnimationDefDownRight;	
+	
+	this.idleAnimation = this.idleAnimationRight;
+	this.walkAnimation = this.walkAnimationRight;
+	this.jumpAnimation = this.jumpAnimationRight;
+	this.fallAnimation = this.fallAnimationRight;
     
     // Hurt
-    this.hurtAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_hurt_right.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
-    this.hurtAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_hurt_left.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
     this.hurtAnimation = this.hurtAnimationLeft;
     
     this.currentAnimation = this.idleAnimationRight; // Setting starting animation
@@ -2696,6 +2839,20 @@ Character.prototype.constructor = Character;
  */
 Character.prototype.canCancel = function() {
 	return (this.attacking && this.attackAnimation.elapsedTime >= 0.25);
+}
+
+Character.prototype.notBaby = function() { 
+    this.idleAnimationRight = this.idleAnimationDefRight;
+    this.idleAnimationLeft = this.idleAnimationDefLeft;
+    this.walkAnimationRight = this.walkAnimationDefRight;
+    this.walkAnimationLeft = this.walkAnimationDefLeft;
+    this.jumpAnimationRight = this.jumpAnimationDefRight;
+    this.jumpAnimationLeft = this.jumpAnimationDefLeft;
+    this.fallAnimationRight = this.fallAnimationDefRight;
+    this.fallAnimationLeft = this.fallAnimationDefLeft;
+    this.hurtAnimationRight = this.hurtAnimationDefRight;
+    this.hurtAnimationLeft =this.hurtAnimationDefLeft;
+	this.currentForm = 1;
 }
 
 Character.prototype.defaultAnimations = function() {
@@ -2802,6 +2959,8 @@ function handleDie(game) {
 }
 
 Character.prototype.update = function () {
+	this.lastX = this.x;
+	this.lastY = this.y;
 	var that = this;
 	if (this.cooldown > 0)
 		this.cooldown--;
@@ -2810,8 +2969,9 @@ Character.prototype.update = function () {
 		if (this.game.currentPhase < 1) {
 			startMusic.play();
 			var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
+			this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
 			this.game.step = 0;
-			this.game.addEntity(chat);
+			//this.game.addEntity(chat);
             this.game.currentPhase = 1;
 		}
 		if (this.phaseTimer > 0) {
@@ -2850,19 +3010,6 @@ Character.prototype.update = function () {
 						//this.game.gameWon = true; //temp!
 					break;
 				}
-			}
-		}
-		if (this.x >= 1100) {
-			if (this.game.currentPhase === 1) {
-				startMusic.pause();
-				forestMusic.play();
-				this.game.currentPhase = 2;
-				this.game.cameraLock = false;
-				this.game.camera.minX = 1100;
-				this.game.camera.maxX = 1100;
-				var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "What's this? Free tree?");
-				this.game.addEntity(chat);
-				this.game.player1.canControl = false;
 			}
 		}
         if (invincible) {
@@ -2956,6 +3103,9 @@ Character.prototype.update = function () {
 				if (this.y === this.destinationY)
 					this.destinationY = -1;
 			}
+		}
+		if (!this.dead && gameStarted && this.currentForm == 0 && this.game.step % 30 == 0) { //baby drowns
+			addEnergy(this.game, -2);
 		}
         if (this.currentHealth <= 0 && !this.dead) {
             this.dead = true;
@@ -3076,13 +3226,17 @@ Character.prototype.update = function () {
             
 	
 			var platformFound = false;
+			var wallFound = false;
 			this.game.currentMap.platforms.forEach(function(currentPlatform) {
 				currentPlatform.update();
 				if ((that.hitBox.x + that.hitBox.width) > currentPlatform.hitBox.x) {
-					if (that.hitBox.x < (currentPlatform.hitBox.x + currentPlatform.hitBox.width)) {
+					if (that.hitBox.x < (currentPlatform.hitBox.x + currentPlatform.hitBox.width - 1)) {
 						if ((that.hitBox.y + that.hitBox.height) + currentPlatform.vSpeed <= currentPlatform.hitBox.y || (that.hitBox.y + that.hitBox.height) - currentPlatform.vSpeed <= currentPlatform.hitBox.y) {
 							if ((that.hitBox.y + that.hitBox.height - (that.yVelocity - that.gravity )) >= currentPlatform.hitBox.y) {
 								platformFound = true;
+								if (currentPlatform.isWall) {
+									wallFound = true;
+								}
 								if (currentPlatform.specialId === 1) { //bouncy platform
 									that.yVelocity = 15;
 									that.bounceTimer = 30;
@@ -3107,9 +3261,9 @@ Character.prototype.update = function () {
             if (this.jumpDown && !this.jumping && !this.falling && this.canControl) {
                 this.jumping = true;
                 playSound(jumpSound);
-				console.log("down down: " + this.downDown+", platformfound: " + platformFound);
-				if (this.downDown && platformFound) {
-					this.yVelocity = -1; //drop through					
+				if (this.downDown && platformFound && !wallFound) {
+					this.yVelocity = -1; //drop through
+					console.log("dropping");					
 				} else {
 					this.yVelocity = this.jumpYVelocity;
 				}
@@ -3123,72 +3277,54 @@ Character.prototype.update = function () {
                     this.jumpSpeed = 0;
                 }
             }
+			if (this.queuedTime > 0) {
+				this.queuedTime--;
+				if (this.queuedTime == 0) {
+					this.queuedAction = "";
+				}
+			}
             // Process the raw attack input into the appropriate skill
-            if (this.attackInput > 0 && this.canControl) {
-                switch(this.attackInput) {
-                    case 1: // Light attack
-                        if (this.cooldown === 0) {
-							if (!this.attacking) {
-								if (this.lastComboType != this.attackInput) { // Last Combo was different (e.g. AA vs Q) - drop combo
-									this.lastComboStage = 0;		    				
-								}
-								this.cooldown = 30;
-								playSound(autoSound);
-								this.targetHit = [];
-								this.attacking = true;
-								this.attackIndex = 1;
-								if (this.leftDown)
-									this.attackDirection = "Left";
-								else if (this.rightDown)
-									this.attackDirection = "Right";
-								else
-									this.attackDirection = this.lastDirection;
-								if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
-									this.attackIndex = 2;
-								else if (this.upDown)
-									this.attackIndex = 3;
-							}
-							/*if (this.petalTorrentHits > 0) {
-								this.cooldown = 45;
-								this.game.addEntity(new Bullet(this.game, this.x, this.y, 0, 22, 2, 0));
-								this.petalTorrentHits--;
-								playSound(laserSound);
-							} else {
-								this.cooldown = 10;
-								if (this.ultiTimer > 0) { 
-									this.cooldown = 4;
-									if (this.alternate === 0) {
-										this.alternate = 1;
-										this.game.addEntity(new Bullet(this.game, this.x, this.y, -5, 22, 3, 0));
-									} else {
-										this.alternate = 0;
-										this.game.addEntity(new Bullet(this.game, this.x, this.y + 20, 5, 22, 3, 0));
-									}
-								} else {
-									this.game.addEntity(new Bullet(this.game, this.x, this.y, 0, 20, 1, 0));
-									this.game.addEntity(new Bullet(this.game, this.x, this.y + 20, 0, 20, 1, 0));
-								}
-								if (this.game.currentPhase >= 16) { //obtained mithril quiver
-									this.game.addEntity(new Bullet(this.game, this.x, this.y, -4, 18, 4, 0));
-									this.game.addEntity(new Bullet(this.game, this.x, this.y + 20, 4, 18, 4, 0));
-								}
-							}*/
-                        }
-                    break;
-                    case 2: // Strong attack
-                        if (this.cooldown === 0) {
-							this.cooldown = 5;
-							this.game.addEntity(new Bullet(this.game, this.x, this.y, 0, 22, 2, 0));
-							playSound(laserSound);
-                        }
-                    break;
-                }
+            if ((this.queuedAction == "Attack" || this.attackInput > 0) && this.canControl) {
+				if (this.cooldown === 0) {
+					if (this.queuedAction == "Attack") {
+						this.queuedAction = "";
+						this.queuedTime = 0;
+					}
+					if (!this.attacking) {
+						if (this.lastComboType != this.attackInput) { // Last Combo was different (e.g. AA vs Q) - drop combo
+							this.lastComboStage = 0;		    				
+						}
+						this.cooldown = 30;
+						
+						this.targetHit = [];
+						this.attacking = true;
+						this.attackIndex = 1;
+						if (this.leftDown)
+							this.attackDirection = "Left";
+						else if (this.rightDown)
+							this.attackDirection = "Right";
+						else
+							this.attackDirection = this.lastDirection;
+						if (this.currentForm > 0) {
+							if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
+								this.attackIndex = 2;
+							else if (this.upDown)
+								this.attackIndex = 3;
+							playSound(autoSound);
+						} else {
+							playSound(slashSound);
+						}
+					}
+				} else if (this.attackInput > 0) { //queue up the attack
+					this.queuedAction = "Attack";
+					this.queuedTime = 10;
+				}
             }
             
 			//extended hitboxes
 			var xBonus = 0;
             var yBonus = 0;
-			var attackRange = 48;
+			var attackRange = this.currentForm == 0 ? 32 : 48;
 			if (this.equipment[LONG_RANGE]) {
 				attackRange = 72;
 			}
@@ -3290,7 +3426,14 @@ Character.prototype.update = function () {
                     }
                 });
 				if (targetEntity != null) {
+					console.log("entity y: " + (targetEntity.y + targetEntity.invulnFromTop + targetEntity.hitBoxDef.offsetY) + "; player y: " + (this.game.player1.y + this.game.player1.hitBoxDef.height + this.game.player1.hitBoxDef.offsetY));
 					if (targetEntity.meleeInvuln) {
+						playSound(hitMetal);
+						this.game.player1.targetHit.push(targetEntity);
+						
+					} else if (targetEntity.invulnFromTop > 0 &&
+							(((targetEntity.y + targetEntity.invulnFromTop + targetEntity.hitBoxDef.offsetY) > (this.game.player1.y + this.game.player1.hitBoxDef.height + this.game.player1.hitBoxDef.offsetY)
+							) || this.game.player1.attackIndex == 2)) {
 						playSound(hitMetal);
 						this.game.player1.targetHit.push(targetEntity);
 					} else {
@@ -3303,7 +3446,8 @@ Character.prototype.update = function () {
 							createX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
 							createY = this.game.player1.y + (yBonus > 0 ? this.game.player1.hitBoxDef.height : 0) + this.game.player1.hitBoxDef.offsetY;
 						}
-						for (var i = 0; i < 6; i++) {
+						var partAmount = this.currentForm == 0 ? 3 : 6;
+						for (var i = 0; i < partAmount; i++) {
 							var newParticle = new Particle(PART_SECONDARY, createX, createY, 
 									-5, 5, -5, 5, 0, 0.15, 0, 0, 0, 50, .75, .15, true, this.game);
 							element = new CircleElement(5 + Math.random() * 3, "#f7ffba", "#faf6be");
@@ -3312,8 +3456,8 @@ Character.prototype.update = function () {
 						}
 						this.game.player1.targetHit.push(targetEntity);
 						applyDamage(targetEntity.x, targetEntity.y, this.game, 25, targetEntity);
-						playSound(lightningSound);
-						addEnergy(this.game, 20);
+						playSound(this.currentForm > 0 ? lightningSound : shotHitSound);
+						addEnergy(this.game, this.currentForm > 0 ? 20 : 0);
 					}
 					switch(this.game.player1.attackIndex) {
 						case 1: //side hit
@@ -3414,6 +3558,29 @@ Character.prototype.update = function () {
     if (this.hitBox.x + this.hitBox.width - this.hitBoxDef.width <= this.game.camera.minX && (this.lastDirection === "Left" || this.hurt)) {
         this.x = this.game.camera.minX + 0 - this.hitBoxDef.offsetX;
     }*/
+	this.game.currentMap.platforms.forEach(function(currentPlatform) {
+		if (currentPlatform.isWall) {
+			if (that.hitBox.x + that.hitBox.width > currentPlatform.x && that.hitBox.x < currentPlatform.x + currentPlatform.width - 1) {
+				if (that.lastY + that.hitBoxDef.offsetY > currentPlatform.y + currentPlatform.height && that.y + that.hitBoxDef.offsetY < currentPlatform.y + currentPlatform.height) {
+					that.y = currentPlatform.y + currentPlatform.height - that.hitBoxDef.growthY - that.hitBoxDef.offsetY;
+					that.yVelocity = 0;
+					that.jumping = false;
+					that.falling = true;							
+				}
+			}
+			if (that.hitBox.y + that.hitBox.height > currentPlatform.y && that.hitBox.y < currentPlatform.y + currentPlatform.height) {
+				if (that.hitBox.x < currentPlatform.x && that.hitBox.x + that.hitBox.width >= currentPlatform.x && (that.lastDirection == "Right" || that.displacementXSpeed > 0 || that.xVelocity > 0)) {
+					platformFound = true;
+					inX = (that.hitBox.x + that.hitBox.width) - currentPlatform.x;
+					that.x = currentPlatform.x - that.hitBox.width - that.hitBoxDef.offsetX;
+				} else if (that.hitBox.x < currentPlatform.x + currentPlatform.width && that.hitBox.x + that.hitBox.width >= currentPlatform.x + currentPlatform.width && (that.lastDirection == "Left" || that.displacementXSpeed < 0 || that.xVelocity < 0)) {
+					platformFound = true;
+					inX = that.hitBox.x - (currentPlatform.x + currentPlatform.width);
+					that.x = currentPlatform.x + currentPlatform.width - that.hitBoxDef.growthX - that.hitBoxDef.offsetX - 1;
+				}
+			} 
+		}
+	});
     if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.x + this.game.camera.width) {
         this.x = this.game.camera.x + this.game.camera.width - this.hitBoxDef.width - this.hitBoxDef.offsetX - 4;
     }
@@ -4482,44 +4649,592 @@ Alpha.prototype.draw = function (ctx) {
 function spawnWave(game, number) {
 	switch(number) {
 		case 1:
+			var objects = [		
+				new Spaceship(game, -2400, 370),
+			];
 			var powerups = [
-				new Powerup(game, -632, 176, 0),
-				new Powerup(game, 1680, 350, 7) //tree of life
 			];
 			var platforms = [
-			
 
 
-new Platform(game, -1224, 304),
+new Platform(game, -1544, 400),
 
-new Platform(game, -1160, 304),
+new Platform(game, -1480, 400),
 
-new Platform(game, -1224, 352),
+new Platform(game, -1416, 400),
 
-new Platform(game, -1160, 352),
+new Platform(game, -1352, 400),
 
-new Platform(game, -1160, 256),
+new Platform(game, -1288, 400),
 
-new Platform(game, -1096, 256),
+new Platform(game, -1224, 368),
 
-new Platform(game, -1032, 256),
+new Platform(game, -1160, 336),
 
-new Platform(game, -968, 256, 0, -1, 64),
+new Platform(game, -968, 304),
 
-new Platform(game, -968, 256),
+new Platform(game, -1032, 304),
 
-new Platform(game, -920, 160),
+new Platform(game, -904, 304),
 
-new Platform(game, -856, 160),
+new Platform(game, -584, 304),
 
-new Platform(game, -792, 192),
+new Platform(game, -520, 304),
 
-new Platform(game, -728, 224, 2, 0, 96),
+new Platform(game, -584, 352),
 
-new Platform(game, -728, 224),
+new Platform(game, -520, 352),
+
+new Platform(game, -520, 400),
+
+new Platform(game, -584, 400),
+
+new Platform(game, -72, 352),
+
+new Platform(game, -72, 400),
+
+new Platform(game, 56, 400),
+
+new Platform(game, 120, 336),
+
+new Platform(game, 184, 272),
+
+new Platform(game, 280, 336),
+
+new Platform(game, 376, 272),
+
+new Platform(game, 120, 208),
+
+new Platform(game, 456, 208),
+
+new Platform(game, 760, 256),
+
+new Platform(game, 760, 192),
+
+new Platform(game, 1208, 400),
+
+new Platform(game, 1208, 336),
+
+new Platform(game, 520, 160),
+
+new Wall(game, -1096, 432, 32, 32),
+
+new Wall(game, -1096, 400, 32, 32),
+
+new Wall(game, -1096, 368, 32, 32),
+
+new Wall(game, -1096, 336, 32, 32),
+
+new Wall(game, -1096, 304, 32, 32),
+
+new Wall(game, -1064, 304, 32, 32),
+
+new Wall(game, -840, 304, 32, 32),
+
+new Wall(game, -808, 304, 32, 32),
+
+new Wall(game, -808, 336, 32, 32),
+
+new Wall(game, -808, 368, 32, 32),
+
+new Wall(game, -808, 400, 32, 32),
+
+new Wall(game, -808, 432, 32, 32),
+
+new Wall(game, -776, 304, 32, 32),
+
+new Wall(game, -776, 272, 32, 32),
+
+new Wall(game, -744, 304, 32, 32),
+
+new Wall(game, -744, 240, 32, 32),
+
+new Wall(game, -712, 208, 32, 32),
+
+new Wall(game, -712, 304, 32, 32),
+
+new Wall(game, -680, 176, 32, 32),
+
+new Wall(game, -680, 304, 32, 32),
+
+new Wall(game, -648, 144, 32, 32),
+
+new Wall(game, -648, 304, 32, 32),
+
+new Wall(game, -616, 112, 32, 32),
+
+new Wall(game, -584, 112, 32, 32),
+
+new Wall(game, -552, 112, 32, 32),
+
+new Wall(game, -520, 112, 32, 32),
+
+new Wall(game, -488, 112, 32, 32),
+
+new Wall(game, -456, 112, 32, 32),
+
+new Wall(game, -424, 112, 32, 32),
+
+new Wall(game, -392, 112, 32, 32),
+
+new Wall(game, -360, 112, 32, 32),
+
+new Wall(game, -328, 112, 32, 32),
+
+new Wall(game, -296, 112, 32, 32),
+
+new Wall(game, -264, 112, 32, 32),
+
+new Wall(game, -232, 112, 32, 32),
+
+new Wall(game, -200, 112, 32, 32),
+
+new Wall(game, -168, 112, 32, 32),
+
+new Wall(game, -136, 112, 32, 32),
+
+new Wall(game, -104, 112, 32, 32),
+
+new Wall(game, -8, 112, 32, 32),
+
+new Wall(game, -8, 80, 32, 32),
+
+new Wall(game, -8, 48, 32, 32),
+
+new Wall(game, -8, 16, 32, 32),
+
+new Wall(game, -8, -16, 32, 32),
+
+new Wall(game, -8, 144, 32, 32),
+
+new Wall(game, -8, 176, 32, 32),
+
+new Wall(game, -8, 208, 32, 32),
+
+new Wall(game, -40, 208, 32, 32),
+
+new Wall(game, -72, 208, 32, 32),
+
+new Wall(game, -104, 208, 32, 32),
+
+new Wall(game, -136, 208, 32, 32),
+
+new Wall(game, -168, 208, 32, 32),
+
+new Wall(game, -200, 208, 32, 32),
+
+new Wall(game, -232, 208, 32, 32),
+
+new Wall(game, -264, 208, 32, 32),
+
+new Wall(game, -296, 208, 32, 32),
+
+new Wall(game, -328, 208, 32, 32),
+
+new Wall(game, -360, 208, 32, 32),
+
+new Wall(game, -392, 208, 32, 32),
+
+new Wall(game, -424, 208, 32, 32),
+
+new Wall(game, -456, 208, 32, 32),
+
+new Wall(game, -488, 208, 32, 32),
+
+new Wall(game, -616, 304, 32, 32),
+
+new Wall(game, -456, 304, 32, 32),
+
+new Wall(game, -328, 304, 32, 32),
+
+new Wall(game, -296, 304, 32, 32),
+
+new Wall(game, -264, 304, 32, 32),
+
+new Wall(game, -232, 304, 32, 32),
+
+new Wall(game, -200, 304, 32, 32),
+
+new Wall(game, -168, 304, 32, 32),
+
+new Wall(game, -136, 304, 32, 32),
+
+new Wall(game, -104, 304, 32, 32),
+
+new Wall(game, -424, 304, 32, 32),
+
+new Wall(game, -360, 304, 32, 32),
+
+new Wall(game, -392, 304, 32, 32),
+
+new Wall(game, -104, 336, 32, 32),
+
+new Wall(game, -104, 368, 32, 32),
+
+new Wall(game, -104, 400, 32, 32),
+
+new Wall(game, -104, 432, 32, 32),
+
+new Wall(game, 24, 208, 32, 32),
+
+new Wall(game, -712, 240, 32, 32),
+
+new Wall(game, -680, 208, 32, 32),
+
+new Wall(game, -648, 176, 32, 32),
+
+new Wall(game, -616, 144, 32, 32),
+
+new Wall(game, 584, 128, 32, 32),
+
+new Wall(game, 584, 160, 32, 32),
+
+new Wall(game, 584, 192, 32, 32),
+
+new Wall(game, 584, 224, 32, 32),
+
+new Wall(game, 584, 256, 32, 32),
+
+new Wall(game, 584, 288, 32, 32),
+
+new Wall(game, 584, 320, 32, 32),
+
+new Wall(game, 584, 352, 32, 32),
+
+new Wall(game, 584, 384, 32, 32),
+
+new Wall(game, 584, 416, 32, 32),
+
+new Wall(game, 584, 448, 32, 32),
+
+new Wall(game, 728, 0, 32, 32),
+
+new Wall(game, 728, 32, 32, 32),
+
+new Wall(game, 728, 64, 32, 32),
+
+new Wall(game, 728, 96, 32, 32),
+
+new Wall(game, 728, 128, 32, 32),
+
+new Wall(game, 728, 160, 32, 32),
+
+new Wall(game, 728, 192, 32, 32),
+
+new Wall(game, 728, 224, 32, 32),
+
+new Wall(game, 728, 256, 32, 32),
+
+new Wall(game, 728, 288, 32, 32),
+
+new Wall(game, 728, 320, 32, 32),
+
+new Wall(game, 760, 320, 32, 32),
+
+new Wall(game, 792, 320, 32, 32),
+
+new Wall(game, 824, 320, 32, 32),
+
+new Wall(game, 856, 320, 32, 32),
+
+new Wall(game, 888, 320, 32, 32),
+
+new Wall(game, 984, 320, 32, 32),
+
+new Wall(game, 1016, 320, 32, 32),
+
+new Wall(game, 1048, 320, 32, 32),
+
+new Wall(game, 1080, 320, 32, 32),
+
+new Wall(game, 1112, 320, 32, 32),
+
+new Wall(game, 1144, 320, 32, 32),
+
+new Wall(game, 1272, 448, 32, 32),
+
+new Wall(game, 1272, 416, 32, 32),
+
+new Wall(game, 1272, 384, 32, 32),
+
+new Wall(game, 1272, 352, 32, 32),
+
+new Wall(game, 1272, 320, 32, 32),
+
+new Wall(game, 1272, 288, 32, 32),
+
+new Wall(game, 1272, 256, 32, 32),
+
+new Wall(game, 1272, 224, 32, 32),
+
+new Wall(game, 1272, 192, 32, 32),
+
+new Wall(game, 1272, 160, 32, 32),
+
+new Wall(game, 1272, 128, 32, 32),
+
+new Wall(game, 824, 112, 32, 32),
+
+new Wall(game, 856, 112, 32, 32),
+
+new Wall(game, 888, 112, 32, 32),
+
+new Wall(game, 984, 112, 32, 32),
+
+new Wall(game, 1016, 112, 32, 32),
+
+new Wall(game, 1048, 112, 32, 32),
+
+new Wall(game, 1080, 112, 32, 32),
+
+new Wall(game, 1112, 112, 32, 32),
+
+new Wall(game, 1144, 112, 32, 32),
+
+new Wall(game, 1176, 112, 32, 32),
+
+new Wall(game, 1208, 112, 32, 32),
+
+new Wall(game, 1240, 112, 32, 32),
+
+new Platform(game, -968, 448, 0, 0, 0, 1),
+
+new Platform(game, 24, 160, 0, 0, 0, 1),
+
+
 			];
 			var enemies = [
-			new SeaSlug(game, -1944, 426, 1, 96),
+			new SeaSlug(game, -1480, 432, -1, 32),
+
+new SeaSlug(game, -1320, 432, 1, 32),
+
+new SeaSlug(game, -840, 272, -1, 0),
+
+new SeaSlug(game, -136, 176, -1, 0),
+
+new SeaSlug(game, -232, 176, -1, 0),
+
+new SeaSlug(game, -328, 176, -1, 0),
+
+new SeaSlug(game, -376, 272, -1, 0),
+
+new SeaSlug(game, -184, 272, -1, 0),
+
+new SeaSlug(game, -280, 272, -1, 0),
+
+new SeaSlug(game, 312, 432, -1, 0),
+
+new SeaSlug(game, 392, 432, -1, 0),
+
+new SeaSlug(game, 232, 432, -1, 0),
+
+new SeaSlug(game, 1032, 80, 0, 0),
+
+new SeaSlug(game, 1160, 80, 0, 0),
+
+new Pirahna(game, -696, 384, 1, 0),
+
+new Pirahna(game, -744, 368, 1, 0),
+
+new Pirahna(game, -744, 400, 1, 0),
+
+new Pirahna(game, -328, 384, -1, 0),
+
+new Pirahna(game, -280, 368, -1, 0),
+
+new Pirahna(game, -280, 400, -1, 0),
+
+new Pirahna(game, 136, 144, 1, 128),
+
+new Pirahna(game, 136, 96, 1, 128),
+
+new Powerup(game, -1400, 432, JELLY_COIN),
+
+new Powerup(game, -952, 400, JELLY_COIN),
+
+new Powerup(game, -760, 432, JELLY_COIN),
+
+new Powerup(game, -760, 400, JELLY_COIN),
+
+new Powerup(game, -760, 368, JELLY_COIN),
+
+new Powerup(game, 584, 32, JELLY_COIN),
+
+new Powerup(game, 936, 176, JELLY_COIN),
+
+new Powerup(game, 936, 224, JELLY_COIN),
+
+new Powerup(game, -1784, 416, JELLY_COIN_SM),
+
+new Powerup(game, -1704, 416, JELLY_COIN_SM),
+
+new Powerup(game, -1864, 416, JELLY_COIN_SM),
+
+new Powerup(game, -1464, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1320, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1048, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1016, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1048, 400, JELLY_COIN_SM),
+
+new Powerup(game, -1016, 400, JELLY_COIN_SM),
+
+new Powerup(game, -1016, 432, JELLY_COIN_SM),
+
+new Powerup(game, -1048, 432, JELLY_COIN_SM),
+
+new Powerup(game, -840, 368, JELLY_COIN_SM),
+
+new Powerup(game, -840, 400, JELLY_COIN_SM),
+
+new Powerup(game, -840, 432, JELLY_COIN_SM),
+
+new Powerup(game, -872, 432, JELLY_COIN_SM),
+
+new Powerup(game, -872, 400, JELLY_COIN_SM),
+
+new Powerup(game, -872, 368, JELLY_COIN_SM),
+
+new Powerup(game, 40, 128, JELLY_COIN_SM),
+
+new Powerup(game, 56, 96, JELLY_COIN_SM),
+
+new Powerup(game, 40, 64, JELLY_COIN_SM),
+
+new Powerup(game, 56, 32, JELLY_COIN_SM),
+
+new Powerup(game, -568, 80, JELLY_COIN_SM),
+
+new Powerup(game, -440, 80, JELLY_COIN_SM),
+
+new Powerup(game, -312, 80, JELLY_COIN_SM),
+
+new Powerup(game, -184, 80, JELLY_COIN_SM),
+
+new Powerup(game, -456, 176, JELLY_COIN_SM),
+
+new Powerup(game, -344, 176, JELLY_COIN_SM),
+
+new Powerup(game, -232, 176, JELLY_COIN_SM),
+
+new Powerup(game, -136, 176, JELLY_COIN_SM),
+
+new Powerup(game, 216, 128, JELLY_COIN_SM),
+
+new Powerup(game, 264, 112, JELLY_COIN_SM),
+
+new Powerup(game, 312, 128, JELLY_COIN_SM),
+
+new Powerup(game, 360, 176, JELLY_COIN_SM),
+
+new Powerup(game, 392, 224, JELLY_COIN_SM),
+
+new Powerup(game, 168, 176, JELLY_COIN_SM),
+
+new Powerup(game, 664, 80, JELLY_COIN_SM),
+
+new Powerup(game, 664, 128, JELLY_COIN_SM),
+
+new Powerup(game, 664, 176, JELLY_COIN_SM),
+
+new Powerup(game, 664, 224, JELLY_COIN_SM),
+
+new Powerup(game, 1128, 288, JELLY_COIN_SM),
+
+new Powerup(game, 1032, 288, JELLY_COIN_SM),
+
+new Powerup(game, 1096, 80, JELLY_COIN_SM),
+
+new Powerup(game, 1192, 80, JELLY_COIN_SM),
+
+new Powerup(game, 1000, 80, JELLY_COIN_SM),
+
+new Powerup(game, 120, 432, JELLY_COIN_SM),
+
+new Powerup(game, 200, 432, JELLY_COIN_SM),
+
+new Powerup(game, 280, 432, JELLY_COIN_SM),
+
+new Powerup(game, 360, 432, JELLY_COIN_SM),
+
+new Powerup(game, 440, 432, JELLY_COIN_SM),
+
+new Powerup(game, 504, 432, JELLY_COIN_SM),
+
+new Powerup(game, 40, 432, JELLY_COIN_SM),
+
+new Powerup(game, -40, 432, JELLY_COIN_SM),
+
+new Powerup(game, -520, 176, ENTITY_MARKER),
+
+new Powerup(game, -72, 176, ENTITY_MARKER),
+
+new Powerup(game, -72, 272, ENTITY_MARKER),
+
+new Powerup(game, -488, 272, ENTITY_MARKER),
+
+new Powerup(game, -792, 352, ENTITY_MARKER),
+
+new Powerup(game, -792, 384, ENTITY_MARKER),
+
+new Powerup(game, -792, 416, ENTITY_MARKER),
+
+new Powerup(game, -584, 352, ENTITY_MARKER),
+
+new Powerup(game, -584, 384, ENTITY_MARKER),
+
+new Powerup(game, -584, 416, ENTITY_MARKER),
+
+new Powerup(game, -168, 384, ENTITY_MARKER),
+
+new Powerup(game, -488, 352, ENTITY_MARKER),
+
+new Powerup(game, -488, 384, ENTITY_MARKER),
+
+new Powerup(game, -488, 416, ENTITY_MARKER),
+
+new Powerup(game, -120, 352, ENTITY_MARKER),
+
+new Powerup(game, -120, 384, ENTITY_MARKER),
+
+new Powerup(game, -120, 416, ENTITY_MARKER),
+
+new Powerup(game, -1128, 272, ENTITY_MARKER),
+
+new Powerup(game, -776, 272, ENTITY_MARKER),
+
+new Powerup(game, 56, 432, ENTITY_MARKER),
+
+new Powerup(game, 584, 432, ENTITY_MARKER),
+
+new Powerup(game, 952, 80, ENTITY_MARKER),
+
+new Powerup(game, 1272, 80, ENTITY_MARKER),
+
+new Kelp(game, -56, -48),
+
+new Kelp(game, 8, 224),
+
+new Kelp(game, -1928, 224),
+
+new Kelp(game, 664, 208),
+
+new Kelp(game, 1336, 208),
+
+new Kelp(game, 1368, 208),
+new TunaChargeDropper(game, 936, 0),
+
+new Powerup(game, -1624, 288, TIP_MARKER, 1),
+
+new Powerup(game, -1096, 112, TIP_MARKER, 2),
+
+
+
+
+			/*new SeaSlug(game, -1944, 426, 1, 96),
 			new Isopod(game, -1844, 426 - 32, 1, 96),
 			new Eel(game, -1744, 426, 1, 0, 96),
 			new TopRamen(game, -1644, 326, 1, 0, 96),
@@ -4528,209 +5243,10 @@ new Platform(game, -728, 224),
 			new Pirahna(game, -1444 + 48 * 3, 326, 1, 96),
 			new Pirahna(game, -1444 + 48 * 4, 326, 1, 96),
 			new Uni(game, -1944, 400),
+			new ShellSnail(game, -1544, 426 - 32, 1, 96),
 			new Squid(game, -2000, 400),
-			
-			/*new Chicken(game, -1944, 336, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1864, 336, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1784, 336, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1704, 288, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1624, 288, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1544, 288, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1464, 224, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1384, 224, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1304, 224, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -1224, 64, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -920, 352, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -792, 352, 0, 0, 0, 0, 0),
-
-			new Chicken(game, -648, 352, 0, 0, 0, 0, 0),
-			*/
-
-
-
-			];
-		break;
-		case 2:
-			var powerups = [
-			];
-			var enemies = [new Chicken(game, 16880, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 16928, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 16976, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 17024, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 17072, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 17456, 160, 0, 0, 0, 0, 1),
-
-new Chicken(game, 17504, 160, 0, 0, 0, 0, 1),
-
-new Chicken(game, 17552, 160, 0, 0, 0, 0, 1),
-
-new Chicken(game, 17600, 160, 0, 0, 0, 0, 1),
-
-new Chicken(game, 17648, 160, 0, 0, 0, 0, 1),
-
-new Chicken(game, 17696, 160, 0, 0, 0, 0, 1),
-
-new Chicken(game, 17984, 0, 0, 0, 0, 0, 0),
-
-new Chicken(game, 17952, 64, 0, 0, 0, 0, 0),
-
-new Chicken(game, 17984, 128, 0, 0, 0, 0, 0),
-
-new Chicken(game, 18672, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 18736, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 18800, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 18864, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 18928, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 18672, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 18736, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 18800, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 18864, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 18928, 432, 0, 0, -0.10, -0.10, 0),
-
-new Chicken(game, 19104, 336, 0, 0, 0, 0, 0),
-
-new Chicken(game, 19104, 400, 0, 0, 0, 0, 0),
-
-new Chicken(game, 19104, 64, 0, 0, 0, 0, 0),
-
-new Chicken(game, 19104, 128, 0, 0, 0, 0, 0),
-
-new Chicken(game, 19904, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 19968, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 20032, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 19840, 0, 0, 0, -0.10, 0.10, 0),
-
-new Chicken(game, 19776, 0, 0, 0, -0.10, 0.10, 0),
-
-new Boar(game, 16576, 352),
-
-new Boar(game, 16672, 304),
-
-new Boar(game, 17248, 16),
-
-new Boar(game, 17248, 80),
-
-new Boar(game, 17248, 144),
-
-new Boar(game, 17888, 0),
-
-new Boar(game, 17856, 64),
-
-new Boar(game, 17888, 128),
-
-new Boar(game, 18512, 384),
-
-new Boar(game, 18464, 432),
-
-new Boar(game, 18416, 384),
-
-new Boar(game, 19168, 32),
-
-new Boar(game, 19136, 96),
-
-new Boar(game, 19168, 160),
-
-new Boar(game, 19168, 304),
-
-new Boar(game, 19152, 368),
-
-new Boar(game, 19168, 432),
-
-new Boar(game, 19296, 240),
-
-new Boar(game, 19392, 240),
-
-new Boar(game, 19584, 240),
-
-new Boar(game, 19680, 240),
-
-new Powerup(game, 17376, 96, 6),
-
-new Powerup(game, 16144, 224, 0),
-
-new Powerup(game, 19632, 128, 0),
-
-new Powerup(game, 19008, 160, 8),
-
-new Powerup(game, 19008, 224, 8),
-
-new Powerup(game, 19008, 288, 8),
-
-new Powerup(game, 19008, 352, 8),
-
-new Powerup(game, 19008, 432, 8),
-
-new Powerup(game, 19472, 0, 8),
-
-new Powerup(game, 19472, 64, 8),
-
-new Powerup(game, 19472, 128, 8),
-
-new Powerup(game, 19472, 192, 8),
-
-new Powerup(game, 19472, 256, 8),
-
-new Powerup(game, 19472, 320, 8),
-
-new Powerup(game, 19536, 0, 8),
-
-new Powerup(game, 19536, 64, 8),
-
-new Powerup(game, 19536, 128, 8),
-
-new Powerup(game, 19536, 192, 8),
-
-new Powerup(game, 19536, 256, 8),
-
-new Powerup(game, 19536, 320, 8),
-
-new Powerup(game, 18464, 224, 9),
-
-new Aya(game, 16704, 96),
-
-new Aya(game, 17520, 352),
-
-new Aya(game, 18016, 32),
-
-new Aya(game, 18784, 256),
-
-new Aya(game, 19168, 144),
-
-new Aya(game, 19168, 416),
-
-new Alpha(game, 20304, 152),
-
-new Powerup(game, 18880, 336, 12),
-
-
+			new Tentacle(game, -1444, 300),
+			new Tentacle(game, -1144, 300),*/
 
 			];
 		break;
@@ -4746,6 +5262,10 @@ new Powerup(game, 18880, 336, 12),
 	for (i = 0; i < platforms.length; i++) {
 		var p = platforms[i];
 		game.currentMap.platforms.push(p);
+	}
+	for (i = 0; i < objects.length; i++) {
+		var o = objects[i];
+		game.addEntity(o);
 	}
 }
 
@@ -4803,6 +5323,21 @@ ASSET_MANAGER.queueDownload("./img/Jelly/jelly_hurt_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_hurt_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_jump_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_jump_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_fall_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_fall_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_hurt_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_hurt_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_walk_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_walk_right.png");
+
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_attack_air_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_attack_air_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_attack_ground_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_attack_ground_right.png");
 
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attack_air_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attack_air_right.png");
@@ -4823,6 +5358,8 @@ ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_air_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_air_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_ground_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackuplong_ground_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackdownlong_left.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/jelly_attackdownlong_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/JellyPortrait.png");
 
 ASSET_MANAGER.queueDownload("./img/Enemy/seaslug_right.png");
@@ -4857,10 +5394,30 @@ ASSET_MANAGER.queueDownload("./img/Enemy/isopod_uncurl_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/isopod_uncurl_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/isopod_dead_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/isopod_dead_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/shellsnail_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/shellsnail_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/shellsnail_dead_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/shellsnail_dead_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/eel_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/eel_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/eel_dead_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/eel_dead_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_idle_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_idle_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_raise_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_raise_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slam_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slam_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slammed_right.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slammed_left.png");
+
+ASSET_MANAGER.queueDownload("./img/Misc/ship.png");
+ASSET_MANAGER.queueDownload("./img/Misc/ship_contact.png");
+ASSET_MANAGER.queueDownload("./img/Misc/t_key.png");
+ASSET_MANAGER.queueDownload("./img/Misc/kelp.png");
+ASSET_MANAGER.queueDownload("./img/Misc/tuna_charge.png");
+
+
 ASSET_MANAGER.queueDownload("./img/Enemy/chicken.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/boar_idle.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/boar_prep.png");
@@ -4886,6 +5443,8 @@ ASSET_MANAGER.queueDownload("./img/Enemy/blue_viper.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/aya.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/aya_shoot.png");
 
+ASSET_MANAGER.queueDownload("./img/Powerup/jellycoin.png");
+ASSET_MANAGER.queueDownload("./img/Powerup/jellycoin_sm.png");
 ASSET_MANAGER.queueDownload("./img/Powerup/hermes.png");
 ASSET_MANAGER.queueDownload("./img/Powerup/petaltorrent.png");
 ASSET_MANAGER.queueDownload("./img/Powerup/treeoflife.png");
