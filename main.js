@@ -119,7 +119,7 @@ var victory = new Audio("./sounds/victory.mp3");
 victory.loop = true;
 victory.volume = 0.1;
 var bounceSound = new Audio("./sounds/bounce.wav");
-bounceSound.volume = 0.3;
+bounceSound.volume = 0.1;
 var chargedBurstSound = new Audio("./sounds/chargedburst.wav");
 hitSound.volume = 1;
 var teleportSound = new Audio("./sounds/teleport.wav");
@@ -171,6 +171,7 @@ wooshSound.volume = 0.05;
 slapSound.volume = 0.05;
 beepsSound.volume = 0.05;
 var hitMetal = new Audio("./sounds/metalHit.wav");
+var drownHurtSound = new Audio("./sounds/drownhurt.wav");
 cannedTunaSound.volume = 0.03;
 energyUpSound.volume = 0.07;
 
@@ -407,6 +408,7 @@ function addEnergy(game, amount) {
 	if (game.player1.currentStamina + amount < 0) {
 		game.player1.currentStamina = 0;
 		applyDamage(game.player1.x, game.player1.y, game, Math.abs(amount), game.player1);
+		playSound(drownHurtSound);
 	} else if (amount < 0) {
 		game.player1.currentStamina += amount;
 	}
@@ -934,146 +936,6 @@ function updateBossResources(entity, ui) {
 }
 
 /**
-    Platform
-*/
-function Platform(game, x, y, hSpeed, vSpeed, switchDelay, specialId, stepOffset) {
-    // Number Variables
-    this.x = x;
-    this.y = y;
-    this.width = 63;
-    this.height = 16;
-    this.hSpeed = hSpeed || 0;
-    this.vSpeed = vSpeed || 0;
-    this.switchDelay = switchDelay || 0;
-	this.specialId = specialId || 0;
-    this.step = stepOffset || 0;
-    this.delay = 0;
-    if (this.vSpeed !== 0 && this.step > 0) {
-    	this.delay = this.step;
-    	this.step = 0;
-    }
-    // Pictures and Animations
-    this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/Platform.png");
-    if (this.specialId === 1) {
-        this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/PlatformBouncy.png");    	
-    }
-    if (this.specialId === 2) {
-        this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/PlatformFire.png");    	
-    }
-    
-    Entity.call(this, game, x, y);
-    
-    this.hitBoxDef = {
-    	width: this.width, height: this.height, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
-    };
-    createHitBox(this);
-}
-
-Platform.prototype = new Entity();
-Platform.prototype.constructor = Platform;
-
-Platform.prototype.update = function () {
-	// Only update when it is visible on the screen
-	if (isOnScreen(this)) {
-		if (this.delay > 0) {
-			this.delay--;
-		} else {
-			this.step++;
-			if (this.switchDelay > 0 && this.step % this.switchDelay === 0) {
-				this.hSpeed *= -1;
-				this.vSpeed *= -1;
-			}
-			if (this.specialId === 2) {
-				if (this.step >= 150) {
-					if (this.step === 150)
-			            playSound(fireSound);
-					if (this.step % 2 === 0) {
-						for (i = 0; i < this.hitBox.width; i += 10) {
-							if (Math.random() >= 0.5) {
-					            var particle = new Particle(SHAPE_PART, this.x + i, this.y, 1, -1, 0, -4, 0, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
-					            var element;
-					            element = new SquareElement(4 + Math.random() * 2, 4 + Math.random() * 2, "#f27d30", "#eab120");
-					            particle.other = element;
-					            particle.attackId = 5;
-					            this.game.addEntity(particle);
-							}
-						}
-					}
-				}
-				if (this.step >= 200)
-					this.step = 0;
-			}
-		    this.x += this.hSpeed;
-		    this.y += this.vSpeed;
-		}
-	}
-    if ((this.game.currentPhase === 10 || this.game.currentPhase === 17) && !this.removeFromWorld) {
-        if (this.game.liveCamera.y <= -120 && this.hitBox.y + this.hitBox.height >= this.game.liveCamera.y + 500) {
-			for (i = 0; i < this.hitBox.width; i += 10) {
-	            playSound(breakSound);
-	            var particle = new Particle(SHAPE_PART, this.x + i, this.y, 4, -4, 0, -4, 0.15, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
-	            var element;
-	            if (this.specialId === 0)
-	            	element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#123D5C", "#386586");
-	            else if (this.specialId === 1)
-	            	element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#39682D", "#41850B");
-	            else
-	            	element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#3A1F0E", "#7F5336");	            	
-	            particle.other = element;
-	            this.game.addEntity(particle);
-			}
-			this.removeFromWorld = true;
-        }
-    }
-    Entity.prototype.update.call(this);
-};
-
-Platform.prototype.draw = function (ctx) {
-	if (isOnScreen(this)) {
-		if (!this.removeFromWorld) {
-		    ctx.drawImage(this.platformPicture, this.x, this.y, this.width, this.height); 
-			drawHitBox(this, ctx);
-		}
-	}
-	Entity.prototype.draw.call(this);
-}
-
-/**
-    Platform
-*/
-function Wall(game, x, y, width, height) {
-    // Number Variables
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-    this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/Bottom.png");
-    this.isWall = true;
-	this.hSpeed = 0;
-	this.vSpeed = 0;
-    
-    Entity.call(this, game, x, y);
-    
-    this.hitBoxDef = {
-    	width: this.width, height: this.height, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
-    };
-    createHitBox(this);
-}
-
-Wall.prototype = new Entity();
-Wall.prototype.constructor = Wall;
-
-Wall.prototype.update = function () {
-    Entity.prototype.update.call(this);
-};
-
-Wall.prototype.draw = function (ctx) {
-    ctx.drawImage(this.platformPicture, 0, 0, this.width, this.height, this.x, this.y, this.width, this.height); 
-    drawHitBox(this, ctx);
-	Entity.prototype.draw.call(this);
-}
-
-/**
     Map
 */
 
@@ -1102,79 +964,6 @@ Map.prototype.draw = function (ctx) {
         currentPlatform.draw(ctx);
     });
     Entity.prototype.draw.call(this);
-}
-
-function createPlatforms2(game) {
-	var powerups = [
-		new Powerup(game, 1184, -1904, 0), //health powerup
-		new Powerup(game, 848, -2064, 2), //void gate spawner
-		new Powerup(game, 896, -2368, 2), //void gate spawner
-		new Powerup(game, 832, -2512, 0), //health powerup
-		new Powerup(game, 1184, -2832, 1), //invuln powerup
-		new Powerup(game, 1520, -3072, 2), //void gate spawner
-		new Powerup(game, 1200, -3504, 2), //void gate spawner
-		new Powerup(game, 816, -3312, 1), //invuln powerup
-		new Powerup(game, 1152, -3840, 2), //void gate spawner
-		new Powerup(game, 848, -3984, 2), //void gate spawner
-		new Powerup(game, 928, -3984, 1), //invuln powerup
-		new Powerup(game, 1136, -4176, 0), //health powerup
-		new Powerup(game, 816, -4368, 2), //void gate spawner
-		new Powerup(game, 816, -4592, 0), //health powerup
-		new Powerup(game, 944, -4688, 2), //void gate spawner
-		new Powerup(game, 880, -4640, 0), //health powerup
-		new Powerup(game, 1056, -4976, 0), //health powerup
-		new Powerup(game, 1312, -4976, 0), //health powerup
-		new Powerup(game, 1056, -5072, 0), //health powerup
-		new Powerup(game, 1312, -5072, 0), //health powerup		
-		new Powerup(game, 1168, -3648, 0), //health powerup
-		new Powerup(game, 816, -2928, 0) //health powerup
-	];
-	var voidlings = [
-	];
-	var platforms = [
-	];
-	for (i = 0; i < platforms.length; i++) {
-		var p = platforms[i];
-		game.currentMap.platforms.push(p);
-	}
-	for (i = 0; i < voidlings.length; i++) {
-		var v = voidlings[i];
-		game.addEntity(v);
-	}
-	for (i = 0; i < powerups.length; i++) {
-		var v = powerups[i];
-		game.addEntity(v);
-	}
-}
-
-function createPlatforms(game) {
-	var powerups = [
-		
-		new Powerup(game, 816, -544, 0), //health powerup
-		
-		new Powerup(game, 816, 0, 0), //health powerup
-		
-		new Powerup(game, 1552, -896, 0), //health powerup
-		
-		new Powerup(game, 1216, -992, 0), //health powerup
-	]
-	var voidlings = [
-	];
-	var platforms = [
-	];
-	for (i = 0; i < platforms.length; i++) {
-		var p = platforms[i];
-		//console.log("adding new platform: "+p.x+","+p.y);
-		game.currentMap.platforms.push(p);
-	}
-	for (i = 0; i < voidlings.length; i++) {
-		var v = voidlings[i];
-		game.addEntity(v);
-	}
-	for (i = 0; i < powerups.length; i++) {
-		var v = powerups[i];
-		game.addEntity(v);
-	}
 }
 
 function Bullet(game, x, y, vspeed, hspeed, type, specialId) {
@@ -3184,24 +2973,32 @@ Character.prototype.update = function () {
 					if (that.hitBox.x < (currentPlatform.hitBox.x + currentPlatform.hitBox.width - 1)) {
 						if ((that.hitBox.y + that.hitBox.height) + currentPlatform.vSpeed <= currentPlatform.hitBox.y || (that.hitBox.y + that.hitBox.height) - currentPlatform.vSpeed <= currentPlatform.hitBox.y) {
 							if ((that.hitBox.y + that.hitBox.height - (that.yVelocity - that.gravity )) >= currentPlatform.hitBox.y) {
-								platformFound = true;
-								if (currentPlatform.isWall) {
-									wallFound = true;
-								}
-								if (currentPlatform.specialId === 1) { //bouncy platform
-									that.yVelocity = 15;
-									that.bounceTimer = 30;
-									that.jumpSpeed = 0;
-									that.jumping = true;
-									playSound(bounceSound);
+								if (currentPlatform.fadeAmount >= 0.5) {
+									//fall through
 								} else {
-									that.x += currentPlatform.hSpeed;
-									that.y += currentPlatform.vSpeed;
-									that.yVelocity = 0;
-									if (that.falling) {
-										that.falling = false;
+									if (currentPlatform.specialId == PLATFORM_BREAK && !currentPlatform.trigger) {
+										currentPlatform.trigger = true;
+										currentPlatform.step = 0;
+									}
+									platformFound = true;
+									if (currentPlatform.isWall) {
+										wallFound = true;
+									}
+									if (currentPlatform.specialId === PLATFORM_BOUNCY) { //bouncy platform
+										that.yVelocity = 15;
+										that.bounceTimer = 30;
+										that.jumpSpeed = 0;
+										that.jumping = true;
+										playSound(bounceSound);
+									} else {
+										that.x += currentPlatform.hSpeed;
+										that.y += currentPlatform.vSpeed;
 										that.yVelocity = 0;
-										that.y = currentPlatform.hitBox.y - that.hitBox.height - that.hitBoxDef.offsetY;
+										if (that.falling) {
+											that.falling = false;
+											that.yVelocity = 0;
+											that.y = currentPlatform.hitBox.y - that.hitBox.height - that.hitBoxDef.offsetY;
+										}
 									}
 								}
 							}
@@ -4579,8 +4376,10 @@ function spawnWave(game, number) {
 			var powerups = [
 			];
 			var platforms = [
-
-
+new Platform(game, -2144, 400, 0, 0, 0, PLATFORM_BREAK, 0),
+new Platform(game, -2144 + 64, 400, 0, 0, 0, PLATFORM_BREAK, 0),
+new Platform(game, -2144, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
+new Platform(game, -2144 + 64, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -1544, 400),
 
 new Platform(game, -1480, 400),
@@ -5343,6 +5142,8 @@ ASSET_MANAGER.queueDownload("./img/Misc/ship_contact.png");
 ASSET_MANAGER.queueDownload("./img/Misc/t_key.png");
 ASSET_MANAGER.queueDownload("./img/Misc/kelp.png");
 ASSET_MANAGER.queueDownload("./img/Misc/tuna_charge.png");
+
+ASSET_MANAGER.queueDownload("./img/Platform/invisible_shine.png");
 
 
 ASSET_MANAGER.queueDownload("./img/Enemy/chicken.png");

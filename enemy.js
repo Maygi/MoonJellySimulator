@@ -217,7 +217,6 @@ class Enemy {
 				0, 0, 0, 0, 0, 0, 0, 30, 0, 10, 1, 0, false, this.game, this.currentAnimation));
 			var coins = this.scoreValue / 25;
 			var bigCoins = 0;
-			console.log("Value: " + this.scoreValue + "; Coins: " + coins + "; big coins: " + bigCoins);
 			if (coins >= 8) {
 				bigCoins = this.scoreValue / 100;
 				coins = (this.scoreValue % 100) / 25;
