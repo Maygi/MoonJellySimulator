@@ -161,8 +161,11 @@ var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
 var coinSound = new Audio("./sounds/coin.wav");
 var slapSound = new Audio("./sounds/slap.wav");
 var beepSound = new Audio("./sounds/beep.mp3");
+var rumbleSound = new Audio("./sounds/rumble.wav");
 var beepsSound = new Audio("./sounds/beeps.wav");
 var wooshSound = new Audio("./sounds/woosh.wav");
+var boomSound = new Audio("./sounds/boom.mp3");
+boomSound.volume = 0.1;
 var slashSound = new Audio("./sounds/slash.mp3");
 wooshSound.volume = 0.05;
 slapSound.volume = 0.05;
@@ -410,7 +413,7 @@ function addEnergy(game, amount) {
 	if (game.player1.currentStamina < game.player1.maxStamina && amount > 0) {
 		var oldStamina = game.player1.currentStamina;
 		game.player1.currentStamina += amount;
-		if (game.player1.currentForm > 0 && oldStamina <= game.player1.maxStamina && game.player1.currentStamina >= game.player1.maxStamina) {
+		if (game.player1.currentForm >= FORM_ANGLER && oldStamina <= game.player1.maxStamina && game.player1.currentStamina >= game.player1.maxStamina) {
 			playSound(energyMaxSound);
 			game.player1.currentStamina = game.player1.maxStamina;
 			for (var i = 0; i < 50; i++) {
@@ -442,6 +445,21 @@ function playSound(audio) {
     }
 	if (audio.volume === 1) //default volume
 		audio.volume = 0.3;
+    audio.currentTime = 0;
+    audio.play();
+}
+
+// Plays the given audio
+function playSoundProx(game, source, audio) {
+    if (!soundOn) {
+        return;
+    }
+	audio.volume = 0.1;
+	var dist = getDistance(game.player1.x + game.player1.hitBoxDef.offsetX + game.player1.hitBoxDef.width / 2, game.player1.y + game.player1.hitBoxDef.offsetY + game.player1.hitBoxDef.height / 2, 
+		source.x, source.y);
+	var mult = 1 - dist / 500;
+	//console.log("distance: "+ dist + "; mult: " + mult);
+	audio.volume = audio.volume * Math.max(0, mult);
     audio.currentTime = 0;
     audio.play();
 }
@@ -571,7 +589,7 @@ Background.prototype.draw = function (ctx) {
 	for (var i = 0; i < 30; i++) {
 		ctx.drawImage(ASSET_MANAGER.getAsset("./img/Background.png"), -2400 + i * 800, 0);
 	}
-    ctx.drawImage(ASSET_MANAGER.getAsset("./img/Misc/tree.png"), 1500, -200);
+    //ctx.drawImage(ASSET_MANAGER.getAsset("./img/Misc/tree.png"), 1500, -200);
     Entity.prototype.draw.call(this);
 };
 
@@ -1539,6 +1557,8 @@ function Particle(particleId, x, y, minHSpeed, maxHSpeed, minVSpeed, maxVSpeed,
 	this.targetX = null;
 	this.targetY = null;
 	this.targetSpeed = 0;
+	this.converge = false;
+	this.convergeMultiplier = 20;
 	if (fadeIn > 0) {
 		this.alpha = 0;
 	} else {
@@ -1560,21 +1580,30 @@ Particle.prototype.constructor = Particle;
 Particle.prototype.update = function() {
 	if ((this.particleId === BRANDONG_WHIP || this.attackId === BRANDONG_WHIPLINE || this.attackId === BRANDONG_WHIPWALL) && this.game.currentPhase === 9)
 		this.removeFromWorld = true;
-	if (this.targetX !== null && this.targetY !== null && this.targetSpeed !== 0) { //assign a speed to chase the target
-		var dx = this.targetX - this.x;
-		var dy = this.targetY - this.y;
-		if (Math.abs(dx) > Math.abs(dy)) {
-			this.hSpeed = this.targetSpeed;
-			this.vSpeed = Math.abs(dy / dx) * this.targetSpeed;
+	if ((this.targetX !== null && this.targetY !== null && this.targetSpeed !== 0) || this.converge) { //assign a speed to chase the target
+		var dx = this.targetX - (this.x + this.hitBox.width / 2);
+		var dy = this.targetY - (this.y + this.hitBox.height / 2);
+		if (this.converge) {
+			this.hSpeed = 0;
+			this.vSpeed = 0;
+			this.gravity = 0;
+			this.x += dx / this.convergeMultiplier;
+			this.y += dy / this.convergeMultiplier;
+			//console.log("CONVERGE TO : " + this.x);
 		} else {
-			this.vSpeed = this.targetSpeed;	
-			this.hSpeed = Math.abs(dx / dy) * this.targetSpeed;
+			if (Math.abs(dx) > Math.abs(dy)) {
+				this.hSpeed = this.targetSpeed;
+				this.vSpeed = Math.abs(dy / dx) * this.targetSpeed;
+			} else {
+				this.vSpeed = this.targetSpeed;	
+				this.hSpeed = Math.abs(dx / dy) * this.targetSpeed;
+			}
+			this.hSpeed = dx > 0 ? this.hSpeed : -1 * this.hSpeed;
+			this.vSpeed = dy > 0 ? this.vSpeed : -1 * this.vSpeed;
+			this.targetX = null;
+			this.targetY = null;
+			this.targetSpeed = 0;
 		}
-		this.hSpeed = dx > 0 ? this.hSpeed : -1 * this.hSpeed;
-		this.vSpeed = dy > 0 ? this.vSpeed : -1 * this.vSpeed;
-		this.targetX = null;
-		this.targetY = null;
-		this.targetSpeed = 0;
 		//console.log("hspeed: " + this.hSpeed + "; vspeed: " + this.vSpeed);
 	}
 	if (this.particleId === IMG_PART) {
@@ -1608,7 +1637,7 @@ Particle.prototype.update = function() {
 	    	this.life = 0;
 	    	this.explodeTime = 5;
 			this.vSpeed = 0;
-	    	playSound(explosionSound);
+	    	playSoundProx(this.game, this, explosionSound);
 	    	/*this.game.cameraShakeTime = 20;
 	    	this.game.cameraShakeAmount = 40;
 	    	this.game.cameraShakeDecay = 1;*/
@@ -2539,6 +2568,11 @@ Powerup.prototype.draw = function (ctx) {
 // equipment ID
 var LONG_RANGE = 0;
 
+// form IDs
+var FORM_BABY = 0;
+var FORM_WATERBREATHE = 1;
+var FORM_ANGLER = 2;
+
 /**
     Character (Character ID)
 */
@@ -2615,6 +2649,7 @@ function Character(game) {
 	this.queuedAction = "";
 	this.queuedTime = 0;
 	this.binded = false;
+	this.phaseTick = 0;
 	
 	this.lastX = 0;
 	this.lastY = 0;
@@ -2655,6 +2690,8 @@ function Character(game) {
     this.attackAnimationDefDownLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_left.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
     this.attackAnimationDefDownRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/jelly_attackdown_right.png"), 0, 0, 64, 128, .1, 4, false, false, 32, 32);
     this.bindAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_binded.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
+    this.wokeAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_woke.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
+    this.wokeAnimation2 = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_woke2.png"), 0, 0, 64, 64, 0.3, 2, true, false, 32, 32);
 	
 	//baby jelly
     this.idleAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_idle_right.png"), 0, 0, 128, 128, .1, 32, true, false, 0, 0);
@@ -2740,7 +2777,7 @@ Character.prototype.notBaby = function() {
     this.fallAnimationLeft = this.fallAnimationDefLeft;
     this.hurtAnimationRight = this.hurtAnimationDefRight;
     this.hurtAnimationLeft =this.hurtAnimationDefLeft;
-	this.currentForm = 1;
+	this.currentForm = FORM_ANGLER;
 }
 
 Character.prototype.defaultAnimations = function() {
@@ -2852,6 +2889,7 @@ Character.prototype.update = function () {
 	var that = this;
 	if (this.cooldown > 0)
 		this.cooldown--;
+	this.phaseTick++;
     if (gameStarted) {
 		//game phase management
 		if (this.game.currentPhase < 1) {
@@ -2861,6 +2899,25 @@ Character.prototype.update = function () {
 			this.game.step = 0;
 			//this.game.addEntity(chat);
             this.game.currentPhase = 1;
+		}
+		if (this.game.currentPhase == 3 && this.phaseTick > 90) { //JELLY WOKE
+			if (this.phaseTick == 91)
+				playSound(rumbleSound);
+			var maxDiff = 100 + Math.min(800, this.phaseTick * 10);
+			var chosenX = this.x - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.offsetX;
+			var chosenY =  this.y - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.height + this.hitBoxDef.offsetY;
+			var theDistance = getDistance(chosenX, chosenY, this.game.player1.x, this.game.player1.y);
+			var newParticle = new Particle(PART_SECONDARY, chosenX, chosenY, 
+					-2, 2, -2, 2, 0, 0.3, 0, 0, 0, 80, .3, .15, true, this.game);
+			element = new SquareElement((10 + Math.random() * 10) * Math.min(3, this.phaseTick / 30), 
+				(10 + Math.random() * 10) * Math.min(3, this.phaseTick / 30), "#a6f9ff", "#6ae2eb");
+			newParticle.other = element;
+			newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.hitBoxDef.offsetX;
+			newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.hitBoxDef.offsetY;
+			newParticle.converge = true;
+			var distMultiplier = Math.min(1, theDistance / maxDiff);
+			newParticle.convergeMulitplier = 10 / distMultiplier + 5;
+			this.game.addEntity(newParticle);
 		}
 		if (this.phaseTimer > 0) {
 			this.phaseTimer--;
@@ -2992,7 +3049,7 @@ Character.prototype.update = function () {
 					this.destinationY = -1;
 			}
 		}
-		if (!this.dead && gameStarted && this.currentForm == 0 && this.game.step % 30 == 0) { //baby drowns
+		if (!this.dead && gameStarted && this.currentForm == FORM_BABY && this.game.step % 30 == 0) { //baby drowns
 			addEnergy(this.game, -2);
 		}
         if (this.currentHealth <= 0 && !this.dead) {
@@ -3106,10 +3163,17 @@ Character.prototype.update = function () {
             } else {
 				this.running = false;
             }
-			if (this.binded && this.game.step % 30 == 0) {
-				this.game.cameraShakeTime = 10;
-				this.game.cameraShakeAmount = 10;
-				this.game.cameraShakeDecay = 1;
+			if (this.binded) {
+				if (this.currentForm == FORM_BABY && this.game.step % 30 == 0) {
+					this.game.cameraShakeTime = 10;
+					this.game.cameraShakeAmount = 10;
+					this.game.cameraShakeDecay = 1;
+				} else if (this.currentForm == FORM_WATERBREATHE && this.phaseTick > 90 && this.game.step % 5 == 0) {
+					this.game.cameraShakeTime = 5;
+					this.game.cameraShakeAmount = 25;
+					this.game.cameraShakeDecay = 5;
+					
+				}
 			}
 	
 			var platformFound = false;
@@ -3192,7 +3256,7 @@ Character.prototype.update = function () {
 							this.attackDirection = "Right";
 						else
 							this.attackDirection = this.lastDirection;
-						if (this.currentForm > 0) {
+						if (this.currentForm >= FORM_ANGLER) {
 							if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
 								this.attackIndex = 2;
 							else if (this.upDown)
@@ -3211,7 +3275,7 @@ Character.prototype.update = function () {
 			//extended hitboxes
 			var xBonus = 0;
             var yBonus = 0;
-			var attackRange = this.currentForm == 0 ? 32 : 48;
+			var attackRange = this.currentForm < FORM_ANGLER ? 32 : 48;
 			if (this.equipment[LONG_RANGE]) {
 				attackRange = 72;
 			}
@@ -3333,7 +3397,7 @@ Character.prototype.update = function () {
 							createX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
 							createY = this.game.player1.y + (yBonus > 0 ? this.game.player1.hitBoxDef.height : 0) + this.game.player1.hitBoxDef.offsetY;
 						}
-						var partAmount = this.currentForm == 0 ? 3 : 6;
+						var partAmount = this.currentForm < FORM_ANGLER ? 3 : 6;
 						for (var i = 0; i < partAmount; i++) {
 							var newParticle = new Particle(PART_SECONDARY, createX, createY, 
 									-5, 5, -5, 5, 0, 0.15, 0, 0, 0, 50, .75, .15, true, this.game);
@@ -3343,11 +3407,11 @@ Character.prototype.update = function () {
 						}
 						this.game.player1.targetHit.push(targetEntity);
 						var damage = 25;
-						if (this.currentForm == 0) //baby
+						if (this.currentForm < FORM_ANGLER) //baby
 							damage = 15;
 						applyDamage(targetEntity.x, targetEntity.y, this.game, 15, targetEntity);
-						playSound(this.currentForm > 0 ? lightningSound : shotHitSound);
-						addEnergy(this.game, this.currentForm > 0 ? 20 : 0);
+						playSound(this.currentForm < FORM_ANGLER ? shotHitSound : lightningSound);
+						addEnergy(this.game, this.currentForm >= FORM_ANGLER ? 20 : 0);
 					}
 					switch(this.game.player1.attackIndex) {
 						case 1: //side hit
@@ -3503,7 +3567,20 @@ Character.prototype.draw = function (ctx) {
 		}
 		var doNotDraw = false;
 		if (this.binded) {
-			this.currentAnimation = this.bindAnimation;
+			if (this.currentForm == FORM_BABY)
+				this.currentAnimation = this.bindAnimation;
+			else if (this.phaseTick <= 90)
+				this.currentAnimation = this.wokeAnimation;
+			else {
+				if (this.phaseTick == 91) {
+					playSound(boomSound);
+					var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+							0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0.3, 0, false, this.game,
+							new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
+					this.game.addEntity(newParticle);
+				}
+				this.currentAnimation = this.wokeAnimation2;
+			}
 		} else if (this.stunned) {
 			this.currentAnimation = this.hurtAnimation;
 		} else if (this.attacking && this.attackAnimation != null) { // Attacking
@@ -3975,52 +4052,6 @@ function Brandong(game, x, y) {
 }
 
 Brandong.prototype.update = function() {
-	if (this.game.player1.dead)
-		return;
-    for (i = 0; i < this.cooldown.length; i++) {
-        if (this.cooldown[i] > 0)
-            this.cooldown[i]--;
-    }
-	if (this.hurtTimer > 0)
-		this.hurtTimer--;
-	if (this.step <= 100 && this.game.currentPhase >= 4) { //walk into the screen
-		this.x += 3;
-	}
-	if (this.game.currentPhase >= 4)
-		this.step++;
-	if (this.step >= 100 && this.game.currentPhase === 4 && this.state !== "idle") {
-		if (this.game.player1.phaseTimer === 0) {
-			var chat = new TextBox(this.game, "./img/Chat/BrandongSquare.png", "Grrrrrrrr...");
-			this.game.addEntity(chat);
-			this.currentAnimation = this.idleRight;
-			this.state = "idle";
-		}
-	}
-	if (this.game.currentPhase === 5 || (this.game.currentPhase === 4 && this.game.player1.phaseTimer > 0)) {
-		if (mode === "easy") {
-			this.x += 4;
-		} else if (mode === "medium") {
-			this.x += 4.5;
-		} else {
-			this.x += 5.5;
-		}
-		this.state = "walking";
-		if ((checkCollision(this, this.game.player1) || this.game.player1.x < this.x) && !this.game.player1.hitByAttack) {
-			if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-				this.game.player1.vulnerable = false;
-				applyDamage(this.game.player1.x, this.game.player1.y, this.game, this.autoDamage, this.game.player1);
-				this.game.player1.hitByAttack = true;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-                this.game.player1.xVelocity = 7;
-				playSound(hitSound);
-				if (this.game.player1.lastDirection == "Left") {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-				} else {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-				}
-			}
-		}
-	}
 }
 
 Brandong.prototype.draw = function (ctx) {
@@ -4543,7 +4574,7 @@ function spawnWave(game, number) {
 		case 1:
 			var objects = [		
 				new Spaceship(game, -2400, 370),
-				new LivingKelp(game, -2100, 208),
+				new LivingKelp(game, 1600, 208),
 			];
 			var powerups = [
 			];
@@ -5217,6 +5248,8 @@ ASSET_MANAGER.queueDownload("./img/Jelly/jelly_hurt_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_binded.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_woke.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_woke2.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_jump_left.png");

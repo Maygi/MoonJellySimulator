@@ -183,7 +183,7 @@ GameEngine.prototype.startInput = function () {
         } else if (String.fromCharCode(e.which) === 'Q') {
 			that.player1.attackInput = 2;
         } else if (String.fromCharCode(e.which) === 'C') {
-			if (that.player1.currentStamina >= 100) { //ulti
+			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER && that.player1.currentStamina >= 100) { //ulti
 				that.player1.currentStamina = 0;
 				cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
 			}

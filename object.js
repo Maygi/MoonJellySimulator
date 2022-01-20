@@ -163,8 +163,9 @@ class LivingKelp extends BackgroundObject {
 		this.interactDistance = 25;
 		this.cooldown = 5;
 		this.backgroundObject = true;
-		this.currentHealth = 100;
+		this.currentHealth = 20;
 		this.maxHealth = 100;
+		this.explodeTimer = 0;
 		this.currentAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Misc/kelp.png"), 0, 0, 32, 264, 0.5, 20, true, false, 0, 0);
 		this.hitBoxDef = {
 			width: 32, height: 264, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
@@ -173,6 +174,26 @@ class LivingKelp extends BackgroundObject {
 	}
 	
 	update() {
+		if (this.explodeTimer > 0) {
+			this.explodeTimer--;
+			if (this.explodeTimer == 80)
+				playSound(chargedBurstSound);
+			if (this.explodeTimer == 0) {
+				for (var i = 0; i < 22; i++) {
+					for (var parts = 0; parts < 3; parts++) {
+						var newParticle = new Particle(PART_SECONDARY, (this.x + this.hitBoxDef.width / 2), (this.y + 12 * i), 
+								-4, 4, -3, -3, 0.3, 0.03, 0, 0, 0, 60, .7, .15, true, this.game);
+						var element = new SquareElement(16, 16, "#0e4533", "#156373");
+						newParticle.other = element;
+						this.game.addEntity(newParticle);
+					}
+				}
+				this.removeFromWorld = true;
+				this.game.player1.canControl = true;
+				this.game.player1.binded = false;
+				this.game.currentPhase = 4;
+			}
+		}
 		if (this.tick % 10 == 0) {
 			var newParticle = new Particle(PART_SECONDARY, (this.x + this.hitBoxDef.width / 2), (this.y + this.hitBoxDef.height), 
 					-1, 1, -4.5, -5, 0.03, 0.03, 0, 0, 0, 180, .3, .15, true, this.game);
@@ -180,7 +201,7 @@ class LivingKelp extends BackgroundObject {
 			newParticle.other = element;
 			this.game.addEntity(newParticle);
 		}
-		if (this.distanceToPlayer() <= this.interactDistance && this.phase == 0) { 
+		if (this.distanceToPlayer() <= this.interactDistance && this.phase == 0) {
 			var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
 					0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
 			var damageText = new TextElement("!", "Lucida Console", 50, "#ffd43a", "black");
@@ -264,9 +285,22 @@ class ButtonChallenge extends BackgroundObject {
 		this.buttonScrollSpeed = 15;
 		this.buttonScrollAmount = 0;
 		this.cooldown = 5;
-		if (this.kelp != null)
-			this.kelp.currentHealth -= 1;
 		playSound(beepSound);
+		if (this.kelp != null) {
+			this.kelp.currentHealth -= 1;
+			if (this.kelp.currentHealth == 0) {
+				this.kelp.explodeTimer = 300;
+				this.game.currentPhase = 3;
+				this.game.player1.currentForm = FORM_WATERBREATHE;
+				this.game.player1.phaseTick = 0;
+				playSound(boomSound);
+				var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0.3, 0, false, this.game,
+						new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.03, 1, true, false, 0, 0));
+				this.game.addEntity(newParticle);
+				this.removeFromWorld = true;
+			}
+		}
 	}
 	fail() {
 		var particle = new Particle(TEXT_PART, 300 + this.game.liveCamera.x + 6, 150 + this.game.liveCamera.y, 
