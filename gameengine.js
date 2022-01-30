@@ -171,7 +171,9 @@ GameEngine.prototype.startInput = function () {
 			that.interactDown = true;
 		}
 		if (String.fromCharCode(e.which) === 'C') {
-			that.player1.attackInput = 2;
+			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER) { //dash
+				that.player1.attackInput = 2;
+			}
         } else if (String.fromCharCode(e.which) === 'Z') {
 			that.player1.attackInput = 1;
         } else if (String.fromCharCode(e.which) === 'R') {
