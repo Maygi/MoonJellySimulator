@@ -48,9 +48,9 @@ var TUNA_CHARGE_EXPLODE = 12;
 var gameStarted = false;
 var mode = "hard";
 // Sounds
-/*var startMusic = new Audio("./sounds/startMusic.mp3");
+var startMusic = new Audio("./sounds/startMusic.mp3");
 startMusic.loop = true;
-startMusic.volume = 0.1;*/
+startMusic.volume = 0.1;
 var bossMusic = new Audio("./sounds/bgm_boss.mp3");
 bossMusic.loop = true;
 bossMusic.volume = bossMusicVolume;
@@ -166,6 +166,8 @@ var beepsSound = new Audio("./sounds/beeps.wav");
 var wooshSound = new Audio("./sounds/woosh.wav");
 var boomSound = new Audio("./sounds/boom.mp3");
 boomSound.volume = 0.1;
+var boomSound2 = new Audio("./sounds/boom2.wav");
+boomSound2.volume = 0.1;
 var slashSound = new Audio("./sounds/slash.mp3");
 wooshSound.volume = 0.05;
 slapSound.volume = 0.05;
@@ -364,6 +366,12 @@ function getRandomColor(color1, color2) {
 function isOnScreen(entity) {
 	return (entity.x + entity.hitBoxDef.width >= entity.game.liveCamera.x - 50 && entity.x <= entity.game.liveCamera.x + entity.game.liveCamera.width + 50
 			&& entity.y >= entity.game.liveCamera.y -50 && entity.y <= entity.game.liveCamera.y + entity.game.liveCamera.height + 50);
+}
+
+// Returns whether or not the entity is NEARBY the screen
+function isNearbyScreen(entity) {
+	return (entity.x + entity.hitBoxDef.width >= entity.game.liveCamera.x - 250 && entity.x <= entity.game.liveCamera.x + entity.game.liveCamera.width + 250
+			&& entity.y >= entity.game.liveCamera.y - 250 && entity.y <= entity.game.liveCamera.y + entity.game.liveCamera.height + 250);
 }
 
 // Returns whether or not the entity is on the screen in terms of X only
@@ -705,7 +713,7 @@ UI.prototype.draw = function (ctx) { //draw ui
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBar.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealth / this.game.currentBoss.maxHealth), this.bossHealthHeight);
     	//ctx.drawImage(ASSET_MANAGER.getAsset("./img/Enemy/brandong_portrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
-        ctx.fillText("Living Kelp                      " + this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
+        ctx.fillText("Demon Kelp                      " + this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
     }
     if (this.game.currentPhase === 7 || this.game.currentPhase === 8) {
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
@@ -1437,10 +1445,12 @@ Particle.prototype.update = function() {
 			newParticle.grow = true;
 			newParticle.attackId = TUNA_CHARGE_EXPLODE;
 			newParticle.overrideHitbox = {
-				x: this.x - 100 + 16, 
-				y: this.y - 100 + 16,
+				x: this.x + 16, 
+				y: this.y + 16,
 				width: 200, 
-				height: 200
+				height: 200,
+				offsetX: -100,
+				offsetY: -100
 			};
 			this.game.addEntity(newParticle);
 	    }
@@ -1729,6 +1739,8 @@ Particle.prototype.update = function() {
 
 	if (this.overrideHitbox != null) {
 		this.hitBox = this.overrideHitbox;
+		this.hitBox.x = this.x;
+		this.hitBox.y = this.y;
 	} else if (this.particleId == IMG_PART) {
 		this.hitBox = { //update hitbox as we move
 			x: this.x, 
@@ -1766,7 +1778,7 @@ Particle.prototype.update = function() {
 			}
 		}
 	}
-    if (checkCollision(this, this.game.player1) && !this.game.player1.hitByAttack) {
+    if (checkCollision(this, this.game.player1) && !this.game.player1.hitByAttack) { 
 		if (this.attackId == TUNA_CHARGE && this.canHit) {
 			this.canHit = false;
 		}
@@ -2419,6 +2431,9 @@ function Character(game) {
 	this.runningVertical = false;
     this.dead = false;
     this.jumping = false;
+	this.dashing = false;
+	this.dashTime = 0;
+	this.dashIndex = 0;
     this.falling = true;
 	this.attacking = false;
     this.vulnerable = true;
@@ -2432,6 +2447,7 @@ function Character(game) {
     this.jumpDown = false;
 	this.lastDirectionVertical = "Up";
 	this.cooldown = 0;
+	this.dashCooldown = 0;
 	this.isPlayer = true;
 	this.phaseTimer = 0;
 	this.alternate = 0;
@@ -2442,6 +2458,12 @@ function Character(game) {
 	
 	this.lastX = 0;
 	this.lastY = 0;
+	
+	this.lastSafeX = -1;
+	this.lastSafeY = -1;
+	this.lastPlatform = null;
+	this.teleportToX = -1;
+	this.teleportToY = -1;
     
     this.timesHit = 0;
 	this.currentForm = 0;
@@ -2595,6 +2617,73 @@ Character.prototype.longRangeAnimations = function() {
     this.attackAnimationDownRight = this.attackAnimationLongDownRight;	
 }
 
+Character.prototype.groundSlam = function() {
+	this.game.cameraShakeTime = 5;
+	this.game.cameraShakeAmount = 25;
+	this.game.cameraShakeDecay = 5;
+	var partAmount = 40;
+	playSound(boomSound2);
+	for (var i = 0; i < partAmount; i++) {
+		var newParticle = new Particle(PART_SECONDARY, this.hitBox.x + this.hitBox.width / 2, this.hitBox.y + this.hitBox.height, 
+				-15, 15, -10, 10, -0.55, 0.5, 0, 0, 0, 50, .75, .15, true, this.game);
+		var size = 10 + Math.random() * 5;
+		element = new SquareElement(size, size, "#f7ffba", "#faf6be");
+		newParticle.other = element;
+		this.game.addEntity(newParticle);
+	}
+	var attackWidth = 150;
+	/*var newParticle = new Particle(PART_SECONDARY, this.hitBox.x + this.hitBox.width / 2, this.hitBox.y + this.hitBox.height - 16, 
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 10, .75, 0, false, this.game);
+	var size = this.hitBox.width;
+	element = new SquareElement(attackWidth, 16, "#f7ffba", "#faf6be");
+	newParticle.other = element;
+	this.game.addEntity(newParticle);*/
+	
+	var shine = new Particle(IMG_PART, this.hitBox.x + this.hitBox.width / 2 - attackWidth / 2, this.hitBox.y + this.hitBox.height - 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 1, 0, false, this.game,
+		new Animation(ASSET_MANAGER.getAsset("./img/Particle/ground_slam.png"), 0, 0, 150, 16, .08, 6, false, false, 0, 0));
+	shine.highPriority = 1;
+	this.game.addEntity(shine);
+					
+	var that = this;
+	this.game.entities.forEach(function(entity) {
+		if (entity instanceof Enemy && 
+				Math.abs((entity.getY() + entity.hitBoxDef.offsetY + entity.hitBoxDef.height) - 
+				(that.hitBox.y + that.hitBox.height)) <= 32 &&
+				Math.abs((entity.getXMidpoint() - (that.hitBox.x + that.hitBox.width / 2)) <= attackWidth / 2)) {
+			var targetEntity = entity;
+			var damage = 25;
+			applyDamage(targetEntity.x, targetEntity.y, that.game, damage, targetEntity);
+			playSound(lightningSound);
+			addEnergy(that.game, that.currentForm >= FORM_ANGLER ? 20 : 0);
+			targetEntity.handleSideHit();
+			if (that.game.player1.x + that.game.player1.hitBoxDef.offsetX + that.game.player1.hitBoxDef.width / 2 < targetEntity.x + targetEntity.displacementX + targetEntity.hitBoxDef.offsetX + targetEntity.hitBoxDef.width / 2) {
+				targetEntity.displacementXSpeed = 6;
+			} else {
+				targetEntity.displacementXSpeed = -6;
+			}
+		}
+	});
+}
+
+Character.prototype.hitSpike = function() {
+	playSound(hitSound);
+	if (this.lastDirection == "Right") {
+		this.hurtAnimation = this.hurtAnimationLeft;
+	} else {
+		this.hurtAnimation = this.hurtAnimationRight;
+	}
+	this.stunTimer = 30;
+	this.invulnTimer = this.invulnTimerMax;
+	this.stunned = true;
+	this.game.pauseTime = 5;
+	this.game.addEntity(new BlackScreenFade(this.game, 30));
+	console.log("teleporting to : " + this.lastSafeX);
+	this.teleportToX = this.lastSafeX;
+	this.teleportToY = this.lastSafeY;
+	this.yVelocity = 0;
+	applyDamage(this.x, this.y, this.game, 20, this);
+}
+
 function cutEffect(game, ultiName, imageName) {
 	playSound(cutSound);
 	game.cutTime = 50;
@@ -2678,15 +2767,26 @@ Character.prototype.update = function () {
 	var that = this;
 	if (this.cooldown > 0)
 		this.cooldown--;
+	if (this.dashCooldown > 0)
+		this.dashCooldown--;
+	if (this.teleportToX != -1) {
+		this.x = this.teleportToX;
+		this.y = this.teleportToY;
+		this.teleportToX = -1;
+		this.teleportToY = -1;
+	}
 	this.phaseTick++;
     if (gameStarted) {
 		//game phase management
 		if (this.game.currentPhase < 1) {
-			startMusic.play();
+			//startMusic.play();
 			var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
 			this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
 			this.game.step = 0;
 			//this.game.addEntity(chat);
+			/*this.game.addEntity(new BigInfoBox(this.game, "Evolution Complete", "Consumed the ANGLERFISH SPIRIT",
+				"Attack range and damage is increased with the power of lightning. Press [↑] or [↓] + [Z] to attack up or down.",
+				new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_lightning.png"), 0, 0, 384, 192, 1, 1, true, false, -200, -200)));*/
             this.game.currentPhase = 1;
 		}
 		if (this.game.currentPhase == 3 && this.phaseTick > 90) { //JELLY WOKE
@@ -2902,11 +3002,6 @@ Character.prototype.update = function () {
 					this.game.addEntity(newParticle);
 				}
 			}
-			if (this.speedTimer > 0) {
-				this.speedTimer--;
-				if (this.speedTimer % 8 == 0)
-					this.game.addEntity(new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.5, 0, false, this.game, this.currentAnimation));
-			}
 			if (this.telephotoTimer > 0) {
 				this.telephotoTimer--;
 			}
@@ -2981,10 +3076,23 @@ Character.prototype.update = function () {
 										currentPlatform.step = 0;
 									}
 									platformFound = true;
+									if (currentPlatform.specialId == 0 && currentPlatform.hSpeed == 0 && currentPlatform.vSpeed == 0) {
+										that.lastSafeX = that.x;
+										that.lastSafeY = that.y;
+									}
 									if (currentPlatform.isWall) {
 										wallFound = true;
 									}
-									if (currentPlatform.specialId === PLATFORM_BOUNCY) { //bouncy platform
+									if (currentPlatform.isWall && currentPlatform.specialId == WALL_SPIKE_UP && !that.stunned) {
+										if (that.attacking && that.attackIndex == 2) {
+											playSound(hitMetal);
+											if (that.falling || that.jumping) {
+												that.yVelocity = 8;
+											}
+										} else {
+											that.hitSpike();
+										}
+									} else if (!currentPlatform.isWall && currentPlatform.specialId === PLATFORM_BOUNCY) { //bouncy platform
 										that.yVelocity = 15;
 										that.bounceTimer = 30;
 										that.jumpSpeed = 0;
@@ -2994,6 +3102,12 @@ Character.prototype.update = function () {
 										that.x += currentPlatform.hSpeed;
 										that.y += currentPlatform.vSpeed;
 										that.yVelocity = 0;
+										if (that.dashIndex == 1) {
+											that.dashing = false;
+											that.dashTime = 0;
+											that.dashIndex = 0;
+											that.groundSlam();
+										}
 										if (that.falling) {
 											that.falling = false;
 											that.yVelocity = 0;
@@ -3031,22 +3145,50 @@ Character.prototype.update = function () {
 					this.queuedAction = "";
 				}
 			}
-            // Process the raw attack input into the appropriate skill
-            if ((this.queuedAction == "Attack" || this.attackInput > 0) && this.canControl) {
+            if ((this.queuedAction == "Dash" || this.attackInput == 2) && this.canControl) {
+				if (this.dashCooldown === 0) {
+					if (this.queuedAction == "Dash") {
+						this.queuedAction = "";
+						this.queuedTime = 0;
+					}
+					if (!this.dashing) {
+						this.dashCooldown = 30;
+						
+						this.targetHit = [];
+						this.attacking = false;
+						this.dashing = true;
+						this.dashTime = 10;
+						if (this.leftDown)
+							this.attackDirection = "Left";
+						else if (this.rightDown)
+							this.attackDirection = "Right";
+						else
+							this.attackDirection = this.lastDirection;
+						playSound(slashSound);
+						if (this.currentForm >= FORM_ANGLER) {
+							if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
+								this.dashIndex = 1;
+						}
+					}
+				} else if (this.attackInput == 2) { //queue up the attack
+					this.queuedAction = "Dash";
+					this.queuedTime = 10;
+				}
+            }
+            if ((this.queuedAction == "Attack" || this.attackInput == 1) && this.canControl) {
 				if (this.cooldown === 0) {
 					if (this.queuedAction == "Attack") {
 						this.queuedAction = "";
 						this.queuedTime = 0;
 					}
 					if (!this.attacking) {
-						if (this.lastComboType != this.attackInput) { // Last Combo was different (e.g. AA vs Q) - drop combo
-							this.lastComboStage = 0;		    				
-						}
 						this.cooldown = 30;
 						
 						this.targetHit = [];
 						this.attacking = true;
 						this.attackIndex = 1;
+						this.dashing = false;
+						this.dashTime = 0;
 						if (this.leftDown)
 							this.attackDirection = "Left";
 						else if (this.rightDown)
@@ -3063,7 +3205,7 @@ Character.prototype.update = function () {
 							playSound(slashSound);
 						}
 					}
-				} else if (this.attackInput > 0) { //queue up the attack
+				} else if (this.attackInput == 1) { //queue up the attack
 					this.queuedAction = "Attack";
 					this.queuedTime = 10;
 				}
@@ -3241,7 +3383,6 @@ Character.prototype.update = function () {
                     this.attacking = false;
                     this.attackIndex = 0;
                     noSnap = true;
-					console.log("attack done");
                 }
             }
             if (this.invincTimer > 0) {
@@ -3275,34 +3416,66 @@ Character.prototype.update = function () {
     var moveSpeed = this.runSpeed;
 	if (this.speedTimer > 0)
 		moveSpeed *= 1.6;
-    if (this.running) {
-        if (this.lastDirection === "Right") {
-            this.x += moveSpeed;
-        } else if (this.lastDirection === "Left") {
-            this.x -= moveSpeed;
-        }
-    }
-	/*if (this.runningVertical) {
-        if (this.lastDirectionVertical === "Up") {
-            this.y -= moveSpeed;
-        } else if (this.lastDirectionVertical === "Down") {
-            this.y += moveSpeed;
-        }
-	}*/
-    if (this.jumping || this.falling) {
-        this.yVelocity-= this.gravity;  
-        this.y -= this.yVelocity;    
-    }
-    if (this.jumping && this.yVelocity <= 0) {
-        this.falling = true;
-        this.jumping = false;
-		
-    }
+	if (this.dashing) { //ignore all other input
+		if (this.dashTime % 3 == 0)
+			this.game.addEntity(new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.3, 0, false, this.game, this.currentAnimation));
+		this.dashTime -= 1;
+		this.yVelocity = 0;
+		if (this.dashIndex == 0) {
+			if (this.attackDirection == "Right")
+				this.x += moveSpeed * 3;
+			else
+				this.x -= moveSpeed * 3;
+		} else { //down dash
+			this.yVelocity = moveSpeed * -3;
+			this.y -= this.yVelocity;    
+			this.falling = true;
+			this.jumping = false;
+		}
+		if (this.dashTime <= 0) {
+			this.dashing = false;
+			this.dashIndex = false;
+		}
+	} else {
+		if (this.running) {
+			if (this.lastDirection === "Right") {
+				this.x += moveSpeed;
+			} else if (this.lastDirection === "Left") {
+				this.x -= moveSpeed;
+			}
+		}
+		/*if (this.runningVertical) {
+			if (this.lastDirectionVertical === "Up") {
+				this.y -= moveSpeed;
+			} else if (this.lastDirectionVertical === "Down") {
+				this.y += moveSpeed;
+			}*/
+		if (this.jumping || this.falling) {
+			this.yVelocity-= this.gravity;  
+			this.y -= this.yVelocity;    
+		}
+		if (this.jumping && this.yVelocity <= 0) {
+			this.falling = true;
+			this.jumping = false;
+		}
+	}
     if (this.falling && (this.hitBox.y + this.hitBox.height - this.hitBoxDef.offsetY) >= this.ground) {
         this.yVelocity = 0;
         this.falling = false;
         this.y = this.ground - this.hitBox.height;
+		this.lastSafeX = that.x;
+		this.lastSafeY = that.y;
+		if (that.dashIndex == 1) {
+			that.dashing = false;
+			that.dashTime = 0;
+			that.dashIndex = 0;
+			that.groundSlam();
+		}
     }
+	if (!platformFound && !this.falling && !this.jumping) {
+		this.lastSafeX = that.x;
+		this.lastSafeY = that.y;
+	}
     /*if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.maxX + this.game.surfaceWidth && (this.lastDirection === "Right" || this.hurt)) {
         this.x = this.game.camera.maxX + this.game.surfaceWidth - this.hitBoxDef.width - this.hitBoxDef.offsetX;
     }
@@ -3316,18 +3489,52 @@ Character.prototype.update = function () {
 					that.y = currentPlatform.y + currentPlatform.height - that.hitBoxDef.growthY - that.hitBoxDef.offsetY;
 					that.yVelocity = 0;
 					that.jumping = false;
-					that.falling = true;							
+					that.falling = true;		
+					if (currentPlatform.specialId == WALL_SPIKE_DOWN && !that.stunned) {
+						if (that.attacking && that.attackIndex == 3) {
+							playSound(hitMetal);
+							if (that.falling || that.jumping) {
+								that.yVelocity = -5;
+							}
+						} else {
+							that.hitSpike();
+						}
+					}
 				}
 			}
 			if (that.hitBox.y + that.hitBox.height > currentPlatform.y && that.hitBox.y < currentPlatform.y + currentPlatform.height) {
 				if (that.hitBox.x < currentPlatform.x && that.hitBox.x + that.hitBox.width >= currentPlatform.x && (that.lastDirection == "Right" || that.displacementXSpeed > 0 || that.xVelocity > 0)) {
 					platformFound = true;
-					inX = (that.hitBox.x + that.hitBox.width) - currentPlatform.x;
 					that.x = currentPlatform.x - that.hitBox.width - that.hitBoxDef.offsetX;
+					if (currentPlatform.specialId == WALL_SPIKE_LEFT && !that.stunned) {
+						if (that.attacking && that.attackIndex == 1) {
+							playSound(hitMetal);
+							that.displacementXSpeed = 6;
+						} else {
+							if (!that.falling && !that.jumping) {
+								console.log("last safe X: " + that.lastSafeX);
+								that.lastSafeX = that.x + 20;
+								console.log("last safe X: " + that.lastSafeX);
+							}
+							that.hitSpike();
+						}
+					}
 				} else if (that.hitBox.x < currentPlatform.x + currentPlatform.width && that.hitBox.x + that.hitBox.width >= currentPlatform.x + currentPlatform.width && (that.lastDirection == "Left" || that.displacementXSpeed < 0 || that.xVelocity < 0)) {
 					platformFound = true;
-					inX = that.hitBox.x - (currentPlatform.x + currentPlatform.width);
 					that.x = currentPlatform.x + currentPlatform.width - that.hitBoxDef.growthX - that.hitBoxDef.offsetX - 1;
+					if (currentPlatform.specialId == WALL_SPIKE_RIGHT && !that.stunned) {
+						if (that.attacking && that.attackIndex == 1) {
+							playSound(hitMetal);
+							that.displacementXSpeed = -6;
+						} else {
+							if (!that.falling && !that.jumping) {
+								console.log("last safe X: " + that.lastSafeX);
+								that.lastSafeX = that.x - 20;
+								console.log("last safe X: " + that.lastSafeX);
+							}
+							that.hitSpike();
+						}
+					}
 				}
 			} 
 		}
@@ -4371,15 +4578,18 @@ function spawnWave(game, number) {
 		case 1:
 			var objects = [		
 				new Spaceship(game, -2400, 370),
-				new LivingKelp(game, 1600, 208),
+				//new LivingKelp(game, 1600, 208),
 			];
 			var powerups = [
 			];
 			var platforms = [
-new Platform(game, -2144, 400, 0, 0, 0, PLATFORM_BREAK, 0),
-new Platform(game, -2144 + 64, 400, 0, 0, 0, PLATFORM_BREAK, 0),
+new Platform(game, -2144, 400, 0, 0, 0, PLATFORM_FADE, 0),
+new Platform(game, -2144 + 64, 400, 0, 0, 0, PLATFORM_FADE, 0),
 new Platform(game, -2144, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
+new Platform(game, -2144 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
+new Platform(game, -2144 + 64 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
+
 new Platform(game, -1544, 400),
 
 new Platform(game, -1480, 400),
@@ -4416,20 +4626,6 @@ new Platform(game, -72, 352),
 
 new Platform(game, -72, 400),
 
-new Platform(game, 56, 400),
-
-new Platform(game, 120, 336),
-
-new Platform(game, 184, 272),
-
-new Platform(game, 280, 336),
-
-new Platform(game, 376, 272),
-
-new Platform(game, 120, 208),
-
-new Platform(game, 456, 208),
-
 new Platform(game, 760, 256),
 
 new Platform(game, 760, 192),
@@ -4438,7 +4634,11 @@ new Platform(game, 1208, 400),
 
 new Platform(game, 1208, 336),
 
-new Platform(game, 520, 160),
+new Platform(game, 2568, 160),
+
+new Platform(game, 3448, 224, 2, 0, 64),
+
+new Platform(game, 3896, 224, 2, 0, 96),
 
 new Wall(game, -1096, 432, 32, 32),
 
@@ -4654,26 +4854,6 @@ new Wall(game, 728, 320, 32, 32),
 
 new Wall(game, 760, 320, 32, 32),
 
-new Wall(game, 792, 320, 32, 32),
-
-new Wall(game, 824, 320, 32, 32),
-
-new Wall(game, 856, 320, 32, 32),
-
-new Wall(game, 888, 320, 32, 32),
-
-new Wall(game, 984, 320, 32, 32),
-
-new Wall(game, 1016, 320, 32, 32),
-
-new Wall(game, 1048, 320, 32, 32),
-
-new Wall(game, 1080, 320, 32, 32),
-
-new Wall(game, 1112, 320, 32, 32),
-
-new Wall(game, 1144, 320, 32, 32),
-
 new Wall(game, 1272, 448, 32, 32),
 
 new Wall(game, 1272, 416, 32, 32),
@@ -4720,14 +4900,299 @@ new Wall(game, 1208, 112, 32, 32),
 
 new Wall(game, 1240, 112, 32, 32),
 
-new Platform(game, -968, 448, 0, 0, 0, 1),
+new Wall(game, 1864, 432, 32, 32),
 
-new Platform(game, 24, 160, 0, 0, 0, 1),
+new Wall(game, 1864, 400, 32, 32),
+
+new Wall(game, 1864, 368, 32, 32),
+
+new Wall(game, 1832, 400, 32, 32),
+
+new Wall(game, 1832, 432, 32, 32),
+
+new Wall(game, 2344, 0, 32, 32),
+
+new Wall(game, 2376, 0, 32, 32),
+
+new Wall(game, 2408, 0, 32, 32),
+
+new Wall(game, 2440, 0, 32, 32),
+
+new Wall(game, 2472, 0, 32, 32),
+
+new Wall(game, 2504, 0, 32, 32),
+
+new Wall(game, 2536, 0, 32, 32),
+
+new Wall(game, 2568, 0, 32, 32),
+
+new Wall(game, 2600, 0, 32, 32),
+
+new Wall(game, 2312, 0, 32, 32),
+
+new Wall(game, 2312, 32, 32, 32),
+
+new Wall(game, 2312, 64, 32, 32),
+
+new Wall(game, 2312, 96, 32, 32),
+
+new Wall(game, 2312, 128, 32, 32),
+
+new Wall(game, 2312, 160, 32, 32),
+
+new Wall(game, 2312, 192, 32, 32),
+
+new Wall(game, 2312, 224, 32, 32),
+
+new Wall(game, 2312, 256, 32, 32),
+
+new Wall(game, 2344, 256, 32, 32),
+
+new Wall(game, 2376, 256, 32, 32),
+
+new Wall(game, 2408, 256, 32, 32),
+
+new Wall(game, 2440, 256, 32, 32),
+
+new Wall(game, 2472, 256, 32, 32),
+
+new Wall(game, 2504, 256, 32, 32),
+
+new Wall(game, 2536, 256, 32, 32),
+
+new Wall(game, 2568, 256, 32, 32),
+
+new Wall(game, 2600, 256, 32, 32),
+
+new Wall(game, -744, 272, 32, 32),
+
+new Wall(game, -712, 272, 32, 32),
+
+new Wall(game, -680, 240, 32, 32),
+
+new Wall(game, -680, 272, 32, 32),
+
+new Wall(game, -648, 208, 32, 32),
+
+new Wall(game, -648, 240, 32, 32),
+
+new Wall(game, -648, 272, 32, 32),
+
+new Wall(game, -616, 176, 32, 32),
+
+new Wall(game, -616, 208, 32, 32),
+
+new Wall(game, -616, 240, 32, 32),
+
+new Wall(game, -616, 272, 32, 32),
+
+new Wall(game, 2904, 336, 32, 32),
+
+new Wall(game, 2904, 304, 32, 32),
+
+new Wall(game, 2904, 272, 32, 32),
+
+new Wall(game, 2904, 240, 32, 32),
+
+new Wall(game, 2904, 208, 32, 32),
+
+new Wall(game, 2904, 176, 32, 32),
+
+new Wall(game, 2904, 144, 32, 32),
+
+new Wall(game, 2632, 144, 32, 32),
+
+new Wall(game, 2632, 176, 32, 32),
+
+new Wall(game, 2632, 208, 32, 32),
+
+new Wall(game, 2632, 240, 32, 32),
+
+new Wall(game, 3416, 224, 32, 32),
+
+new Wall(game, 3416, 256, 32, 32),
+
+new Wall(game, 3416, 288, 32, 32),
+
+new Wall(game, 3416, 320, 32, 32),
+
+new Wall(game, 3416, 352, 32, 32),
+
+new Wall(game, 3416, 384, 32, 32),
+
+new Wall(game, 3416, 416, 32, 32),
+
+new Wall(game, 3416, 448, 32, 32),
+
+new Wall(game, 2904, 112, 32, 32),
+
+new Wall(game, 4344, 160, 32, 32),
+
+new Wall(game, 4344, 192, 32, 32),
+
+new Wall(game, 4344, 224, 32, 32),
+
+new Wall(game, 4344, 256, 32, 32),
+
+new Wall(game, 4344, 288, 32, 32),
+
+new Wall(game, 4344, 320, 32, 32),
+
+new Wall(game, 4344, 352, 32, 32),
+
+new Wall(game, 4344, 384, 32, 32),
+
+new Wall(game, 4344, 416, 32, 32),
+
+new Wall(game, 4344, 448, 32, 32),
+
+new Platform(game, -968, 448, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, 376, 272, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, 1912, 352, 1, 0, 256, PLATFORM_BOUNCY),
+
+new Platform(game, 3448, 384, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, 56, 400, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 248, 400, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 152, 336, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 56, 272, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 984, 320, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 1048, 320, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 1112, 320, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 856, 320, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 792, 320, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3000, 208, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3176, 208, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3352, 208, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3640, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3832, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 4152, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 4280, 160, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3768, 272, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3832, 320, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 120, 208, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, 24, 144, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, 520, 160, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, 2824, 400, 0, 0, 0, PLATFORM_FADE, 60),
+
+new Platform(game, 2664, 352, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, 2824, 288, 0, 0, 0, PLATFORM_FADE, 60),
+
+new Platform(game, 2664, 224, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, 2824, 160, 0, 0, 0, PLATFORM_FADE, 60),
+
+new Wall(game, 1896, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 1928, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 1960, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 1992, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2024, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2056, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2088, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2120, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2152, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2184, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2216, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2248, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2360, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2456, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2552, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3704, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3736, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3768, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3800, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3832, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3864, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3896, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3928, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3960, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 3992, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4024, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4056, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4088, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4120, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4152, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4184, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4216, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4248, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4280, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 4312, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2312, 288, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 2408, 288, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 2504, 288, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 2600, 288, 32, 32, WALL_SPIKE_DOWN),
+
+
 
 
 			];
 			var enemies = [
-			new SeaSlug(game, -1480, 432, -1, 32),
+
+new Powerup(game, -168, 384, 0),
+
+new SeaSlug(game, -1480, 432, -1, 32),
 
 new SeaSlug(game, -1320, 432, 1, 32),
 
@@ -4735,41 +5200,71 @@ new SeaSlug(game, -840, 272, -1, 0),
 
 new SeaSlug(game, -136, 176, -1, 0),
 
-new SeaSlug(game, -232, 176, -1, 0),
-
 new SeaSlug(game, -328, 176, -1, 0),
 
 new SeaSlug(game, -376, 272, -1, 0),
 
 new SeaSlug(game, -184, 272, -1, 0),
 
-new SeaSlug(game, -280, 272, -1, 0),
+new SeaSlug(game, 296, 432, -1, 0),
 
-new SeaSlug(game, 312, 432, -1, 0),
+new SeaSlug(game, 456, 432, -1, 0),
 
-new SeaSlug(game, 392, 432, -1, 0),
+new SeaSlug(game, 136, 432, -1, 0),
 
-new SeaSlug(game, 232, 432, -1, 0),
+new SeaSlug(game, 1032, 80, -1, 0),
 
-new SeaSlug(game, 1032, 80, 0, 0),
+new SeaSlug(game, 1160, 80, -1, 0),
 
-new SeaSlug(game, 1160, 80, 0, 0),
+new SeaSlug(game, 1592, 432, -1, 32),
+
+new SeaSlug(game, 1688, 432, -1, 32),
+
+new SeaSlug(game, 1784, 432, -1, 32),
+
+new SeaSlug(game, 2952, 432, 1, 0),
+
+new SeaSlug(game, 3048, 432, 1, 0),
+
+new SeaSlug(game, 3192, 432, 1, 0),
+
+new Eel(game, 1544, 368, 1, 64),
+
+new Eel(game, 2136, 160, -1, 64),
+
+new Uni(game, 2456, 176),
+
+new Uni(game, 4008, 144),
 
 new Pirahna(game, -696, 384, 1, 0),
-
-new Pirahna(game, -744, 368, 1, 0),
 
 new Pirahna(game, -744, 400, 1, 0),
 
 new Pirahna(game, -328, 384, -1, 0),
-
-new Pirahna(game, -280, 368, -1, 0),
 
 new Pirahna(game, -280, 400, -1, 0),
 
 new Pirahna(game, 136, 144, 1, 128),
 
 new Pirahna(game, 136, 96, 1, 128),
+
+new Pirahna(game, 2216, 64, -1, 0),
+
+new Pirahna(game, 2072, 160, -1, 0),
+
+new Pirahna(game, 1928, 272, -1, 0),
+
+new Pirahna(game, 2408, 368, 1, 32),
+
+new Pirahna(game, 2504, 368, 1, 32),
+
+new Pirahna(game, 2504, 64, 1, 0),
+
+new Pirahna(game, 2456, 112, 1, 0),
+
+new Pirahna(game, 3752, 64, -1, 32),
+
+new Pirahna(game, 4088, 144, -1, 32),
 
 new Powerup(game, -1400, 432, JELLY_COIN),
 
@@ -4786,6 +5281,14 @@ new Powerup(game, 584, 32, JELLY_COIN),
 new Powerup(game, 936, 176, JELLY_COIN),
 
 new Powerup(game, 936, 224, JELLY_COIN),
+
+new Powerup(game, 2360, 304, JELLY_COIN),
+
+new Powerup(game, 2456, 304, JELLY_COIN),
+
+new Powerup(game, 2552, 304, JELLY_COIN),
+
+new Powerup(game, 4344, 112, JELLY_COIN),
 
 new Powerup(game, -1784, 416, JELLY_COIN_SM),
 
@@ -4869,12 +5372,6 @@ new Powerup(game, 1128, 288, JELLY_COIN_SM),
 
 new Powerup(game, 1032, 288, JELLY_COIN_SM),
 
-new Powerup(game, 1096, 80, JELLY_COIN_SM),
-
-new Powerup(game, 1192, 80, JELLY_COIN_SM),
-
-new Powerup(game, 1000, 80, JELLY_COIN_SM),
-
 new Powerup(game, 120, 432, JELLY_COIN_SM),
 
 new Powerup(game, 200, 432, JELLY_COIN_SM),
@@ -4890,6 +5387,116 @@ new Powerup(game, 504, 432, JELLY_COIN_SM),
 new Powerup(game, 40, 432, JELLY_COIN_SM),
 
 new Powerup(game, -40, 432, JELLY_COIN_SM),
+
+new Powerup(game, 1352, 80, JELLY_COIN_SM),
+
+new Powerup(game, 1368, 128, JELLY_COIN_SM),
+
+new Powerup(game, 1368, 192, JELLY_COIN_SM),
+
+new Powerup(game, 1272, 48, JELLY_COIN_SM),
+
+new Powerup(game, 1192, 48, JELLY_COIN_SM),
+
+new Powerup(game, 840, 48, JELLY_COIN_SM),
+
+new Powerup(game, 888, 48, JELLY_COIN_SM),
+
+new Powerup(game, 1032, 48, JELLY_COIN_SM),
+
+new Powerup(game, 1112, 48, JELLY_COIN_SM),
+
+new Powerup(game, 1944, 96, JELLY_COIN_SM),
+
+new Powerup(game, 1992, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2040, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2088, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2136, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2184, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2232, 96, JELLY_COIN_SM),
+
+new Powerup(game, 1896, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2280, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2312, 432, JELLY_COIN_SM),
+
+new Powerup(game, 2280, 352, JELLY_COIN_SM),
+
+new Powerup(game, 2296, 384, JELLY_COIN_SM),
+
+new Powerup(game, 2408, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2376, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2440, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2536, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2568, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2600, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2840, 368, JELLY_COIN_SM),
+
+new Powerup(game, 2696, 320, JELLY_COIN_SM),
+
+new Powerup(game, 2840, 256, JELLY_COIN_SM),
+
+new Powerup(game, 2696, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2840, 128, JELLY_COIN_SM),
+
+new Powerup(game, 2920, 48, JELLY_COIN_SM),
+
+new Powerup(game, 3032, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3208, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3384, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3496, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3544, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3592, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3640, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3704, 112, JELLY_COIN_SM),
+
+new Powerup(game, 3768, 96, JELLY_COIN_SM),
+
+new Powerup(game, 3832, 112, JELLY_COIN_SM),
+
+new Powerup(game, 3896, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3960, 176, JELLY_COIN_SM),
+
+new Powerup(game, 4024, 176, JELLY_COIN_SM),
+
+new Powerup(game, 4088, 176, JELLY_COIN_SM),
+
+new Powerup(game, 4152, 176, JELLY_COIN_SM),
+
+new Powerup(game, 2856, 368, JELLY_COIN_SM),
+
+new Powerup(game, 2680, 320, JELLY_COIN_SM),
+
+new Powerup(game, 2856, 256, JELLY_COIN_SM),
+
+new Powerup(game, 2680, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2856, 128, JELLY_COIN_SM),
+
+new Powerup(game, 888, 288, JELLY_COIN_SM),
+
+new Powerup(game, 808, 288, JELLY_COIN_SM),
 
 new Powerup(game, -520, 176, ENTITY_MARKER),
 
@@ -4910,8 +5517,6 @@ new Powerup(game, -584, 352, ENTITY_MARKER),
 new Powerup(game, -584, 384, ENTITY_MARKER),
 
 new Powerup(game, -584, 416, ENTITY_MARKER),
-
-new Powerup(game, -168, 384, ENTITY_MARKER),
 
 new Powerup(game, -488, 352, ENTITY_MARKER),
 
@@ -4937,6 +5542,60 @@ new Powerup(game, 952, 80, ENTITY_MARKER),
 
 new Powerup(game, 1272, 80, ENTITY_MARKER),
 
+new Powerup(game, 1848, 48, ENTITY_MARKER),
+
+new Powerup(game, 1848, 80, ENTITY_MARKER),
+
+new Powerup(game, 1848, 112, ENTITY_MARKER),
+
+new Powerup(game, 1848, 144, ENTITY_MARKER),
+
+new Powerup(game, 1848, 176, ENTITY_MARKER),
+
+new Powerup(game, 1848, 208, ENTITY_MARKER),
+
+new Powerup(game, 1848, 240, ENTITY_MARKER),
+
+new Powerup(game, 1848, 272, ENTITY_MARKER),
+
+new Powerup(game, 2312, 48, ENTITY_MARKER),
+
+new Powerup(game, 2312, 80, ENTITY_MARKER),
+
+new Powerup(game, 2312, 112, ENTITY_MARKER),
+
+new Powerup(game, 2312, 176, ENTITY_MARKER),
+
+new Powerup(game, 2312, 144, ENTITY_MARKER),
+
+new Powerup(game, 2312, 64, ENTITY_MARKER),
+
+new Powerup(game, 2312, 96, ENTITY_MARKER),
+
+new Powerup(game, 2312, 128, ENTITY_MARKER),
+
+new Powerup(game, 2632, 64, ENTITY_MARKER),
+
+new Powerup(game, 2632, 96, ENTITY_MARKER),
+
+new Powerup(game, 2632, 128, ENTITY_MARKER),
+
+new Powerup(game, 2632, 160, ENTITY_MARKER),
+
+new Powerup(game, 2632, 192, ENTITY_MARKER),
+
+new Powerup(game, 2904, 432, ENTITY_MARKER),
+
+new Powerup(game, 3304, 448, ENTITY_MARKER),
+
+new Powerup(game, 2312, 272, ENTITY_MARKER),
+
+new Powerup(game, 2312, 240, ENTITY_MARKER),
+
+new Powerup(game, 2312, 208, ENTITY_MARKER),
+
+new Powerup(game, 2312, 160, ENTITY_MARKER),
+
 new Kelp(game, -56, -48),
 
 new Kelp(game, 8, 224),
@@ -4948,16 +5607,45 @@ new Kelp(game, 664, 208),
 new Kelp(game, 1336, 208),
 
 new Kelp(game, 1368, 208),
-new TunaChargeDropper(game, 936, 0),
+
+new Kelp(game, 2280, 208),
+
+new Kelp(game, 3416, -32),
+
+new Kelp(game, 2584, 0),
+
+new Kelp(game, 4568, 208),
+
+new Kelp(game, 4632, 208),
+
+new Kelp(game, 4696, 208),
+
+new Kelp(game, 4760, 208),
+
+new Kelp(game, 4792, 208),
+
+new Kelp(game, 4888, 224),
+
+new Kelp(game, 5064, 224),
+
+new Kelp(game, 4984, 192),
+
+new Kelp(game, 5192, 208),
 
 new Powerup(game, -1624, 288, TIP_MARKER, 1),
 
 new Powerup(game, -1096, 112, TIP_MARKER, 2),
 
+new TunaChargeDropper(game, 936, 0),
 
+new TunaChargeDropper(game, 2760, 0),
 
+new TunaChargeDropper(game, 3656, 0),
 
-			/*new SeaSlug(game, -1944, 426, 1, 96),
+new BubbleCurrent(game, 3384, 144, -8),
+
+/*
+			new SeaSlug(game, -1944, 426, 1, 96),
 			new Isopod(game, -1844, 426 - 32, 1, 96),
 			new Eel(game, -1744, 426, 1, 0, 96),
 			new TopRamen(game, -1644, 326, 1, 0, 96),
@@ -4969,8 +5657,8 @@ new Powerup(game, -1096, 112, TIP_MARKER, 2),
 			new ShellSnail(game, -1544, 426 - 32, 1, 96),
 			new Squid(game, -2000, 400),
 			new Tentacle(game, -1444, 300),
-			new Tentacle(game, -1144, 300),*/
-
+			new Tentacle(game, -1144, 300),
+*/
 			];
 		break;
 	}
@@ -5144,6 +5832,16 @@ ASSET_MANAGER.queueDownload("./img/Misc/kelp.png");
 ASSET_MANAGER.queueDownload("./img/Misc/tuna_charge.png");
 
 ASSET_MANAGER.queueDownload("./img/Platform/invisible_shine.png");
+ASSET_MANAGER.queueDownload("./img/Platform/platform_crumble.png");
+ASSET_MANAGER.queueDownload("./img/Platform/spike_up.png");
+ASSET_MANAGER.queueDownload("./img/Platform/spike_down.png");
+ASSET_MANAGER.queueDownload("./img/Platform/spike_left.png");
+ASSET_MANAGER.queueDownload("./img/Platform/spike_right.png");
+
+ASSET_MANAGER.queueDownload("./img/Particle/ground_slam.png");
+ASSET_MANAGER.queueDownload("./img/UI/jelly_waterbreathe.png");
+ASSET_MANAGER.queueDownload("./img/UI/jelly_lightning.png");
+ASSET_MANAGER.queueDownload("./img/UI/blackscreen_bar.png");
 
 
 ASSET_MANAGER.queueDownload("./img/Enemy/chicken.png");

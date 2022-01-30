@@ -26,11 +26,14 @@ function Platform(game, x, y, hSpeed, vSpeed, switchDelay, specialId, stepOffset
     }
     // Pictures and Animations
     this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/Platform.png");
-    if (this.specialId === 1) {
+    if (this.specialId === PLATFORM_BOUNCY) {
         this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/PlatformBouncy.png");    	
     }
-    if (this.specialId === 2) {
+    if (this.specialId === PLATFORM_FIRE) {
         this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/PlatformFire.png");    	
+    }
+    if (this.specialId === PLATFORM_BREAK) {
+        this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/platform_crumble.png");    	
     }
     
     Entity.call(this, game, x, y);
@@ -46,82 +49,80 @@ Platform.prototype.constructor = Platform;
 
 Platform.prototype.update = function () {
 	// Only update when it is visible on the screen
-	if (isOnScreen(this)) {
-		if (this.delay > 0) {
-			this.delay--;
-		} else {
-			this.step++;
-			if (this.switchDelay > 0 && this.step % this.switchDelay === 0) {
-				this.hSpeed *= -1;
-				this.vSpeed *= -1;
-			}
-			if (this.specialId === PLATFORM_FIRE) {
-				if (this.step >= 150) {
-					if (this.step === 150)
-			            playSoundProx(this.game, this, fireSound);
-					if (this.step % 2 === 0) {
-						for (i = 0; i < this.hitBox.width; i += 10) {
-							if (Math.random() >= 0.5) {
-					            var particle = new Particle(SHAPE_PART, this.x + i, this.y, 1, -1, 0, -4, 0, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
-					            var element;
-					            element = new SquareElement(4 + Math.random() * 2, 4 + Math.random() * 2, "#f27d30", "#eab120");
-					            particle.other = element;
-					            particle.attackId = 5;
-					            this.game.addEntity(particle);
-							}
-						}
-					}
-				}
-				if (this.step >= 200)
-					this.step = 0;
-			}
-			if (this.specialId === PLATFORM_FADE) {
-				if (this.step == 120) {
-					var shine = new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 1, 0, false, this.game,
-						new Animation(ASSET_MANAGER.getAsset("./img/Platform/invisible_shine.png"), 0, 0, 63, 16, .05, 8, false, false, 0, 0));
-					shine.highPriority = 1;
-					this.game.addEntity(shine);
-				}
-				if (this.step >= 150 && this.step <= 200) {
-					this.fadeAmount += 0.02;
-					if (this.fadeAmount > 1)
-						this.fadeAmount = 1;
-				}
-				if (this.step >= 290) {
-					this.fadeAmount -= 0.02;
-					if (this.fadeAmount < 0)
-						this.fadeAmount = 0;
-				}
-				if (this.step >= 340) {
-					this.step = 0;
-					this.fadeAmount = 0;
-				}
-			}
-			if (this.specialId === PLATFORM_BREAK) {
-				if (this.trigger) {
-					if (this.step == 60) {
-						playSound(breakSound);
-						this.fadeAmount = 1;
-						for (i = 0; i < this.hitBox.width; i += 10) {
-							var particle = new Particle(SHAPE_PART, this.x + i, this.y, 4, -4, 0, -4, 0.15, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
+	if (this.delay > 0) {
+		this.delay--;
+	} else {
+		this.step++;
+		if (this.switchDelay > 0 && this.step % this.switchDelay === 0) {
+			this.hSpeed *= -1;
+			this.vSpeed *= -1;
+		}
+		if (this.specialId === PLATFORM_FIRE) {
+			if (this.step >= 150 && isOnScreen(this)) {
+				if (this.step === 150)
+					playSoundProx(this.game, this, fireSound);
+				if (this.step % 2 === 0) {
+					for (i = 0; i < this.hitBox.width; i += 10) {
+						if (Math.random() >= 0.5) {
+							var particle = new Particle(SHAPE_PART, this.x + i, this.y, 1, -1, 0, -4, 0, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
 							var element;
-								element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#123D5C", "#386586");        	
+							element = new SquareElement(4 + Math.random() * 2, 4 + Math.random() * 2, "#f27d30", "#eab120");
 							particle.other = element;
+							particle.attackId = 5;
 							this.game.addEntity(particle);
 						}
 					}
-					if (this.step >= 160) {
-						this.fadeAmount -= 0.02;
-						if (this.fadeAmount < 0) {
-							this.fadeAmount = 0;
-							this.trigger = false;
-						}
-					}
-				} 
+				}
 			}
-		    this.x += this.hSpeed;
-		    this.y += this.vSpeed;
+			if (this.step >= 200)
+				this.step = 0;
 		}
+		if (this.specialId === PLATFORM_FADE) {
+			if (this.step == 120) {
+				var shine = new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 1, 0, false, this.game,
+					new Animation(ASSET_MANAGER.getAsset("./img/Platform/invisible_shine.png"), 0, 0, 63, 16, .05, 8, false, false, 0, 0));
+				shine.highPriority = 1;
+				this.game.addEntity(shine);
+			}
+			if (this.step >= 150 && this.step <= 200) {
+				this.fadeAmount += 0.02;
+				if (this.fadeAmount > 1)
+					this.fadeAmount = 1;
+			}
+			if (this.step >= 290) {
+				this.fadeAmount -= 0.02;
+				if (this.fadeAmount < 0)
+					this.fadeAmount = 0;
+			}
+			if (this.step >= 340) {
+				this.step = 0;
+				this.fadeAmount = 0;
+			}
+		}
+		if (this.specialId === PLATFORM_BREAK) {
+			if (this.trigger) {
+				if (this.step == 60) {
+					playSound(breakSound);
+					this.fadeAmount = 1;
+					for (i = 0; i < this.hitBox.width; i += 10) {
+						var particle = new Particle(SHAPE_PART, this.x + i, this.y, 4, -4, 0, -4, 0.15, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
+						var element;
+							element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#123D5C", "#386586");        	
+						particle.other = element;
+						this.game.addEntity(particle);
+					}
+				}
+				if (this.step >= 160) {
+					this.fadeAmount -= 0.02;
+					if (this.fadeAmount < 0) {
+						this.fadeAmount = 0;
+						this.trigger = false;
+					}
+				}
+			} 
+		}
+		this.x += this.hSpeed;
+		this.y += this.vSpeed;
 	}
     if ((this.game.currentPhase === 10 || this.game.currentPhase === 17) && !this.removeFromWorld) {
         if (this.game.liveCamera.y <= -120 && this.hitBox.y + this.hitBox.height >= this.game.liveCamera.y + 500) {
@@ -168,7 +169,13 @@ Platform.prototype.draw = function (ctx) {
 /**
     Platform
 */
-function Wall(game, x, y, width, height) {
+var WALL_SPIKE_UP = 1;
+var WALL_SPIKE_DOWN = 2;
+var WALL_SPIKE_RIGHT = 3;
+var WALL_SPIKE_LEFT = 4;
+
+
+function Wall(game, x, y, width, height, specialId) {
     // Number Variables
     this.x = x;
     this.y = y;
@@ -179,6 +186,27 @@ function Wall(game, x, y, width, height) {
 	this.hSpeed = 0;
 	this.vSpeed = 0;
 	this.fadeAmount = 0;
+	this.specialId = specialId || 0;
+	if (this.specialId == WALL_SPIKE_UP) {
+		this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/spike_up.png");
+		this.width = 32;
+		this.height = 48;
+	}
+	if (this.specialId == WALL_SPIKE_DOWN) {
+		this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/spike_down.png");
+		this.width = 32;
+		this.height = 48;
+	}
+	if (this.specialId == WALL_SPIKE_RIGHT) {
+		this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/spike_right.png");
+		this.width = 48;
+		this.height = 48;
+	}
+	if (this.specialId == WALL_SPIKE_LEFT) {
+		this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/spike_left.png");
+		this.width = 48;
+		this.height = 48;
+	}
     
     Entity.call(this, game, x, y);
     

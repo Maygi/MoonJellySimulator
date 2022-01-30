@@ -42,6 +42,11 @@ function GameEngine() {
 }
 
 GameEngine.prototype.init = function (ctx) {
+	WebFont.load({
+		google: {
+			families: ['Proxima Nova:300,400,700']
+		}
+	});
 	this.highPriority = 1000;
 	this.score = 0;
 	this.cameraShakeAmount = 0;
@@ -59,12 +64,13 @@ GameEngine.prototype.init = function (ctx) {
 	this.currentPhase = -1;
 	this.currentBoss = null;
     this.currentMap = null;
+    this.spaceDown = false;
     this.UI = null;
     this.textSpeed = 5;
     this.step = 0;
     this.cameraLock = false;
     this.gameWon = false;
-    this.cameraSpeed = 5;
+    this.cameraSpeed = 15;
 	this.cutTime = 0; // the time where the black cross-screen cut effect is in play
 	this.pauseTime = 0;
 	this.buttonChallenge = null;
@@ -75,7 +81,7 @@ GameEngine.prototype.init = function (ctx) {
     	x: -2400,
     	y: 0,
     	minX: -2400,
-    	maxX: 2000,
+    	maxX: 10000,
     	minY: 0,
     	maxY: 0,
     	width: 800,
@@ -159,12 +165,13 @@ GameEngine.prototype.startInput = function () {
 		if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
 			that.player1.jumpDown = true;
             that.textSpeed = 1;
+			that.spaceDown = true;
 		}
 		if (String.fromCharCode(e.which) === 'T') {
 			that.interactDown = true;
 		}
-		if (String.fromCharCode(e.which) === 'Y') {
-			that.player1.attackInput = 1;
+		if (String.fromCharCode(e.which) === 'C') {
+			that.player1.attackInput = 2;
         } else if (String.fromCharCode(e.which) === 'Z') {
 			that.player1.attackInput = 1;
         } else if (String.fromCharCode(e.which) === 'R') {
@@ -175,14 +182,19 @@ GameEngine.prototype.startInput = function () {
 				that.player1.invulnTimer = that.player1.invulnTimerMax * 2;
 				that.player1.hitByAttack = true;
 				that.player1.xVelocity = 0;
-				that.score = Math.round(that.score / 2);
-				if (that.currentPhase === 5) { //brandong chase
-					that.player1.speedTimer = 300;
+				that.player1.stunTimer = 2;
+				that.player1.stunned = true;
+				if (that.player1.teleportToX != -1) {
+					that.player1.x = that.player1.teleportToX;
+					that.player1.y = that.player1.teleportToY;
+					that.player1.teleportToY = -1;
+					that.player1.teleportToY = -1;
 				}
+				that.score = Math.round(that.score / 2);
 			}
         } else if (String.fromCharCode(e.which) === 'Q') {
 			that.player1.attackInput = 2;
-        } else if (String.fromCharCode(e.which) === 'C') {
+        } else if (String.fromCharCode(e.which) === 'A') {
 			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER && that.player1.currentStamina >= 100) { //ulti
 				that.player1.currentStamina = 0;
 				cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
@@ -214,11 +226,12 @@ GameEngine.prototype.startInput = function () {
 		if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
 			that.player1.jumpDown = false;
             that.textSpeed = 5;
+			that.spaceDown = false;
 		}
 		if (String.fromCharCode(e.which) === 'S' || String.fromCharCode(e.which) === '(') {
 			that.player1.downDown = false;
 		}
-        if (String.fromCharCode(e.which) === 'Y' || String.fromCharCode(e.which) === 'U') {
+        if (String.fromCharCode(e.which) === 'C') {
 			that.player1.attackInput = 0;
 		}
 		if (String.fromCharCode(e.which) === 'T') {
@@ -277,7 +290,7 @@ GameEngine.prototype.draw = function () {
     for (var i = 0; i < highPriorityEntities2.length; i++) {
 		this.entities[highPriorityEntities2[i]].draw(this.ctx);
     }
-	if (!this.player1.dead)
+	if (!this.player1.dead && this.pauseTime == 0)
 		this.UI.draw(this.ctx);
     for (var i = 0; i < highPriorityEntities3.length; i++) {
 		this.entities[highPriorityEntities3[i]].draw(this.ctx);

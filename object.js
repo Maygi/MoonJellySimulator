@@ -48,6 +48,9 @@ class BackgroundObject {
 	distanceToPlayer() {
 		return Math.abs(this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2));
 	}
+	xToPlayer() {
+		return this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2);
+	}
 	update() {
 		this.tick++;
 		if (this.cooldown > 0)
@@ -174,6 +177,7 @@ class LivingKelp extends BackgroundObject {
 	}
 	
 	update() {
+		var that = this;
 		if (this.explodeTimer > 0) {
 			this.explodeTimer--;
 			if (this.explodeTimer == 80)
@@ -192,6 +196,11 @@ class LivingKelp extends BackgroundObject {
 				this.game.player1.canControl = true;
 				this.game.player1.binded = false;
 				this.game.currentPhase = 4;
+				setTimeout(
+					function() {
+						that.game.addEntity(new BigInfoBox(that.game, "Evolution Complete", "Consumed the DEMON KELP", "You can now breathe underwater. Your oxygen meter will no longer deplete over time.",
+							new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_waterbreathe.png"), 0, 0, 192, 432, 1, 1, true, false, -96, -450)));
+					}, 2000);
 			}
 		}
 		if (this.tick % 10 == 0) {
@@ -241,11 +250,15 @@ class TunaChargeDropper extends BackgroundObject {
 	}
 	
 	update() {
-		if (!isOnScreen(this))
-			return;
-		if (this.tick % 150 == 0) {
+		if (isOnScreen(this) && this.tick % 150 == 0) {
 			var tuna = new Particle(IMG_PART, this.x, this.y - 32, 0, 0, 2, 2, 0.02, 0, 0, 240, 0, 0, 1.0, 0, false, this.game,
 				new Animation(ASSET_MANAGER.getAsset("./img/Misc/tuna_charge.png"), 0, 0, 32, 32, 0.08, 13, true, false, 0, 0));
+			tuna.overrideHitbox = {
+				x: 0, 
+				y: 0,
+				width: 32, 
+				height: 32
+			};
 			tuna.attackId = TUNA_CHARGE;
 			this.game.addEntity(tuna);
 		}
@@ -334,5 +347,50 @@ class ButtonChallenge extends BackgroundObject {
 				150 + this.game.liveCamera.y);
 		}
 		Entity.prototype.draw.call(this);
+	}
+}
+
+class BubbleCurrent extends BackgroundObject {
+	constructor(game, x, y, pushHspeed) {
+		super(game, x, y);
+		this.backgroundObject = true;
+		this.currentAnimation = null;
+		this.pushHspeed = pushHspeed;
+		this.hitBoxDef = {
+			width: 32, height: 64, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	update() {
+		if (!isNearbyScreen(this))
+			return;
+		if (this.phase == 0 && this.cooldown == 0) {
+			this.phase = 1; //bubble blowing mode
+			this.cooldown = 90;
+		}
+		if (this.phase == 1) {
+			if (this.cooldown == 0) {
+				this.phase = 0;
+				this.cooldown = 120;
+			}
+			var xDist = this.xToPlayer();
+			var inXPushRange = (xDist < 0 && xDist >= -500 && this.pushHspeed > 0 ||
+				xDist > 0 && xDist <= 500 && this.pushHspeed < 0);
+			var inYPushRange = Math.abs((this.y + this.hitBoxDef.height/2) - 
+				(this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2)) < 60;
+			if (inYPushRange && inXPushRange) { //push
+				console.log("PUSHHHH");
+				this.game.player1.displacementXSpeed = this.pushHspeed * 3 / 4;
+			}
+			var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y + Math.random() * 64, 
+					this.pushHspeed, this.pushHspeed, -1, 1, 0, 0, 0, 0, 0, 45, .7, .1, false, this.game);
+			var element = new CircleElement(12, "#81d4c6", "#9ed8f7");
+			newParticle.other = element;
+			//newParticle.acceleration = 0.03;
+			this.game.addEntity(newParticle);
+		}
+
+		super.update();
 	}
 }
