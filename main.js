@@ -2779,7 +2779,7 @@ Character.prototype.update = function () {
     if (gameStarted) {
 		//game phase management
 		if (this.game.currentPhase < 1) {
-			//startMusic.play();
+			startMusic.play();
 			var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
 			this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
 			this.game.step = 0;
