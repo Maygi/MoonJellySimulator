@@ -257,7 +257,8 @@ class TunaChargeDropper extends BackgroundObject {
 				x: 0, 
 				y: 0,
 				width: 32, 
-				height: 32
+				height: 32,
+				followPosition: true
 			};
 			tuna.attackId = TUNA_CHARGE;
 			this.game.addEntity(tuna);

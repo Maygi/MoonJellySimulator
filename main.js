@@ -1445,12 +1445,10 @@ Particle.prototype.update = function() {
 			newParticle.grow = true;
 			newParticle.attackId = TUNA_CHARGE_EXPLODE;
 			newParticle.overrideHitbox = {
-				x: this.x + 16, 
-				y: this.y + 16,
+				x: this.x - 100 + 16, 
+				y: this.y  - 100 + 16,
 				width: 200, 
-				height: 200,
-				offsetX: -100,
-				offsetY: -100
+				height: 200
 			};
 			this.game.addEntity(newParticle);
 	    }
@@ -1739,8 +1737,10 @@ Particle.prototype.update = function() {
 
 	if (this.overrideHitbox != null) {
 		this.hitBox = this.overrideHitbox;
-		this.hitBox.x = this.x;
-		this.hitBox.y = this.y;
+		if (this.overrideHitbox.followPosition) {
+			this.hitBox.x = this.x;
+			this.hitBox.y = this.y;
+		}
 	} else if (this.particleId == IMG_PART) {
 		this.hitBox = { //update hitbox as we move
 			x: this.x, 
@@ -5636,6 +5636,7 @@ new Powerup(game, -1624, 288, TIP_MARKER, 1),
 
 new Powerup(game, -1096, 112, TIP_MARKER, 2),
 
+new TunaChargeDropper(game, -1800, 0),
 new TunaChargeDropper(game, 936, 0),
 
 new TunaChargeDropper(game, 2760, 0),
