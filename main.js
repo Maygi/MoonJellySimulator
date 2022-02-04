@@ -4635,7 +4635,7 @@ function spawnWave(game, number) {
 		case 1:
 			var objects = [		
 				new Spaceship(game, -2400, 370),
-				new LivingKelp(game, 1600, 208),
+				new LivingKelp(game, 6168, 208),
 			];
 			var powerups = [
 			];
@@ -6455,8 +6455,6 @@ new Kelp(game, 6072, 224),
 new Kelp(game, 6104, 224),
 
 new Kelp(game, 6136, 224),
-
-new Kelp(game, 6168, 224),
 
 new Kelp(game, 6200, 224),
 
