@@ -4647,6 +4647,7 @@ new Platform(game, -2144 + 64, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
 new Platform(game, -2144 + 64 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
 
+
 new Platform(game, -1544, 400),
 
 new Platform(game, -1480, 400),
@@ -5353,9 +5354,9 @@ new Wall(game, 5208, 256, 32, 32),
 
 new Wall(game, 5208, 288, 32, 32),
 
-new Wall(game, 5208, 320, 32, 32),
+new Wall(game, 5240, 320, 32, 32),
 
-new Wall(game, 5208, 352, 32, 32),
+new Wall(game, 5240, 352, 32, 32),
 
 new Wall(game, 5208, 384, 32, 32),
 
@@ -5817,6 +5818,30 @@ new Wall(game, 6264, 448, 32, 32),
 
 new Wall(game, 6264, 416, 32, 32),
 
+new Wall(game, 3384, 224, 32, 32),
+
+new Wall(game, 5240, 192, 32, 32),
+
+new Wall(game, 5240, 224, 32, 32),
+
+new Wall(game, 5240, 256, 32, 32),
+
+new Wall(game, 5240, 288, 32, 32),
+
+new Wall(game, 5240, 384, 32, 32),
+
+new Wall(game, 5240, 416, 32, 32),
+
+new Wall(game, 5240, 448, 32, 32),
+
+new Wall(game, 2664, 432, 32, 32),
+
+new Wall(game, 2696, 432, 32, 32),
+
+new Wall(game, 2664, 400, 32, 32),
+
+new Wall(game, 2696, 400, 32, 32),
+
 new Platform(game, -968, 448, 0, 0, 0, PLATFORM_BOUNCY),
 
 new Platform(game, 376, 272, 0, 0, 0, PLATFORM_BOUNCY),
@@ -5847,11 +5872,7 @@ new Platform(game, 856, 320, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, 792, 320, 0, 0, 0, PLATFORM_BREAK),
 
-new Platform(game, 3000, 208, 0, 0, 0, PLATFORM_BREAK),
-
-new Platform(game, 3176, 208, 0, 0, 0, PLATFORM_BREAK),
-
-new Platform(game, 3352, 208, 0, 0, 0, PLATFORM_BREAK),
+new Platform(game, 3320, 224, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, 3640, 224, 0, 0, 0, PLATFORM_BREAK),
 
@@ -5868,6 +5889,18 @@ new Platform(game, 2024, 400, 0, 0, 0, PLATFORM_BREAK),
 new Platform(game, 2088, 400, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, 2152, 400, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3256, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3192, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3128, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3064, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 3000, 224, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 2936, 224, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, 120, 208, 0, 0, 0, PLATFORM_FADE, 0),
 
@@ -5951,8 +5984,6 @@ new Wall(game, 1896, 416, 32, 32, WALL_SPIKE_UP),
 
 new Wall(game, 2184, 416, 32, 32, WALL_SPIKE_UP),
 
-new Wall(game, 5240, 432, 32, 32, WALL_SPIKE_UP),
-
 new Wall(game, 5272, 432, 32, 32, WALL_SPIKE_UP),
 
 new Wall(game, 5304, 432, 32, 32, WALL_SPIKE_UP),
@@ -5973,9 +6004,9 @@ new Wall(game, 5720, 400, 32, 32, WALL_SPIKE_UP),
 
 new Wall(game, 5752, 400, 32, 32, WALL_SPIKE_UP),
 
-new Wall(game, 5160, 336, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, 5192, 336, 32, 32, WALL_SPIKE_LEFT),
 
-new Wall(game, 5160, 304, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, 5192, 304, 32, 32, WALL_SPIKE_LEFT),
 
 new Wall(game, 2312, 288, 32, 32, WALL_SPIKE_DOWN),
 
@@ -6000,6 +6031,8 @@ new Wall(game, 5016, 224, 32, 32, WALL_SPIKE_DOWN),
 new Wall(game, 5144, 224, 32, 32, WALL_SPIKE_DOWN),
 
 new Wall(game, 5176, 224, 32, 32, WALL_SPIKE_DOWN),
+
+
 
 
 

@@ -188,6 +188,9 @@ GameEngine.prototype.startInput = function () {
 			if (that.player1.dead) { //revive
 				that.player1.dead = false;
 				that.player1.currentHealth = that.player1.maxHealth;
+				if (that.player1.currentForm == FORM_BABY) {
+					this.game.player1.currentStamina = this.game.player1.maxStamina;
+				}
 				that.player1.vulnerable = false;
 				that.player1.invulnTimer = that.player1.invulnTimerMax * 2;
 				that.player1.hitByAttack = true;
