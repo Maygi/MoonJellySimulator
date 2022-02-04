@@ -215,9 +215,9 @@ class BigInfoBox extends InfoBox {
 		wrapText(ctx, this.desc, this.game.liveCamera.x + this.game.liveCamera.width / 2, this.game.liveCamera.y + 160 + 32 + 6, 600, 32);
 		//wrapText(ctx, ".", this.game.liveCamera.x + this.game.liveCamera.width / 2, this.game.liveCamera.y + 160 + 96, 800, 100);
 		this.animation.drawFrame(this.game.clockTick, ctx, this.game.liveCamera.x + this.game.liveCamera.width / 2 + this.animation.offsetX,
-			this.game.liveCamera.y + this.game.liveCamera.height / 2 + this.animation.offsetY + 160 + 48, 1);
+			this.game.liveCamera.y + this.game.liveCamera.height / 2 + this.animation.offsetY + 160 + 48 + 32, 1);
 		ctx.font = "12px Proxima Nova";
-		wrapText(ctx, "Press [SPACE] to continue", this.game.liveCamera.x + this.game.liveCamera.width / 2, this.game.liveCamera.y + this.game.liveCamera.height - 32, 800, 100);
+		wrapText(ctx, "Press [SPACE] to continue", this.game.liveCamera.x + this.game.liveCamera.width / 2, this.game.liveCamera.y + this.game.liveCamera.height - 16, 800, 100);
 		ctx.textAlign = "left";
 		Entity.prototype.draw.call(this);
 	}

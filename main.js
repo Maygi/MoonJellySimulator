@@ -482,6 +482,8 @@ function applyDamage(x, y, game, damage, victim) {
 		color = "red";
 		if (game.player1.currentHealth - damage <= 0) {
 			game.player1.dead = true;
+			game.player1.xVelocity = 0;
+			game.player1.yVelocity = 0;
 			handleDie(game);
 		}
 	} else {
@@ -1449,10 +1451,10 @@ Particle.prototype.update = function() {
 			newParticle.grow = true;
 			newParticle.attackId = TUNA_CHARGE_EXPLODE;
 			newParticle.overrideHitbox = {
-				x: this.x - 100 + 16, 
-				y: this.y  - 100 + 16,
-				width: 200, 
-				height: 200
+				x: this.x - 50 + 16, 
+				y: this.y  - 50 + 16,
+				width: 100, 
+				height: 100
 			};
 			this.game.addEntity(newParticle);
 	    }
@@ -2832,7 +2834,7 @@ Character.prototype.update = function () {
 		this.teleportToX = -1;
 		this.teleportToY = -1;
 		console.log("teleporting to: " + this.x + ", " + this.y);
-	} else {
+	} else if (!this.dead) {
 		this.phaseTick++;
 		if (gameStarted) {
 			//game phase management
@@ -4644,12 +4646,12 @@ function spawnWave(game, number) {
 			var powerups = [
 			];
 			var platforms = [
-new Platform(game, -2144, 400, 0, 0, 0, PLATFORM_FADE, 0),
+/*new Platform(game, -2144, 400, 0, 0, 0, PLATFORM_FADE, 0),
 new Platform(game, -2144 + 64, 400, 0, 0, 0, PLATFORM_FADE, 0),
 new Platform(game, -2144, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
-new Platform(game, -2144 + 64 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
+new Platform(game, -2144 + 64 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),*/
 
 
 new Platform(game, -1544, 400),
