@@ -693,12 +693,16 @@ UI.prototype.draw = function (ctx) { //draw ui
     ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.healthX + this.game.liveCamera.x, this.globalY + this.healthY + this.game.liveCamera.y, this.healthWidth * (this.game.player1.currentHealthTemp / this.game.player1.maxHealth), this.healthHeight);
     ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBar.png"), this.healthX + this.game.liveCamera.x, this.globalY + this.healthY + this.game.liveCamera.y, this.healthWidth * (this.game.player1.currentHealth / this.game.player1.maxHealth), this.healthHeight);
     ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bar2X + this.game.liveCamera.x, this.globalY + this.bar2Y + this.game.liveCamera.y, this.bar2Width, this.bar2Height);
-	
-    ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/StaminaBarLight.png"), this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, this.staminaWidth * (this.game.player1.currentStaminaTemp / this.game.player1.maxStamina), this.staminaHeight);
-    ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/StaminaBar.png"), this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, this.staminaWidth * (this.game.player1.currentStamina / this.game.player1.maxStamina), this.staminaHeight);
+	if (this.game.player1.currentForm == FORM_BABY) {
+		ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/StaminaBarLight.png"), this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, this.staminaWidth * (this.game.player1.currentStaminaTemp / this.game.player1.maxStamina), this.staminaHeight);
+		ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/StaminaBar.png"), this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, this.staminaWidth * (this.game.player1.currentStamina / this.game.player1.maxStamina), this.staminaHeight);
+	} else {
+		ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/EnergyBarLight.png"), this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, this.staminaWidth * (this.game.player1.currentStaminaTemp / this.game.player1.maxStamina), this.staminaHeight);
+		ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/EnergyBar.png"), this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, this.staminaWidth * (this.game.player1.currentStamina / this.game.player1.maxStamina), this.staminaHeight);
+	}
 	if (this.game.player1.ultiTimer > 0) {
 		this.ougiBarActive.drawFrame(this.game.clockTick, ctx, this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, 1, 1);
-	} else if (this.game.player1.currentStamina >= this.game.player1.maxStamina) {
+	} else if (this.game.player1.currentStamina >= this.game.player1.maxStamina && this.game.player1.currentForm == FORM_ANGLER) {
 		this.ougiBar.drawFrame(this.game.clockTick, ctx, this.staminaX + this.game.liveCamera.x, this.globalY + this.staminaY + this.game.liveCamera.y, 1, 1);
 	}
     ctx.drawImage(ASSET_MANAGER.getAsset("./img/Jelly/JellyPortrait.png"), this.portraitX + this.game.liveCamera.x, this.globalY + this.portraitY + this.game.liveCamera.y, this.portraitWidth, this.portraitHeight);
@@ -2271,7 +2275,7 @@ Powerup.prototype.update = function () {
 						var chat4 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "We'll meet soon enough! So wait until then, okay?", true);
 						chat.nextText = chat2;
 						chat2.nextText = chat3;
-						//chat3.nextText = chat4;
+						chat3.nextText = chat4;
 						that.game.addEntity(chat);
 						that.game.pauseTime = 100;
 						that.game.player1.teleportToX = 5574 - 128;
@@ -6047,6 +6051,12 @@ new Powerup(game, 1176, 80, 0),
 
 new Powerup(game, 2616, 384, 0),
 
+new Powerup(game, 2472, 128, 0),
+
+new Powerup(game, 4232, 208, 0),
+
+new Powerup(game, 4712, 272, 0),
+
 new SeaSlug(game, -1480, 432, -1, 32),
 
 new SeaSlug(game, -1320, 432, 1, 32),
@@ -6076,8 +6086,6 @@ new SeaSlug(game, 3048, 432, 1, 0),
 new SeaSlug(game, 3192, 432, 1, 0),
 
 new Uni(game, 2456, 176),
-
-new Uni(game, 5064, 304),
 
 new Pirahna(game, -744, 400, 1, 0),
 
@@ -6485,13 +6493,19 @@ new Kelp(game, 6040, 224),
 
 new Kelp(game, 6072, 224),
 
+new Kelp(game, 6008, 224),
+
 new Kelp(game, 6104, 224),
 
 new Kelp(game, 6136, 224),
 
 new Kelp(game, 6200, 224),
 
-new Kelp(game, 6008, 224),
+new Kelp(game, -8, 208),
+
+new Kelp(game, 2248, 208),
+
+new Kelp(game, 2760, 224),
 
 new Powerup(game, -1624, 288, TIP_MARKER, 1),
 
@@ -6503,7 +6517,7 @@ new TunaChargeDropper(game, 2760, 0),
 
 new TunaChargeDropper(game, 3656, 0),
 
-new BubbleCurrent(game, 3384, 144, -8),
+new BubbleCurrent(game, 3320, 160, -8),
 
 new BubbleCurrent(game, 4456, 96, -8),
 
@@ -6584,6 +6598,8 @@ ASSET_MANAGER.queueDownload("./img/UI/HealthBar.png");
 ASSET_MANAGER.queueDownload("./img/UI/HealthBarLight.png");
 ASSET_MANAGER.queueDownload("./img/UI/StaminaBar.png");
 ASSET_MANAGER.queueDownload("./img/UI/StaminaBarLight.png");
+ASSET_MANAGER.queueDownload("./img/UI/EnergyBar.png");
+ASSET_MANAGER.queueDownload("./img/UI/EnergyBarLight.png");
 ASSET_MANAGER.queueDownload("./img/UI/Platform.png");
 ASSET_MANAGER.queueDownload("./img/UI/PlatformBouncy.png");
 ASSET_MANAGER.queueDownload("./img/UI/PlatformFire.png");

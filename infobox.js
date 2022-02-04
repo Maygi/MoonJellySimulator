@@ -111,7 +111,7 @@ class InfoBox {
 }
 
 /**
- * Represents an information box, which expands and appears at the top of the screen, before fading out.
+ * Represents a new powerup screen.
  */
 class BigInfoBox extends InfoBox {
 	constructor(game, header, title, desc, animation) {
@@ -128,7 +128,7 @@ class BigInfoBox extends InfoBox {
 		this.titleOpacity = 0;
 		this.descOpacity = 0;
 		this.imageOpacity = 0;
-		this.highPriority = 5;
+		this.highPriority = 3;
 	}
 	
 	update() {

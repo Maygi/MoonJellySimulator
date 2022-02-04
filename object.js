@@ -171,8 +171,8 @@ class LivingKelp extends BackgroundObject {
 		this.interactDistance = 25;
 		this.cooldown = 5;
 		this.backgroundObject = true;
-		this.currentHealth = 20;
-		this.maxHealth = 100;
+		this.currentHealth = 50;
+		this.maxHealth = 50;
 		this.explodeTimer = 0;
 		this.currentAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Misc/kelp.png"), 0, 0, 32, 264, 0.5, 20, true, false, 0, 0);
 		this.hitBoxDef = {
@@ -203,7 +203,7 @@ class LivingKelp extends BackgroundObject {
 				this.game.currentPhase = 4;
 				setTimeout(
 					function() {
-						that.game.addEntity(new BigInfoBox(that.game, "Evolution Complete", "Consumed the DEMON KELP", "You can now breathe underwater. Your oxygen meter will no longer deplete over time.",
+						that.game.addEntity(new BigInfoBox(that.game, "Evolution Complete", "Consumed the DEMON KELP", "You can now breathe underwater. Your oxygen will no longer deplete over time, and your oxygen meter is replaced with an energy meter.",
 							new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_waterbreathe.png"), 0, 0, 192, 432, 1, 1, true, false, -96, -450)));
 					}, 2000);
 			}
