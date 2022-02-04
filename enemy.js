@@ -654,7 +654,7 @@ class Uni extends Enemy {
 		this.autoDamage = 30;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
-		this.displacementFriction = 0.4; //basically, how "heavy" a mob is
+		this.displacementFriction = 5; //basically, how "heavy" a mob is
 		this.groundlocked = true;
 		
 		//unique vars
@@ -714,7 +714,7 @@ class Uni extends Enemy {
 			this.currentAnimation.restart();
 			this.aniLeft = this.walkAnimationLeft;
 			this.aniRight = this.walkAnimationRight;
-			this.displacementFriction = 0.4;
+			this.displacementFriction = 5;
 		}
 		if (this.changeTime > 0) {
 			this.changeTime--;

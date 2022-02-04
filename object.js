@@ -48,6 +48,10 @@ class BackgroundObject {
 	distanceToPlayer() {
 		return Math.abs(this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2));
 	}
+	distanceToPlayerY() {
+		return Math.abs(this.getYMidpoint() - (this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2));
+	}
+	
 	xToPlayer() {
 		return this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2);
 	}
@@ -152,8 +156,9 @@ class Kelp extends BackgroundObject {
 			newParticle.other = element;
 			this.game.addEntity(newParticle);
 		}
-		if (this.distanceToPlayer() <= this.interactDistance) { //restore O2
-			addEnergy(this.game, 1);
+		if (this.distanceToPlayer() <= this.interactDistance && this.distanceToPlayerY() <= this.hitBoxDef.height / 2) { //restore O2
+			if (!this.game.player1.binded)
+				addEnergy(this.game, 1);
 			this.game.showTip(TIP_KELP);
 		}
 		super.update();

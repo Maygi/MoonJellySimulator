@@ -284,6 +284,8 @@ GameEngine.prototype.draw = function () {
 	var highPriorityEntities2 = [];
 	var highPriorityEntities3 = []; //over ui
     for (var i = 0; i < this.entities.length; i++) {
+		if (this.entities[i] instanceof Character)
+			continue;
 		if (this.entities[i].highPriority > 0) {
 			if (this.entities[i].highPriority === 3)
 				highPriorityEntities3.push(i);
@@ -300,6 +302,7 @@ GameEngine.prototype.draw = function () {
     for (var i = 0; i < highPriorityEntities2.length; i++) {
 		this.entities[highPriorityEntities2[i]].draw(this.ctx);
     }
+	this.player1.draw(this.ctx);
 	if (!this.player1.dead && this.pauseTime == 0)
 		this.UI.draw(this.ctx);
     for (var i = 0; i < highPriorityEntities3.length; i++) {

@@ -3492,6 +3492,10 @@ Character.prototype.update = function () {
 			}
 		} else {
 			if (this.running) {
+				if (!platformFound && !this.falling && !this.jumping && !(this.jumping && this.yVelocity <= 0)) {
+					this.lastSafeX = that.x;
+					this.lastSafeY = that.y;
+				}
 				if (this.lastDirection === "Right") {
 					this.x += moveSpeed;
 				} else if (this.lastDirection === "Left") {
@@ -3525,10 +3529,6 @@ Character.prototype.update = function () {
 				that.dashIndex = 0;
 				that.groundSlam();
 			}
-		}
-		if (this.running && !platformFound && !this.falling && !this.jumping) {
-			this.lastSafeX = that.x;
-			this.lastSafeY = that.y;
 		}
 		/*if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.maxX + this.game.surfaceWidth && (this.lastDirection === "Right" || this.hurt)) {
 			this.x = this.game.camera.maxX + this.game.surfaceWidth - this.hitBoxDef.width - this.hitBoxDef.offsetX;
