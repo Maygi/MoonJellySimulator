@@ -2067,6 +2067,7 @@ var JELLY_COIN = 2;
 var JELLY_COIN_SM = 3;
 var ENTITY_MARKER = 4; //invisible, limiting hitbox to prevent entity movement
 var TIP_MARKER = 5; //tip trigger
+var JELLYBAIT = 6; //jellybait
 
 function Powerup(game, x, y, type, specialId) {
 	this.step = 0;
@@ -2106,7 +2107,7 @@ function Powerup(game, x, y, type, specialId) {
 			this.vspeed = 5 - Math.random() * 10;
 		}
     }
-    if (type === 5) { //tip marker
+    if (type === TIP_MARKER || type === JELLYBAIT) { //tip marker
 		this.hitBoxDef = {
 			width: 32, height: 192, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
 		};
@@ -2219,17 +2220,67 @@ Powerup.prototype.update = function () {
 	            this.removeFromWorld = true;
 	        }
 		}
-		if (this.type === 6) { //petal torrent
+		if (this.type === JELLYBAIT && this.phase == 0) {
 	        if (checkCollision(this, this.game.player1)) {
-	            playSound(healSound);
-	            var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-	                    0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-	            var damageText = new TextElement("", "Lucida Console", 25, "#ffd43a", "black");
-	            damageText.text = "Petal Torrent!";
-	            damageParticle.other = damageText;
-                this.game.addEntity(damageParticle);
-	            this.game.player1.petalTorrentHits = 4;
-	            this.removeFromWorld = true;
+				this.phase = 1;
+				setTimeout(
+					function() {
+						var chat = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "...", true);
+						var chat2 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "Jelly... I'm not sure what you expected when you jumped down here.", true);
+						var chat3 = new TextBox(that.game, "./img/Chat/JellySquare.png", "lol idk either", true);
+						var chat4 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "You're lucky though !! Because I'm going to go bail you out ~", true);
+						chat.nextText = chat2;
+						chat2.nextText = chat3;
+						chat3.nextText = chat4;
+						that.game.addEntity(chat);
+						that.game.pauseTime = 100;
+						that.game.player1.teleportToX = 5574 - 128;
+						that.game.player1.teleportToY = 32;
+						that.phase = 2;
+					}, 5000);
+	        }
+		}
+		if (this.type === JELLYBAIT && this.phase == 2) {
+	        if (checkCollision(this, this.game.player1)) {
+				this.phase = 3;
+				setTimeout(
+					function() {
+						var chat = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "...", true);
+						var chat2 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "Jelly... are you cereal", true);
+						var chat3 = new TextBox(that.game, "./img/Chat/JellySquare.png", "lag?", true);
+						var chat4 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "Let me help you up again~", true);
+						chat.nextText = chat2;
+						chat2.nextText = chat3;
+						chat3.nextText = chat4;
+						that.game.addEntity(chat);
+						that.game.pauseTime = 100;
+						that.game.player1.teleportToX = 5574 - 128;
+						that.game.player1.teleportToY = 32;
+						that.phase = 4;
+					}, 5000);
+	        }
+		}
+		if (this.type === JELLYBAIT && this.phase == 4) {
+	        if (checkCollision(this, this.game.player1)) {
+				this.phase = 5;
+				setTimeout(
+					function() {
+						var chat = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "...", true);
+						var chat2 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "Ok Jelly... you're trying really hard I know", true);
+						var chat3 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "But I think this is enough for now...", true);
+						var chat4 = new TextBox(that.game, "./img/Chat/UnknownSquare.png", "We'll meet soon enough! So wait until then, okay?", true);
+						chat.nextText = chat2;
+						chat2.nextText = chat3;
+						//chat3.nextText = chat4;
+						that.game.addEntity(chat);
+						that.game.pauseTime = 100;
+						that.game.player1.teleportToX = 5574 - 128;
+						that.game.player1.teleportToY = 32;
+						var p = new Platform(that.game, 5560, 224, 0, 0, 0, PLATFORM_BOUNCY);
+						that.game.addEntity(p);
+						that.game.currentMap.platforms.push(p);
+						that.removeFromWorld = true;
+					}, 5000);
 	        }
 		}
 		if (this.type === 7) { //tree of life
@@ -2679,7 +2730,7 @@ Character.prototype.hitSpike = function() {
 	this.game.addEntity(new BlackScreenFade(this.game, 30));
 	console.log("teleporting to : " + this.lastSafeX);
 	this.teleportToX = this.lastSafeX;
-	this.teleportToY = this.lastSafeY;
+	this.teleportToY = this.lastSafeY - 3;
 	this.yVelocity = 0;
 	applyDamage(this.x, this.y, this.game, 20, this);
 }
@@ -2772,789 +2823,793 @@ Character.prototype.update = function () {
 	if (this.teleportToX != -1) {
 		this.x = this.teleportToX;
 		this.y = this.teleportToY;
+		this.xVelocity = 0;
+		this.yVelocity = 0;
 		this.teleportToX = -1;
 		this.teleportToY = -1;
-	}
-	this.phaseTick++;
-    if (gameStarted) {
-		//game phase management
-		if (this.game.currentPhase < 1) {
-			startMusic.play();
-			var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
-			this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
-			this.game.step = 0;
-			//this.game.addEntity(chat);
-			/*this.game.addEntity(new BigInfoBox(this.game, "Evolution Complete", "Consumed the ANGLERFISH SPIRIT",
-				"Attack range and damage is increased with the power of lightning. Press [↑] or [↓] + [Z] to attack up or down.",
-				new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_lightning.png"), 0, 0, 384, 192, 1, 1, true, false, -200, -200)));*/
-            this.game.currentPhase = 1;
-		}
-		if (this.game.currentPhase == 3 && this.phaseTick > 90) { //JELLY WOKE
-			if (this.phaseTick == 91)
-				playSound(rumbleSound);
-			var maxDiff = 100 + Math.min(800, this.phaseTick * 10);
-			var chosenX = this.x - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.offsetX;
-			var chosenY =  this.y - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.height + this.hitBoxDef.offsetY;
-			var theDistance = getDistance(chosenX, chosenY, this.game.player1.x, this.game.player1.y);
-			var newParticle = new Particle(PART_SECONDARY, chosenX, chosenY, 
-					-2, 2, -2, 2, 0, 0.3, 0, 0, 0, 80, .3, .15, true, this.game);
-			element = new SquareElement((10 + Math.random() * 10) * Math.min(3, this.phaseTick / 30), 
-				(10 + Math.random() * 10) * Math.min(3, this.phaseTick / 30), "#a6f9ff", "#6ae2eb");
-			newParticle.other = element;
-			newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.hitBoxDef.offsetX;
-			newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.hitBoxDef.offsetY;
-			newParticle.converge = true;
-			var distMultiplier = Math.min(1, theDistance / maxDiff);
-			newParticle.convergeMulitplier = 10 / distMultiplier + 5;
-			this.game.addEntity(newParticle);
-		}
-		if (this.phaseTimer > 0) {
-			this.phaseTimer--;
-			switch(this.game.currentPhase) {
-				case 6: //brandong tp
-					var newParticle = new Particle(PART_SECONDARY, 15700 + Math.random() * 150, 200 + Math.random() * 150, -3, 3, -3, 3, 0, 0.1, 0, 0, 0, 15, .2, .05, true, this.game);
-					element = new SquareElement(30 + Math.random() * 20, 30 + Math.random() * 20, "#a6f9ff", "#6ae2eb");
-					newParticle.other = element;
-					this.game.addEntity(newParticle);
-				break;
+		console.log("teleporting to: " + this.x + ", " + this.y);
+	} else {
+		this.phaseTick++;
+		if (gameStarted) {
+			//game phase management
+			if (this.game.currentPhase < 1) {
+				startMusic.play();
+				var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
+				this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
+				this.game.step = 0;
+				//this.game.addEntity(chat);
+				/*this.game.addEntity(new BigInfoBox(this.game, "Evolution Complete", "Consumed the ANGLERFISH SPIRIT",
+					"Attack range and damage is increased with the power of lightning. Press [↑] or [↓] + [Z] to attack up or down.",
+					new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_lightning.png"), 0, 0, 384, 192, 1, 1, true, false, -200, -200)));*/
+				this.game.currentPhase = 1;
 			}
-			if (this.phaseTimer === 0) {
+			if (this.game.currentPhase == 3 && this.phaseTick > 90) { //JELLY WOKE
+				if (this.phaseTick == 91)
+					playSound(rumbleSound);
+				var maxDiff = 100 + Math.min(800, this.phaseTick * 10);
+				var chosenX = this.x - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.offsetX;
+				var chosenY =  this.y - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.height + this.hitBoxDef.offsetY;
+				var theDistance = getDistance(chosenX, chosenY, this.game.player1.x, this.game.player1.y);
+				var newParticle = new Particle(PART_SECONDARY, chosenX, chosenY, 
+						-2, 2, -2, 2, 0, 0.3, 0, 0, 0, 80, .3, .15, true, this.game);
+				element = new SquareElement((10 + Math.random() * 10) * Math.min(3, this.phaseTick / 30), 
+					(10 + Math.random() * 10) * Math.min(3, this.phaseTick / 30), "#a6f9ff", "#6ae2eb");
+				newParticle.other = element;
+				newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.hitBoxDef.offsetX;
+				newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.hitBoxDef.offsetY;
+				newParticle.converge = true;
+				var distMultiplier = Math.min(1, theDistance / maxDiff);
+				newParticle.convergeMulitplier = 10 / distMultiplier + 5;
+				this.game.addEntity(newParticle);
+			}
+			if (this.phaseTimer > 0) {
+				this.phaseTimer--;
 				switch(this.game.currentPhase) {
-					case 4: //brandong grrrr
-						this.game.player1.canControl = true;
-						this.game.currentPhase = 5;
-						this.game.cameraLock = false;
-						this.game.cameraSpeed = 10;
-						this.game.camera.minX = 1100;
-						this.game.camera.maxX = 16200;
-					break;
 					case 6: //brandong tp
-						var brandongBoss = new BrandongBoss(this.game, 15700, 200);
-						this.game.currentBoss = brandongBoss;
-						this.game.currentPhase = 7;
-						bossMusic.play();
-						var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "Are you serious?");
-						this.game.addEntity(chat);
-						this.game.addEntity(brandongBoss);
-					break;
-					case 11: //brandong dead
-						var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "...");
-						this.game.addEntity(chat);
-						this.game.currentPhase = 12;
-						//this.game.gameWon = true; //temp!
+						var newParticle = new Particle(PART_SECONDARY, 15700 + Math.random() * 150, 200 + Math.random() * 150, -3, 3, -3, 3, 0, 0.1, 0, 0, 0, 15, .2, .05, true, this.game);
+						element = new SquareElement(30 + Math.random() * 20, 30 + Math.random() * 20, "#a6f9ff", "#6ae2eb");
+						newParticle.other = element;
+						this.game.addEntity(newParticle);
 					break;
 				}
-			}
-		}
-        if (invincible) {
-            this.currentHealth = 1;
-        }
-        if (this.dead) {
-        	this.running = false;
-        	this.runningVertical = false;
-        }
-        if (this.game.currentPhase >= 0 && this.game.currentPhase <= 10) {
-            /*var newParticle = new Particle(VOID_GOOP, this.game.liveCamera.x + Math.random() * this.game.liveCamera.width, this.game.liveCamera.y + this.game.liveCamera.height - 1, 
-                    -4, 4, -6, -4, .2, 0, 0, 60, 10, 15, .5, .2, true, this.game);
-            this.game.addEntity(newParticle);*/
-        }
-        if (this.game.currentPhase === 10 || this.game.currentPhase === 17) {
-            if (this.game.liveCamera.y <= -120 && this.hitBox.y + this.hitBox.height >= this.game.liveCamera.y + 500) {
-                if (mode === "easy") {
-                    this.yVelocity = 20;
-                    this.jumping = true;
-                    this.y = this.game.liveCamera.y + 500 - this.hitBox.height - 10;
-                    this.currentHealth -= 50;
-                    if (this.currentHealth > 0) {
-                        playSound(lightningSound);
-                    }
-                    var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-                			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                    var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-                    var damage = 50;
-                	damageText.text = damage;
-                    damageParticle.other = damageText;
-                    this.game.addEntity(damageParticle);
-                } else if (mode === "medium") {
-                    this.yVelocity = 15;
-                    this.jumping = true;
-                    this.y = this.game.liveCamera.y + 500 - this.hitBox.height - 10;
-                    this.currentHealth -= 75;
-                    if (this.currentHealth > 0) {
-                        playSound(lightningSound);
-                    }
-                    var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-                			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                    var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-                    var damage = 75;
-                	damageText.text = damage;
-                    damageParticle.other = damageText;
-                    this.game.addEntity(damageParticle);
-                } else {
-                    this.currentHealth = 0;
-                    var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-                			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                    var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-                    var damage = 100;
-                	damageText.text = damage;
-                    damageParticle.other = damageText;
-                }
-                //console.log(mode);
-            }
-        }
-        if (this.bounceTimer > 0) {
-            this.bounceTimer--;
-            if (this.bounceTimer % 2 === 0) {
-                var particle = new Particle(SHAPE_PART,
-                        this.game.player1.hitBox.x + this.game.player1.hitBox.width / 2 - 10 + Math.random() * 20,
-                        this.game.player1.hitBox.y + this.game.player1.hitBox.height / 2 - 10 + Math.random() * 20, 
-                        0, 0, 0, 0, 0, 0.1, 0, 5, 10, 50, .6, .2, true, this.game);
-                var element = new SquareElement(10, 10, "#00f6cb", "#70fe37");
-                particle.other = element;
-                this.game.addEntity(particle);
-            }
-        }
-		if (this.destinationX !== -1 || this.destinationY !== -1) {
-			this.running = true;
-			if (this.destinationX !== -1) {
-				if (this.destinationX > this.x) {
-					this.x = Math.min(this.destinationX, this.x + this.runSpeed);
-					this.lastDirection = "Right";
-				} else {
-					this.x = Math.max(this.destinationX, this.x - this.runSpeed);
-					this.lastDirection = "Left";
-				}
-				if (this.x === this.destinationX) {
-					this.destinationX = -1;
-					this.lastDirection = "Right";
+				if (this.phaseTimer === 0) {
+					switch(this.game.currentPhase) {
+						case 4: //brandong grrrr
+							this.game.player1.canControl = true;
+							this.game.currentPhase = 5;
+							this.game.cameraLock = false;
+							this.game.cameraSpeed = 10;
+							this.game.camera.minX = 1100;
+							this.game.camera.maxX = 16200;
+						break;
+						case 6: //brandong tp
+							var brandongBoss = new BrandongBoss(this.game, 15700, 200);
+							this.game.currentBoss = brandongBoss;
+							this.game.currentPhase = 7;
+							bossMusic.play();
+							var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "Are you serious?");
+							this.game.addEntity(chat);
+							this.game.addEntity(brandongBoss);
+						break;
+						case 11: //brandong dead
+							var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "...");
+							this.game.addEntity(chat);
+							this.game.currentPhase = 12;
+							//this.game.gameWon = true; //temp!
+						break;
+					}
 				}
 			}
-			if (this.destinationY !== -1) {
-				if (this.destinationY > this.y)
-					this.y = Math.min(this.destinationY, this.y + this.runSpeed);
-				else
-					this.y = Math.max(this.destinationY, this.y - this.runSpeed);
-				if (this.y === this.destinationY)
-					this.destinationY = -1;
+			if (invincible) {
+				this.currentHealth = 1;
 			}
-		}
-		if (!this.dead && gameStarted && this.currentForm == FORM_BABY && this.game.step % 30 == 0) { //baby drowns
-			addEnergy(this.game, -2);
-		}
-        if (this.currentHealth <= 0 && !this.dead) {
-            this.dead = true;
-			handleDie(this.game);
-        }
-        if (!this.dead) {
-            if (this.stunned) {
-				if (this.xVelocity !== 0) { //knockback equates to stun
-					this.canControl = false;
+			if (this.dead) {
+				this.running = false;
+				this.runningVertical = false;
+			}
+			if (this.game.currentPhase >= 0 && this.game.currentPhase <= 10) {
+				/*var newParticle = new Particle(VOID_GOOP, this.game.liveCamera.x + Math.random() * this.game.liveCamera.width, this.game.liveCamera.y + this.game.liveCamera.height - 1, 
+						-4, 4, -6, -4, .2, 0, 0, 60, 10, 15, .5, .2, true, this.game);
+				this.game.addEntity(newParticle);*/
+			}
+			if (this.game.currentPhase === 10 || this.game.currentPhase === 17) {
+				if (this.game.liveCamera.y <= -120 && this.hitBox.y + this.hitBox.height >= this.game.liveCamera.y + 500) {
+					if (mode === "easy") {
+						this.yVelocity = 20;
+						this.jumping = true;
+						this.y = this.game.liveCamera.y + 500 - this.hitBox.height - 10;
+						this.currentHealth -= 50;
+						if (this.currentHealth > 0) {
+							playSound(lightningSound);
+						}
+						var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
+								0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
+						var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
+						var damage = 50;
+						damageText.text = damage;
+						damageParticle.other = damageText;
+						this.game.addEntity(damageParticle);
+					} else if (mode === "medium") {
+						this.yVelocity = 15;
+						this.jumping = true;
+						this.y = this.game.liveCamera.y + 500 - this.hitBox.height - 10;
+						this.currentHealth -= 75;
+						if (this.currentHealth > 0) {
+							playSound(lightningSound);
+						}
+						var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
+								0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
+						var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
+						var damage = 75;
+						damageText.text = damage;
+						damageParticle.other = damageText;
+						this.game.addEntity(damageParticle);
+					} else {
+						this.currentHealth = 0;
+						var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
+								0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
+						var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
+						var damage = 100;
+						damageText.text = damage;
+						damageParticle.other = damageText;
+					}
+					//console.log(mode);
 				}
-                this.running = false;
-                this.runningVertical = false;
-                this.jumpSpeed = 0;
-                this.hitBoxDef.growthX = 0;
-            }
-			if (this.zoomTimer > 0) { //speed gate
-				this.zoomTimer--;
-				fadeChaseMusicOut();
-				this.x += this.xVelocity;
-				if (this.zoomTimer < 50)
-					this.xVelocity--;
-				else {
+			}
+			if (this.bounceTimer > 0) {
+				this.bounceTimer--;
+				if (this.bounceTimer % 2 === 0) {
 					var particle = new Particle(SHAPE_PART,
-							this.game.player1.x + 1000,
-							0 + Math.random() * 500, 
-							-5, -5, 0, 0, 0, 0, 0, 15, 10, 5, .6, .2, false, this.game);
-					var element = new SquareElement(150, 6, "white", "white");
+							this.game.player1.hitBox.x + this.game.player1.hitBox.width / 2 - 10 + Math.random() * 20,
+							this.game.player1.hitBox.y + this.game.player1.hitBox.height / 2 - 10 + Math.random() * 20, 
+							0, 0, 0, 0, 0, 0.1, 0, 5, 10, 50, .6, .2, true, this.game);
+					var element = new SquareElement(10, 10, "#00f6cb", "#70fe37");
 					particle.other = element;
 					this.game.addEntity(particle);
 				}
-				if (this.zoomTimer === 0) {
-					this.xVelocity = 0;
-					var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "I think I lost him for now...");
-					this.game.camera.minX = 15200;
-					this.game.camera.maxX = 15200;
-					this.game.camera.cameraSpeed = 5;
-					this.game.addEntity(chat);
-				}
-				if (this.speedTimer % 3 == 0)
-					this.game.addEntity(new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.5, 0, false, this.game,
-							this.game.player1.currentAnimation));
 			}
-			if (this.ultiTimer > 0) {
-				if (this.ultiTimer === 600) {
-					energyBarFlash(this.game);
+			if (this.destinationX !== -1 || this.destinationY !== -1) {
+				this.running = true;
+				if (this.destinationX !== -1) {
+					if (this.destinationX > this.x) {
+						this.x = Math.min(this.destinationX, this.x + this.runSpeed);
+						this.lastDirection = "Right";
+					} else {
+						this.x = Math.max(this.destinationX, this.x - this.runSpeed);
+						this.lastDirection = "Left";
+					}
+					if (this.x === this.destinationX) {
+						this.destinationX = -1;
+						this.lastDirection = "Right";
+					}
 				}
-				if (this.canControl)
-					this.ultiTimer--;
-				if (this.ultiTimer % 1 == 0) {
-					var chosenX = this.x - 30 + Math.random() * 60 + this.hitBoxDef.offsetX;
-					var chosenY =  this.y - 30 + Math.random() * 60 + this.hitBoxDef.height + this.hitBoxDef.offsetY;
-					var theDistance = getDistance(chosenX, chosenY, this.game.player1.x, this.game.player1.y);
-					var newParticle = new Particle(PART_SECONDARY, chosenX, chosenY, 
-							-2, 2, -2, 2, 0, 0.3, 0, 0, 0, 50, .3, .15, true, this.game);
-					element = new SquareElement(20 + Math.random() * 20, 20 + Math.random() * 20, "#a6f9ff", "#6ae2eb");
-					newParticle.other = element;
-					newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.hitBoxDef.offsetX;
-					newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.hitBoxDef.offsetY;
-					newParticle.targetSpeed = 3 * (theDistance / 60);
-					this.game.addEntity(newParticle);
+				if (this.destinationY !== -1) {
+					if (this.destinationY > this.y)
+						this.y = Math.min(this.destinationY, this.y + this.runSpeed);
+					else
+						this.y = Math.max(this.destinationY, this.y - this.runSpeed);
+					if (this.y === this.destinationY)
+						this.destinationY = -1;
 				}
 			}
-			if (this.telephotoTimer > 0) {
-				this.telephotoTimer--;
+			if (!this.dead && gameStarted && this.currentForm == FORM_BABY && this.game.step % 30 == 0) { //baby drowns
+				addEnergy(this.game, -2);
 			}
-            if (!this.vulnerable && this.invulnTimer > 0) {
-                this.invulnTimer--;
-                if (this.invulnTimer <= 0) {
-                    this.vulnerable = true;
-                    this.hurt = false;
-                    this.hitByAttack = false;
-                }
-            }
-            if (this.stunTimer > 0) {
-                this.stunTimer--;
-                if (this.stunTimer <= 0) {
-					this.stunned = false;
-                    this.canControl = true;
-                    this.xVelocity = 0;
-                }
-            }
-            if (!this.canControl && this.stunned) { 
-                this.x += this.xVelocity;
-            }
-			this.x += this.displacementXSpeed;
-			if (this.displacementXSpeed > 0) {
-				this.displacementXSpeed -= this.displacementFriction;			
-				if (this.displacementXSpeed < 0)
-					this.displacementXSpeed = 0;
-			} else {
-				this.displacementXSpeed += this.displacementFriction;			
-				if (this.displacementXSpeed > 0)
-					this.displacementXSpeed = 0;
+			if (this.currentHealth <= 0 && !this.dead) {
+				this.dead = true;
+				handleDie(this.game);
 			}
-            if ((this.rightDown || this.leftDown) && this.canControl) {
-                if (this.rightDown) {
-					this.running = true;
-                    this.lastDirection = "Right";
-                } else if (this.leftDown) {
-					this.running = true;
-                    this.lastDirection = "Left";
-                } else {
+			if (!this.dead) {
+				if (this.stunned) {
+					if (this.xVelocity !== 0) { //knockback equates to stun
+						this.canControl = false;
+					}
+					this.running = false;
+					this.runningVertical = false;
+					this.jumpSpeed = 0;
+					this.hitBoxDef.growthX = 0;
+				}
+				if (this.zoomTimer > 0) { //speed gate
+					this.zoomTimer--;
+					fadeChaseMusicOut();
+					this.x += this.xVelocity;
+					if (this.zoomTimer < 50)
+						this.xVelocity--;
+					else {
+						var particle = new Particle(SHAPE_PART,
+								this.game.player1.x + 1000,
+								0 + Math.random() * 500, 
+								-5, -5, 0, 0, 0, 0, 0, 15, 10, 5, .6, .2, false, this.game);
+						var element = new SquareElement(150, 6, "white", "white");
+						particle.other = element;
+						this.game.addEntity(particle);
+					}
+					if (this.zoomTimer === 0) {
+						this.xVelocity = 0;
+						var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "I think I lost him for now...");
+						this.game.camera.minX = 15200;
+						this.game.camera.maxX = 15200;
+						this.game.camera.cameraSpeed = 5;
+						this.game.addEntity(chat);
+					}
+					if (this.speedTimer % 3 == 0)
+						this.game.addEntity(new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.5, 0, false, this.game,
+								this.game.player1.currentAnimation));
+				}
+				if (this.ultiTimer > 0) {
+					if (this.ultiTimer === 600) {
+						energyBarFlash(this.game);
+					}
+					if (this.canControl)
+						this.ultiTimer--;
+					if (this.ultiTimer % 1 == 0) {
+						var chosenX = this.x - 30 + Math.random() * 60 + this.hitBoxDef.offsetX;
+						var chosenY =  this.y - 30 + Math.random() * 60 + this.hitBoxDef.height + this.hitBoxDef.offsetY;
+						var theDistance = getDistance(chosenX, chosenY, this.game.player1.x, this.game.player1.y);
+						var newParticle = new Particle(PART_SECONDARY, chosenX, chosenY, 
+								-2, 2, -2, 2, 0, 0.3, 0, 0, 0, 50, .3, .15, true, this.game);
+						element = new SquareElement(20 + Math.random() * 20, 20 + Math.random() * 20, "#a6f9ff", "#6ae2eb");
+						newParticle.other = element;
+						newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.hitBoxDef.offsetX;
+						newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.hitBoxDef.offsetY;
+						newParticle.targetSpeed = 3 * (theDistance / 60);
+						this.game.addEntity(newParticle);
+					}
+				}
+				if (this.telephotoTimer > 0) {
+					this.telephotoTimer--;
+				}
+				if (!this.vulnerable && this.invulnTimer > 0) {
+					this.invulnTimer--;
+					if (this.invulnTimer <= 0) {
+						this.vulnerable = true;
+						this.hurt = false;
+						this.hitByAttack = false;
+					}
+				}
+				if (this.stunTimer > 0) {
+					this.stunTimer--;
+					if (this.stunTimer <= 0) {
+						this.stunned = false;
+						this.canControl = true;
+						this.xVelocity = 0;
+					}
+				}
+				if (!this.canControl && this.stunned) { 
+					this.x += this.xVelocity;
+				}
+				this.x += this.displacementXSpeed;
+				if (this.displacementXSpeed > 0) {
+					this.displacementXSpeed -= this.displacementFriction;			
+					if (this.displacementXSpeed < 0)
+						this.displacementXSpeed = 0;
+				} else {
+					this.displacementXSpeed += this.displacementFriction;			
+					if (this.displacementXSpeed > 0)
+						this.displacementXSpeed = 0;
+				}
+				if ((this.rightDown || this.leftDown) && this.canControl) {
+					if (this.rightDown) {
+						this.running = true;
+						this.lastDirection = "Right";
+					} else if (this.leftDown) {
+						this.running = true;
+						this.lastDirection = "Left";
+					} else {
+						this.running = false;
+					}
+				} else {
 					this.running = false;
 				}
-            } else {
-				this.running = false;
-            }
-			if (this.binded) {
-				if (this.currentForm == FORM_BABY && this.game.step % 30 == 0) {
-					this.game.cameraShakeTime = 10;
-					this.game.cameraShakeAmount = 10;
-					this.game.cameraShakeDecay = 1;
-				} else if (this.currentForm == FORM_WATERBREATHE && this.phaseTick > 90 && this.game.step % 5 == 0) {
-					this.game.cameraShakeTime = 5;
-					this.game.cameraShakeAmount = 25;
-					this.game.cameraShakeDecay = 5;
-					
+				if (this.binded) {
+					if (this.currentForm == FORM_BABY && this.game.step % 30 == 0) {
+						this.game.cameraShakeTime = 10;
+						this.game.cameraShakeAmount = 10;
+						this.game.cameraShakeDecay = 1;
+					} else if (this.currentForm == FORM_WATERBREATHE && this.phaseTick > 90 && this.game.step % 5 == 0) {
+						this.game.cameraShakeTime = 5;
+						this.game.cameraShakeAmount = 25;
+						this.game.cameraShakeDecay = 5;
+						
+					}
 				}
-			}
-	
-			var platformFound = false;
-			var wallFound = false;
-			this.game.currentMap.platforms.forEach(function(currentPlatform) {
-				currentPlatform.update();
-				if ((that.hitBox.x + that.hitBox.width) > currentPlatform.hitBox.x) {
-					if (that.hitBox.x < (currentPlatform.hitBox.x + currentPlatform.hitBox.width - 1)) {
-						if ((that.hitBox.y + that.hitBox.height) + currentPlatform.vSpeed <= currentPlatform.hitBox.y || (that.hitBox.y + that.hitBox.height) - currentPlatform.vSpeed <= currentPlatform.hitBox.y) {
-							if ((that.hitBox.y + that.hitBox.height - (that.yVelocity - that.gravity )) >= currentPlatform.hitBox.y) {
-								if (currentPlatform.fadeAmount >= 0.5) {
-									//fall through
-								} else {
-									if (currentPlatform.specialId == PLATFORM_BREAK && !currentPlatform.trigger) {
-										currentPlatform.trigger = true;
-										currentPlatform.step = 0;
-									}
-									platformFound = true;
-									if (currentPlatform.specialId == 0 && currentPlatform.hSpeed == 0 && currentPlatform.vSpeed == 0) {
-										that.lastSafeX = that.x;
-										that.lastSafeY = that.y;
-									}
-									if (currentPlatform.isWall) {
-										wallFound = true;
-									}
-									if (currentPlatform.isWall && currentPlatform.specialId == WALL_SPIKE_UP && !that.stunned) {
-										if (that.attacking && that.attackIndex == 2) {
-											playSound(hitMetal);
-											if (that.falling || that.jumping) {
-												that.yVelocity = 8;
-											}
-										} else {
-											that.hitSpike();
-										}
-									} else if (!currentPlatform.isWall && currentPlatform.specialId === PLATFORM_BOUNCY) { //bouncy platform
-										that.yVelocity = 15;
-										that.bounceTimer = 30;
-										that.jumpSpeed = 0;
-										that.jumping = true;
-										playSound(bounceSound);
+		
+				var platformFound = false;
+				var wallFound = false;
+				this.game.currentMap.platforms.forEach(function(currentPlatform) {
+					currentPlatform.update();
+					if ((that.hitBox.x + that.hitBox.width) > currentPlatform.hitBox.x) {
+						if (that.hitBox.x < (currentPlatform.hitBox.x + currentPlatform.hitBox.width - 1)) {
+							if ((that.hitBox.y + that.hitBox.height) + currentPlatform.vSpeed <= currentPlatform.hitBox.y || (that.hitBox.y + that.hitBox.height) - currentPlatform.vSpeed <= currentPlatform.hitBox.y) {
+								if ((that.hitBox.y + that.hitBox.height - (that.yVelocity - that.gravity )) >= currentPlatform.hitBox.y) {
+									if (currentPlatform.fadeAmount >= 0.5) {
+										//fall through
 									} else {
-										that.x += currentPlatform.hSpeed;
-										that.y += currentPlatform.vSpeed;
-										that.yVelocity = 0;
-										if (that.dashIndex == 1) {
-											that.dashing = false;
-											that.dashTime = 0;
-											that.dashIndex = 0;
-											that.groundSlam();
+										if (currentPlatform.specialId == PLATFORM_BREAK && !currentPlatform.trigger) {
+											currentPlatform.trigger = true;
+											currentPlatform.step = 0;
 										}
-										if (that.falling) {
-											that.falling = false;
+										platformFound = true;
+										if (currentPlatform.specialId == 0 && currentPlatform.hSpeed == 0 && currentPlatform.vSpeed == 0) {
+											that.lastSafeX = that.x;
+											that.lastSafeY = that.y;
+										}
+										if (currentPlatform.isWall) {
+											wallFound = true;
+										}
+										if (currentPlatform.isWall && currentPlatform.specialId == WALL_SPIKE_UP && !that.stunned) {
+											if (that.attacking && that.attackIndex == 2) {
+												playSound(hitMetal);
+												if (that.falling || that.jumping) {
+													that.yVelocity = 8;
+												}
+											} else {
+												that.hitSpike();
+											}
+										} else if (!currentPlatform.isWall && currentPlatform.specialId === PLATFORM_BOUNCY) { //bouncy platform
+											that.yVelocity = 15;
+											that.bounceTimer = 30;
+											that.jumpSpeed = 0;
+											that.jumping = true;
+											playSound(bounceSound);
+										} else {
+											that.x += currentPlatform.hSpeed;
+											that.y += currentPlatform.vSpeed;
 											that.yVelocity = 0;
-											that.y = currentPlatform.hitBox.y - that.hitBox.height - that.hitBoxDef.offsetY;
+											if (that.dashIndex == 1) {
+												that.dashing = false;
+												that.dashTime = 0;
+												that.dashIndex = 0;
+												that.groundSlam();
+											}
+											if (that.falling) {
+												that.falling = false;
+												that.yVelocity = 0;
+												that.y = currentPlatform.hitBox.y - that.hitBox.height - that.hitBoxDef.offsetY;
+											}
 										}
 									}
 								}
 							}
 						}
 					}
-				}
-			});
-            if (this.jumpDown && !this.jumping && !this.falling && this.canControl) {
-                this.jumping = true;
-                playSound(jumpSound);
-				if (this.downDown && platformFound && !wallFound) {
-					this.yVelocity = -1; //drop through
-					console.log("dropping");					
-				} else {
-					this.yVelocity = this.jumpYVelocity;
-				}
-                if (this.rightDown) {
-                    this.lastDirection = "Right";
-                    this.jumpSpeed = this.runSpeed;
-                } else if (this.leftDown) {
-                    this.lastDirection = "Left";
-                    this.jumpSpeed = -this.runSpeed;
-                } else {
-                    this.jumpSpeed = 0;
-                }
-            }
-			if (this.queuedTime > 0) {
-				this.queuedTime--;
-				if (this.queuedTime == 0) {
-					this.queuedAction = "";
-				}
-			}
-            if ((this.queuedAction == "Dash" || this.attackInput == 2) && this.canControl) {
-				if (this.dashCooldown === 0) {
-					if (this.queuedAction == "Dash") {
-						this.queuedAction = "";
-						this.queuedTime = 0;
-					}
-					if (!this.dashing) {
-						this.dashCooldown = 30;
-						
-						this.targetHit = [];
-						this.attacking = false;
-						this.dashing = true;
-						this.dashTime = 10;
-						if (this.leftDown)
-							this.attackDirection = "Left";
-						else if (this.rightDown)
-							this.attackDirection = "Right";
-						else
-							this.attackDirection = this.lastDirection;
-						playSound(slashSound);
-						if (this.currentForm >= FORM_ANGLER) {
-							if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
-								this.dashIndex = 1;
-						}
-					}
-				} else if (this.attackInput == 2) { //queue up the attack
-					this.queuedAction = "Dash";
-					this.queuedTime = 10;
-				}
-            }
-            if ((this.queuedAction == "Attack" || this.attackInput == 1) && this.canControl) {
-				if (this.cooldown === 0) {
-					if (this.queuedAction == "Attack") {
-						this.queuedAction = "";
-						this.queuedTime = 0;
-					}
-					if (!this.attacking) {
-						this.cooldown = 30;
-						
-						this.targetHit = [];
-						this.attacking = true;
-						this.attackIndex = 1;
-						this.dashing = false;
-						this.dashTime = 0;
-						if (this.leftDown)
-							this.attackDirection = "Left";
-						else if (this.rightDown)
-							this.attackDirection = "Right";
-						else
-							this.attackDirection = this.lastDirection;
-						if (this.currentForm >= FORM_ANGLER) {
-							if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
-								this.attackIndex = 2;
-							else if (this.upDown)
-								this.attackIndex = 3;
-							playSound(autoSound);
-						} else {
-							playSound(slashSound);
-						}
-					}
-				} else if (this.attackInput == 1) { //queue up the attack
-					this.queuedAction = "Attack";
-					this.queuedTime = 10;
-				}
-            }
-            
-			//extended hitboxes
-			var xBonus = 0;
-            var yBonus = 0;
-			var attackRange = this.currentForm < FORM_ANGLER ? 32 : 48;
-			if (this.equipment[LONG_RANGE]) {
-				attackRange = 72;
-			}
-            if (this.attackIndex > 0 && this.canControl) {
-                switch(this.attackIndex) {
-                    case 1: //side attack
-						if (this.falling || this.jumping) {
-							if (this.attackDirection === "Right") {
-								this.attackAnimation = this.attackAnimationAirRight;
-								xBonus = attackRange;
-							} else {
-								this.attackAnimation = this.attackAnimationAirLeft;
-								xBonus = -1 * attackRange;
-							}
-						} else {
-							if (this.attackDirection === "Right") {
-								this.attackAnimation = this.attackAnimationGroundRight;
-								xBonus = attackRange;
-							} else {
-								this.attackAnimation = this.attackAnimationGroundLeft;
-								xBonus = -1 * attackRange;
-							}
-						}
-                    break;
-                    case 2: //down attack
-						yBonus = attackRange;
-                        if (this.attackDirection === "Right") {
-							xBonus = 12;
-                            this.attackAnimation = this.attackAnimationDownRight;
-                        } else {
-							xBonus = -12;
-                            this.attackAnimation = this.attackAnimationDownLeft;
-                        }
-                    break;
-                    case 3: //up attack
-						yBonus = -1 * attackRange;
-						if (this.falling || this.jumping) {
-							if (this.attackDirection === "Right") {
-								xBonus = 12;
-								this.attackAnimation = this.attackAnimationUpAirRight;
-							} else {
-								xBonus = -12;
-								this.attackAnimation = this.attackAnimationUpAirLeft;
-							}
-						} else {
-							if (this.attackDirection === "Right") {
-								xBonus = 12;
-								this.attackAnimation = this.attackAnimationUpGroundRight;
-							} else {
-								xBonus = -12;
-								this.attackAnimation = this.attackAnimationUpGroundLeft;
-							}							
-						}
-                    break;
-                }
-            }
-			
-			if (!platformFound && !this.jumping) {
-				if (!this.falling) {
-					this.falling = true;
-					if (!this.attacking) {
-						if (this.rightDown) {
-							this.lastDirection = "Right";
-							this.jumpSpeed = this.runSpeed;
-						} else if (this.leftDown) {
-							this.lastDirection = "Left";
-							this.jumpSpeed = -this.runSpeed;
-						} else {
-							this.jumpSpeed = 0;
-						}
-					}
-				}
-			}
-            
-            // Animation Direction Control
-            if (this.lastDirection === "Right") {
-                this.idleAnimation = this.idleAnimationRight;
-            } else {
-                if (this.canControl) {
-                    this.idleAnimation = this.idleAnimationLeft;
-                }
-            }
-            var noSnap = false;
-            var collision = false;
-			var targetEntity = null;
-			var lowestDistance = 99999999;
-            if (this.attacking) { //hit enemy
-                this.game.entities.forEach(function(entity) {
-                    if (entity.attackable && that.targetHit.indexOf(entity) === -1 && that.targetHit.length == 0) {
-                        if (checkCollision(that, entity, xBonus, yBonus) && !checkCollision(that, entity)) {
-							var playerMidpointX = that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2;
-							var playerMidpointY = that.y + that.hitBoxDef.offsetY + that.hitBoxDef.height / 2;
-							var distance = getDistance(playerMidpointX, playerMidpointY, entity.getXMidpoint(), entity.getYMidpoint());
-							if (distance < lowestDistance || targetEntity == null) {
-								targetEntity = entity;
-								lowestDistance = distance;
-							}
-                        }
-                    }
-                });
-				if (targetEntity != null) {
-					console.log("entity y: " + (targetEntity.y + targetEntity.invulnFromTop + targetEntity.hitBoxDef.offsetY) + "; player y: " + (this.game.player1.y + this.game.player1.hitBoxDef.height + this.game.player1.hitBoxDef.offsetY));
-					if (targetEntity.meleeInvuln) {
-						playSound(hitMetal);
-						this.game.player1.targetHit.push(targetEntity);
-						
-					} else if (targetEntity.invulnFromTop > 0 &&
-							(((targetEntity.y + targetEntity.invulnFromTop + targetEntity.hitBoxDef.offsetY) > (this.game.player1.y + this.game.player1.hitBoxDef.height + this.game.player1.hitBoxDef.offsetY)
-							) || this.game.player1.attackIndex == 2)) {
-						playSound(hitMetal);
-						this.game.player1.targetHit.push(targetEntity);
+				});
+				if (this.jumpDown && !this.jumping && !this.falling && this.canControl) {
+					this.jumping = true;
+					playSound(jumpSound);
+					if (this.downDown && platformFound && !wallFound) {
+						this.yVelocity = -1; //drop through
+						console.log("dropping");					
 					} else {
-						var createX;
-						var createY;
-						if (Math.abs(xBonus) > 20) {
-							createX = this.game.player1.x + (xBonus > 0 ? this.game.player1.hitBoxDef.width : 0) + xBonus + this.game.player1.hitBoxDef.offsetX;
-							createY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.game.player1.hitBoxDef.offsetY;
-						} else {
-							createX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
-							createY = this.game.player1.y + (yBonus > 0 ? this.game.player1.hitBoxDef.height : 0) + this.game.player1.hitBoxDef.offsetY;
-						}
-						var partAmount = this.currentForm < FORM_ANGLER ? 3 : 6;
-						for (var i = 0; i < partAmount; i++) {
-							var newParticle = new Particle(PART_SECONDARY, createX, createY, 
-									-5, 5, -5, 5, 0, 0.15, 0, 0, 0, 50, .75, .15, true, this.game);
-							element = new CircleElement(5 + Math.random() * 3, "#f7ffba", "#faf6be");
-							newParticle.other = element;
-							this.game.addEntity(newParticle);
-						}
-						this.game.player1.targetHit.push(targetEntity);
-						var damage = 25;
-						if (this.currentForm < FORM_ANGLER) //baby
-							damage = 15;
-						applyDamage(targetEntity.x, targetEntity.y, this.game, 15, targetEntity);
-						playSound(this.currentForm < FORM_ANGLER ? shotHitSound : lightningSound);
-						addEnergy(this.game, this.currentForm >= FORM_ANGLER ? 20 : 0);
+						this.yVelocity = this.jumpYVelocity;
 					}
-					switch(this.game.player1.attackIndex) {
-						case 1: //side hit
-							//targetEntity.displacementXTarget = 64;
-							//targetEntity.displacementTimeMax = 10;
-							//console.log("side hit! your X: " + (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) + "; their X: " + (targetEntity.x + targetEntity.displacementX + targetEntity.hitBoxDef.offsetX + targetEntity.hitBoxDef.width / 2));
-							targetEntity.handleSideHit();
-							if (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2 < targetEntity.x + targetEntity.displacementX + targetEntity.hitBoxDef.offsetX + targetEntity.hitBoxDef.width / 2) {
-								targetEntity.displacementXSpeed = 6;
-								this.game.player1.displacementXSpeed = -6;
+					if (this.rightDown) {
+						this.lastDirection = "Right";
+						this.jumpSpeed = this.runSpeed;
+					} else if (this.leftDown) {
+						this.lastDirection = "Left";
+						this.jumpSpeed = -this.runSpeed;
+					} else {
+						this.jumpSpeed = 0;
+					}
+				}
+				if (this.queuedTime > 0) {
+					this.queuedTime--;
+					if (this.queuedTime == 0) {
+						this.queuedAction = "";
+					}
+				}
+				if ((this.queuedAction == "Dash" || this.attackInput == 2) && this.canControl) {
+					if (this.dashCooldown === 0) {
+						if (this.queuedAction == "Dash") {
+							this.queuedAction = "";
+							this.queuedTime = 0;
+						}
+						if (!this.dashing) {
+							this.dashCooldown = 30;
+							
+							this.targetHit = [];
+							this.attacking = false;
+							this.dashing = true;
+							this.dashTime = 10;
+							if (this.leftDown)
+								this.attackDirection = "Left";
+							else if (this.rightDown)
+								this.attackDirection = "Right";
+							else
+								this.attackDirection = this.lastDirection;
+							playSound(slashSound);
+							if (this.currentForm >= FORM_ANGLER) {
+								if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
+									this.dashIndex = 1;
+							}
+						}
+					} else if (this.attackInput == 2) { //queue up the attack
+						this.queuedAction = "Dash";
+						this.queuedTime = 10;
+					}
+				}
+				if ((this.queuedAction == "Attack" || this.attackInput == 1) && this.canControl) {
+					if (this.cooldown === 0) {
+						if (this.queuedAction == "Attack") {
+							this.queuedAction = "";
+							this.queuedTime = 0;
+						}
+						if (!this.attacking) {
+							this.cooldown = 30;
+							
+							this.targetHit = [];
+							this.attacking = true;
+							this.attackIndex = 1;
+							this.dashing = false;
+							this.dashTime = 0;
+							if (this.leftDown)
+								this.attackDirection = "Left";
+							else if (this.rightDown)
+								this.attackDirection = "Right";
+							else
+								this.attackDirection = this.lastDirection;
+							if (this.currentForm >= FORM_ANGLER) {
+								if (this.downDown && (this.falling || this.jumping) && this.yVelocity != 0)
+									this.attackIndex = 2;
+								else if (this.upDown)
+									this.attackIndex = 3;
+								playSound(autoSound);
 							} else {
-								targetEntity.displacementXSpeed = -6;
-								this.game.player1.displacementXSpeed = 6;
+								playSound(slashSound);
+							}
+						}
+					} else if (this.attackInput == 1) { //queue up the attack
+						this.queuedAction = "Attack";
+						this.queuedTime = 10;
+					}
+				}
+				
+				//extended hitboxes
+				var xBonus = 0;
+				var yBonus = 0;
+				var attackRange = this.currentForm < FORM_ANGLER ? 32 : 48;
+				if (this.equipment[LONG_RANGE]) {
+					attackRange = 72;
+				}
+				if (this.attackIndex > 0 && this.canControl) {
+					switch(this.attackIndex) {
+						case 1: //side attack
+							if (this.falling || this.jumping) {
+								if (this.attackDirection === "Right") {
+									this.attackAnimation = this.attackAnimationAirRight;
+									xBonus = attackRange;
+								} else {
+									this.attackAnimation = this.attackAnimationAirLeft;
+									xBonus = -1 * attackRange;
+								}
+							} else {
+								if (this.attackDirection === "Right") {
+									this.attackAnimation = this.attackAnimationGroundRight;
+									xBonus = attackRange;
+								} else {
+									this.attackAnimation = this.attackAnimationGroundLeft;
+									xBonus = -1 * attackRange;
+								}
 							}
 						break;
-						case 2: //down hit
-							this.game.player1.yVelocity = 8;
-							targetEntity.displacementYSpeed = 5;
+						case 2: //down attack
+							yBonus = attackRange;
+							if (this.attackDirection === "Right") {
+								xBonus = 12;
+								this.attackAnimation = this.attackAnimationDownRight;
+							} else {
+								xBonus = -12;
+								this.attackAnimation = this.attackAnimationDownLeft;
+							}
 						break;
-						case 3: //up hit
-							targetEntity.displacementYSpeed = -5;
-							if (this.game.player1.falling || this.game.player1.jumping) {
-								this.game.player1.yVelocity = -5;
+						case 3: //up attack
+							yBonus = -1 * attackRange;
+							if (this.falling || this.jumping) {
+								if (this.attackDirection === "Right") {
+									xBonus = 12;
+									this.attackAnimation = this.attackAnimationUpAirRight;
+								} else {
+									xBonus = -12;
+									this.attackAnimation = this.attackAnimationUpAirLeft;
+								}
+							} else {
+								if (this.attackDirection === "Right") {
+									xBonus = 12;
+									this.attackAnimation = this.attackAnimationUpGroundRight;
+								} else {
+									xBonus = -12;
+									this.attackAnimation = this.attackAnimationUpGroundLeft;
+								}							
 							}
 						break;
 					}
 				}
-                if (this.attackAnimation != null && this.attackAnimation.isDone()) {
-                    this.attackAnimation.elapsedTime = 0;
-                    this.attacking = false;
-                    this.attackIndex = 0;
-                    noSnap = true;
-                }
-            }
-            if (this.invincTimer > 0) {
-                this.invincTimer--;
-                if (this.invincTimer % 4 === 0) {
-                    var particle = new Particle(SHAPE_PART,
-                            this.game.player1.hitBox.x + this.game.player1.hitBox.width / 2 - 10 + Math.random() * 20,
-                            this.game.player1.hitBox.y + this.game.player1.hitBox.height * Math.random(), 
-                            2, -2, 2, -2, 0, 0.05, 0, 5, 10, 50, 1, 0, false, this.game);
-                    var element = new SquareElement(4 + Math.random() * 4, 4 + Math.random() * 4, "#ffffff", "#ffffff");
-                    particle.other = element;
-                    this.game.addEntity(particle);
-                }
-            }
-        }
-    }
-	
-	if (this.lastDirection === "Right") {
-		this.jumpAnimation = this.jumpAnimationRight;
-		this.fallAnimation = this.fallAnimationRight;
-		this.idleAnimation = this.idleAnimationRight;
-		this.walkAnimation = this.walkAnimationRight;
-	} else {
-		this.jumpAnimation = this.jumpAnimationLeft;
-		this.fallAnimation = this.fallAnimationLeft;
-		if (this.canControl) {
-			this.idleAnimation = this.idleAnimationLeft;
-		}
-		this.walkAnimation = this.walkAnimationLeft;
-	}
-    var moveSpeed = this.runSpeed;
-	if (this.speedTimer > 0)
-		moveSpeed *= 1.6;
-	if (this.dashing) { //ignore all other input
-		if (this.dashTime % 3 == 0)
-			this.game.addEntity(new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.3, 0, false, this.game, this.currentAnimation));
-		this.dashTime -= 1;
-		this.yVelocity = 0;
-		if (this.dashIndex == 0) {
-			if (this.attackDirection == "Right")
-				this.x += moveSpeed * 3;
-			else
-				this.x -= moveSpeed * 3;
-		} else { //down dash
-			this.yVelocity = moveSpeed * -3;
-			this.y -= this.yVelocity;    
-			this.falling = true;
-			this.jumping = false;
-		}
-		if (this.dashTime <= 0) {
-			this.dashing = false;
-			this.dashIndex = false;
-		}
-	} else {
-		if (this.running) {
-			if (this.lastDirection === "Right") {
-				this.x += moveSpeed;
-			} else if (this.lastDirection === "Left") {
-				this.x -= moveSpeed;
+				
+				if (!platformFound && !this.jumping) {
+					if (!this.falling) {
+						this.falling = true;
+						if (!this.attacking) {
+							if (this.rightDown) {
+								this.lastDirection = "Right";
+								this.jumpSpeed = this.runSpeed;
+							} else if (this.leftDown) {
+								this.lastDirection = "Left";
+								this.jumpSpeed = -this.runSpeed;
+							} else {
+								this.jumpSpeed = 0;
+							}
+						}
+					}
+				}
+				
+				// Animation Direction Control
+				if (this.lastDirection === "Right") {
+					this.idleAnimation = this.idleAnimationRight;
+				} else {
+					if (this.canControl) {
+						this.idleAnimation = this.idleAnimationLeft;
+					}
+				}
+				var noSnap = false;
+				var collision = false;
+				var targetEntity = null;
+				var lowestDistance = 99999999;
+				if (this.attacking) { //hit enemy
+					this.game.entities.forEach(function(entity) {
+						if (entity.attackable && that.targetHit.indexOf(entity) === -1 && that.targetHit.length == 0) {
+							if (checkCollision(that, entity, xBonus, yBonus) && !checkCollision(that, entity)) {
+								var playerMidpointX = that.x + that.hitBoxDef.offsetX + that.hitBoxDef.width / 2;
+								var playerMidpointY = that.y + that.hitBoxDef.offsetY + that.hitBoxDef.height / 2;
+								var distance = getDistance(playerMidpointX, playerMidpointY, entity.getXMidpoint(), entity.getYMidpoint());
+								if (distance < lowestDistance || targetEntity == null) {
+									targetEntity = entity;
+									lowestDistance = distance;
+								}
+							}
+						}
+					});
+					if (targetEntity != null) {
+						console.log("entity y: " + (targetEntity.y + targetEntity.invulnFromTop + targetEntity.hitBoxDef.offsetY) + "; player y: " + (this.game.player1.y + this.game.player1.hitBoxDef.height + this.game.player1.hitBoxDef.offsetY));
+						if (targetEntity.meleeInvuln) {
+							playSound(hitMetal);
+							this.game.player1.targetHit.push(targetEntity);
+							
+						} else if (targetEntity.invulnFromTop > 0 &&
+								(((targetEntity.y + targetEntity.invulnFromTop + targetEntity.hitBoxDef.offsetY) > (this.game.player1.y + this.game.player1.hitBoxDef.height + this.game.player1.hitBoxDef.offsetY)
+								) || this.game.player1.attackIndex == 2)) {
+							playSound(hitMetal);
+							this.game.player1.targetHit.push(targetEntity);
+						} else {
+							var createX;
+							var createY;
+							if (Math.abs(xBonus) > 20) {
+								createX = this.game.player1.x + (xBonus > 0 ? this.game.player1.hitBoxDef.width : 0) + xBonus + this.game.player1.hitBoxDef.offsetX;
+								createY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.game.player1.hitBoxDef.offsetY;
+							} else {
+								createX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
+								createY = this.game.player1.y + (yBonus > 0 ? this.game.player1.hitBoxDef.height : 0) + this.game.player1.hitBoxDef.offsetY;
+							}
+							var partAmount = this.currentForm < FORM_ANGLER ? 3 : 6;
+							for (var i = 0; i < partAmount; i++) {
+								var newParticle = new Particle(PART_SECONDARY, createX, createY, 
+										-5, 5, -5, 5, 0, 0.15, 0, 0, 0, 50, .75, .15, true, this.game);
+								element = new CircleElement(5 + Math.random() * 3, "#f7ffba", "#faf6be");
+								newParticle.other = element;
+								this.game.addEntity(newParticle);
+							}
+							this.game.player1.targetHit.push(targetEntity);
+							var damage = 25;
+							if (this.currentForm < FORM_ANGLER) //baby
+								damage = 15;
+							applyDamage(targetEntity.x, targetEntity.y, this.game, 15, targetEntity);
+							playSound(this.currentForm < FORM_ANGLER ? shotHitSound : lightningSound);
+							addEnergy(this.game, this.currentForm >= FORM_ANGLER ? 20 : 0);
+						}
+						switch(this.game.player1.attackIndex) {
+							case 1: //side hit
+								//targetEntity.displacementXTarget = 64;
+								//targetEntity.displacementTimeMax = 10;
+								//console.log("side hit! your X: " + (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2) + "; their X: " + (targetEntity.x + targetEntity.displacementX + targetEntity.hitBoxDef.offsetX + targetEntity.hitBoxDef.width / 2));
+								targetEntity.handleSideHit();
+								if (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2 < targetEntity.x + targetEntity.displacementX + targetEntity.hitBoxDef.offsetX + targetEntity.hitBoxDef.width / 2) {
+									targetEntity.displacementXSpeed = 6;
+									this.game.player1.displacementXSpeed = -6;
+								} else {
+									targetEntity.displacementXSpeed = -6;
+									this.game.player1.displacementXSpeed = 6;
+								}
+							break;
+							case 2: //down hit
+								this.game.player1.yVelocity = 8;
+								targetEntity.displacementYSpeed = 5;
+							break;
+							case 3: //up hit
+								targetEntity.displacementYSpeed = -5;
+								if (this.game.player1.falling || this.game.player1.jumping) {
+									this.game.player1.yVelocity = -5;
+								}
+							break;
+						}
+					}
+					if (this.attackAnimation != null && this.attackAnimation.isDone()) {
+						this.attackAnimation.elapsedTime = 0;
+						this.attacking = false;
+						this.attackIndex = 0;
+						noSnap = true;
+					}
+				}
+				if (this.invincTimer > 0) {
+					this.invincTimer--;
+					if (this.invincTimer % 4 === 0) {
+						var particle = new Particle(SHAPE_PART,
+								this.game.player1.hitBox.x + this.game.player1.hitBox.width / 2 - 10 + Math.random() * 20,
+								this.game.player1.hitBox.y + this.game.player1.hitBox.height * Math.random(), 
+								2, -2, 2, -2, 0, 0.05, 0, 5, 10, 50, 1, 0, false, this.game);
+						var element = new SquareElement(4 + Math.random() * 4, 4 + Math.random() * 4, "#ffffff", "#ffffff");
+						particle.other = element;
+						this.game.addEntity(particle);
+					}
+				}
 			}
 		}
-		/*if (this.runningVertical) {
-			if (this.lastDirectionVertical === "Up") {
-				this.y -= moveSpeed;
-			} else if (this.lastDirectionVertical === "Down") {
-				this.y += moveSpeed;
-			}*/
-		if (this.jumping || this.falling) {
-			this.yVelocity-= this.gravity;  
-			this.y -= this.yVelocity;    
+		
+		if (this.lastDirection === "Right") {
+			this.jumpAnimation = this.jumpAnimationRight;
+			this.fallAnimation = this.fallAnimationRight;
+			this.idleAnimation = this.idleAnimationRight;
+			this.walkAnimation = this.walkAnimationRight;
+		} else {
+			this.jumpAnimation = this.jumpAnimationLeft;
+			this.fallAnimation = this.fallAnimationLeft;
+			if (this.canControl) {
+				this.idleAnimation = this.idleAnimationLeft;
+			}
+			this.walkAnimation = this.walkAnimationLeft;
 		}
-		if (this.jumping && this.yVelocity <= 0) {
-			this.falling = true;
-			this.jumping = false;
-		}
-	}
-    if (this.falling && (this.hitBox.y + this.hitBox.height - this.hitBoxDef.offsetY) >= this.ground) {
-        this.yVelocity = 0;
-        this.falling = false;
-        this.y = this.ground - this.hitBox.height;
-		this.lastSafeX = that.x;
-		this.lastSafeY = that.y;
-		if (that.dashIndex == 1) {
-			that.dashing = false;
-			that.dashTime = 0;
-			that.dashIndex = 0;
-			that.groundSlam();
-		}
-    }
-	if (!platformFound && !this.falling && !this.jumping) {
-		this.lastSafeX = that.x;
-		this.lastSafeY = that.y;
-	}
-    /*if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.maxX + this.game.surfaceWidth && (this.lastDirection === "Right" || this.hurt)) {
-        this.x = this.game.camera.maxX + this.game.surfaceWidth - this.hitBoxDef.width - this.hitBoxDef.offsetX;
-    }
-    if (this.hitBox.x + this.hitBox.width - this.hitBoxDef.width <= this.game.camera.minX && (this.lastDirection === "Left" || this.hurt)) {
-        this.x = this.game.camera.minX + 0 - this.hitBoxDef.offsetX;
-    }*/
-	this.game.currentMap.platforms.forEach(function(currentPlatform) {
-		if (currentPlatform.isWall) {
-			if (that.hitBox.x + that.hitBox.width > currentPlatform.x && that.hitBox.x < currentPlatform.x + currentPlatform.width - 1) {
-				if (that.lastY + that.hitBoxDef.offsetY > currentPlatform.y + currentPlatform.height && that.y + that.hitBoxDef.offsetY < currentPlatform.y + currentPlatform.height) {
-					that.y = currentPlatform.y + currentPlatform.height - that.hitBoxDef.growthY - that.hitBoxDef.offsetY;
-					that.yVelocity = 0;
-					that.jumping = false;
-					that.falling = true;		
-					if (currentPlatform.specialId == WALL_SPIKE_DOWN && !that.stunned) {
-						if (that.attacking && that.attackIndex == 3) {
-							playSound(hitMetal);
-							if (that.falling || that.jumping) {
-								that.yVelocity = -5;
-							}
-						} else {
-							that.hitSpike();
-						}
-					}
+		var moveSpeed = this.runSpeed;
+		if (this.speedTimer > 0)
+			moveSpeed *= 1.6;
+		if (this.dashing) { //ignore all other input
+			if (this.dashTime % 3 == 0)
+				this.game.addEntity(new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.3, 0, false, this.game, this.currentAnimation));
+			this.dashTime -= 1;
+			this.yVelocity = 0;
+			if (this.dashIndex == 0) {
+				if (this.attackDirection == "Right")
+					this.x += moveSpeed * 3;
+				else
+					this.x -= moveSpeed * 3;
+			} else { //down dash
+				this.yVelocity = moveSpeed * -3;
+				this.y -= this.yVelocity;    
+				this.falling = true;
+				this.jumping = false;
+			}
+			if (this.dashTime <= 0) {
+				this.dashing = false;
+				this.dashIndex = false;
+			}
+		} else {
+			if (this.running) {
+				if (this.lastDirection === "Right") {
+					this.x += moveSpeed;
+				} else if (this.lastDirection === "Left") {
+					this.x -= moveSpeed;
 				}
 			}
-			if (that.hitBox.y + that.hitBox.height > currentPlatform.y && that.hitBox.y < currentPlatform.y + currentPlatform.height) {
-				if (that.hitBox.x < currentPlatform.x && that.hitBox.x + that.hitBox.width >= currentPlatform.x && (that.lastDirection == "Right" || that.displacementXSpeed > 0 || that.xVelocity > 0)) {
-					platformFound = true;
-					that.x = currentPlatform.x - that.hitBox.width - that.hitBoxDef.offsetX;
-					if (currentPlatform.specialId == WALL_SPIKE_LEFT && !that.stunned) {
-						if (that.attacking && that.attackIndex == 1) {
-							playSound(hitMetal);
-							that.displacementXSpeed = 6;
-						} else {
-							if (!that.falling && !that.jumping) {
-								console.log("last safe X: " + that.lastSafeX);
-								that.lastSafeX = that.x + 20;
-								console.log("last safe X: " + that.lastSafeX);
+			/*if (this.runningVertical) {
+				if (this.lastDirectionVertical === "Up") {
+					this.y -= moveSpeed;
+				} else if (this.lastDirectionVertical === "Down") {
+					this.y += moveSpeed;
+				}*/
+			if (this.jumping || this.falling) {
+				this.yVelocity-= this.gravity;  
+				this.y -= this.yVelocity;    
+			}
+			if (this.jumping && this.yVelocity <= 0) {
+				this.falling = true;
+				this.jumping = false;
+			}
+		}
+		if (this.falling && (this.hitBox.y + this.hitBox.height - this.hitBoxDef.offsetY) >= this.ground) {
+			this.yVelocity = 0;
+			this.falling = false;
+			this.y = this.ground - this.hitBox.height;
+			this.lastSafeX = that.x;
+			this.lastSafeY = that.y;
+			if (that.dashIndex == 1) {
+				that.dashing = false;
+				that.dashTime = 0;
+				that.dashIndex = 0;
+				that.groundSlam();
+			}
+		}
+		if (this.running && !platformFound && !this.falling && !this.jumping) {
+			this.lastSafeX = that.x;
+			this.lastSafeY = that.y;
+		}
+		/*if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.maxX + this.game.surfaceWidth && (this.lastDirection === "Right" || this.hurt)) {
+			this.x = this.game.camera.maxX + this.game.surfaceWidth - this.hitBoxDef.width - this.hitBoxDef.offsetX;
+		}
+		if (this.hitBox.x + this.hitBox.width - this.hitBoxDef.width <= this.game.camera.minX && (this.lastDirection === "Left" || this.hurt)) {
+			this.x = this.game.camera.minX + 0 - this.hitBoxDef.offsetX;
+		}*/
+		this.game.currentMap.platforms.forEach(function(currentPlatform) {
+			if (currentPlatform.isWall) {
+				if (that.hitBox.x + that.hitBox.width > currentPlatform.x && that.hitBox.x < currentPlatform.x + currentPlatform.width - 1) {
+					if (that.lastY + that.hitBoxDef.offsetY > currentPlatform.y + currentPlatform.height && that.y + that.hitBoxDef.offsetY < currentPlatform.y + currentPlatform.height) {
+						that.y = currentPlatform.y + currentPlatform.height - that.hitBoxDef.growthY - that.hitBoxDef.offsetY;
+						that.yVelocity = 0;
+						that.jumping = false;
+						that.falling = true;		
+						if (currentPlatform.specialId == WALL_SPIKE_DOWN && !that.stunned) {
+							if (that.attacking && that.attackIndex == 3) {
+								playSound(hitMetal);
+								if (that.falling || that.jumping) {
+									that.yVelocity = -5;
+								}
+							} else {
+								that.hitSpike();
 							}
-							that.hitSpike();
-						}
-					}
-				} else if (that.hitBox.x < currentPlatform.x + currentPlatform.width && that.hitBox.x + that.hitBox.width >= currentPlatform.x + currentPlatform.width && (that.lastDirection == "Left" || that.displacementXSpeed < 0 || that.xVelocity < 0)) {
-					platformFound = true;
-					that.x = currentPlatform.x + currentPlatform.width - that.hitBoxDef.growthX - that.hitBoxDef.offsetX - 1;
-					if (currentPlatform.specialId == WALL_SPIKE_RIGHT && !that.stunned) {
-						if (that.attacking && that.attackIndex == 1) {
-							playSound(hitMetal);
-							that.displacementXSpeed = -6;
-						} else {
-							if (!that.falling && !that.jumping) {
-								console.log("last safe X: " + that.lastSafeX);
-								that.lastSafeX = that.x - 20;
-								console.log("last safe X: " + that.lastSafeX);
-							}
-							that.hitSpike();
 						}
 					}
 				}
-			} 
+				if (that.hitBox.y + that.hitBox.height > currentPlatform.y && that.hitBox.y < currentPlatform.y + currentPlatform.height) {
+					if (that.hitBox.x < currentPlatform.x && that.hitBox.x + that.hitBox.width >= currentPlatform.x && (that.lastDirection == "Right" || that.displacementXSpeed > 0 || that.xVelocity > 0)) {
+						platformFound = true;
+						that.x = currentPlatform.x - that.hitBox.width - that.hitBoxDef.offsetX;
+						if (currentPlatform.specialId == WALL_SPIKE_LEFT && !that.stunned) {
+							if (that.attacking && that.attackIndex == 1) {
+								playSound(hitMetal);
+								that.displacementXSpeed = 6;
+							} else {
+								if (!that.falling && !that.jumping) {
+									console.log("last safe X: " + that.lastSafeX);
+									that.lastSafeX = that.x + 20;
+									console.log("last safe X: " + that.lastSafeX);
+								}
+								that.hitSpike();
+							}
+						}
+					} else if (that.hitBox.x < currentPlatform.x + currentPlatform.width && that.hitBox.x + that.hitBox.width >= currentPlatform.x + currentPlatform.width && (that.lastDirection == "Left" || that.displacementXSpeed < 0 || that.xVelocity < 0)) {
+						platformFound = true;
+						that.x = currentPlatform.x + currentPlatform.width - that.hitBoxDef.growthX - that.hitBoxDef.offsetX - 1;
+						if (currentPlatform.specialId == WALL_SPIKE_RIGHT && !that.stunned) {
+							if (that.attacking && that.attackIndex == 1) {
+								playSound(hitMetal);
+								that.displacementXSpeed = -6;
+							} else {
+								if (!that.falling && !that.jumping) {
+									console.log("last safe X: " + that.lastSafeX);
+									that.lastSafeX = that.x - 20;
+									console.log("last safe X: " + that.lastSafeX);
+								}
+								that.hitSpike();
+							}
+						}
+					}
+				} 
+			}
+		});
+		if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.x + this.game.camera.width) {
+			this.x = this.game.camera.x + this.game.camera.width - this.hitBoxDef.width - this.hitBoxDef.offsetX - 4;
 		}
-	});
-    if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.x + this.game.camera.width) {
-        this.x = this.game.camera.x + this.game.camera.width - this.hitBoxDef.width - this.hitBoxDef.offsetX - 4;
-    }
-    if (this.hitBox.x + this.hitBox.width - this.hitBoxDef.width <= this.game.camera.x) {
-        this.x = this.game.camera.x + 0 - this.hitBoxDef.offsetX + 4;
-    }
-    if (this.hitBox.y + this.hitBoxDef.height >= this.game.camera.maxY + this.game.surfaceHeight && (this.lastDirectionVertical === "Down")) {
-        this.y = this.game.camera.maxY + this.game.surfaceHeight - this.hitBoxDef.height - this.hitBoxDef.offsetY;
-    }
-    if (this.hitBox.y + this.hitBox.height - this.hitBoxDef.height <= this.game.camera.minY) {
-        this.y = this.game.camera.minY + 1 - this.hitBoxDef.offsetY;
-        this.yVelocity = -1;
-    }
-    if (this.x <= 0 && this.game.currentPhase === 0) {
-        this.x = 0;
-    }
+		if (this.hitBox.x + this.hitBox.width - this.hitBoxDef.width <= this.game.camera.x) {
+			this.x = this.game.camera.x + 0 - this.hitBoxDef.offsetX + 4;
+		}
+		if (this.hitBox.y + this.hitBoxDef.height >= this.game.camera.maxY + this.game.surfaceHeight && (this.lastDirectionVertical === "Down")) {
+			this.y = this.game.camera.maxY + this.game.surfaceHeight - this.hitBoxDef.height - this.hitBoxDef.offsetY;
+		}
+		if (this.hitBox.y + this.hitBox.height - this.hitBoxDef.height <= this.game.camera.minY) {
+			this.y = this.game.camera.minY + 1 - this.hitBoxDef.offsetY;
+			this.yVelocity = -1;
+		}
+		if (this.x <= 0 && this.game.currentPhase === 0) {
+			this.x = 0;
+		}
+	}
     
     Entity.prototype.update.call(this);
 };
@@ -3598,6 +3653,8 @@ Character.prototype.draw = function (ctx) {
 	    } else {
 			this.currentAnimation = this.idleAnimation;
 		}
+		//ctx.drawImage(ASSET_MANAGER.getAsset("./img/Misc/debug.png"), this.lastSafeX + this.currentAnimation.offsetX + 16 + this.hitBoxDef.offsetX, 
+			//this.lastSafeY + this.currentAnimation.offsetY + 16 + this.hitBoxDef.offsetY);
 		if (!this.vulnerable) {
 			if (this.game.step % 4 !== 0) {
 				doNotDraw = true;
@@ -4578,7 +4635,7 @@ function spawnWave(game, number) {
 		case 1:
 			var objects = [		
 				new Spaceship(game, -2400, 370),
-				//new LivingKelp(game, 1600, 208),
+				new LivingKelp(game, 1600, 208),
 			];
 			var powerups = [
 			];
@@ -4639,6 +4696,20 @@ new Platform(game, 2568, 160),
 new Platform(game, 3448, 224, 2, 0, 64),
 
 new Platform(game, 3896, 224, 2, 0, 96),
+
+new Platform(game, 4280, 160),
+
+new Platform(game, 4280, 224),
+
+new Platform(game, 4216, 272),
+
+new Platform(game, 4920, 384),
+
+new Platform(game, 4856, 384),
+
+new Platform(game, 5272, 160, 2, 0, 64),
+
+new Platform(game, 5720, 160, 0, 2, 128),
 
 new Wall(game, -1096, 432, 32, 32),
 
@@ -4798,8 +4869,6 @@ new Wall(game, -104, 400, 32, 32),
 
 new Wall(game, -104, 432, 32, 32),
 
-new Wall(game, 24, 208, 32, 32),
-
 new Wall(game, -712, 240, 32, 32),
 
 new Wall(game, -680, 208, 32, 32),
@@ -4874,31 +4943,29 @@ new Wall(game, 1272, 192, 32, 32),
 
 new Wall(game, 1272, 160, 32, 32),
 
-new Wall(game, 1272, 128, 32, 32),
+new Wall(game, 824, 144, 32, 32),
 
-new Wall(game, 824, 112, 32, 32),
+new Wall(game, 856, 144, 32, 32),
 
-new Wall(game, 856, 112, 32, 32),
+new Wall(game, 888, 144, 32, 32),
 
-new Wall(game, 888, 112, 32, 32),
+new Wall(game, 984, 144, 32, 32),
 
-new Wall(game, 984, 112, 32, 32),
+new Wall(game, 1016, 144, 32, 32),
 
-new Wall(game, 1016, 112, 32, 32),
+new Wall(game, 1048, 144, 32, 32),
 
-new Wall(game, 1048, 112, 32, 32),
+new Wall(game, 1080, 144, 32, 32),
 
-new Wall(game, 1080, 112, 32, 32),
+new Wall(game, 1112, 144, 32, 32),
 
-new Wall(game, 1112, 112, 32, 32),
+new Wall(game, 1144, 144, 32, 32),
 
-new Wall(game, 1144, 112, 32, 32),
+new Wall(game, 1176, 144, 32, 32),
 
-new Wall(game, 1176, 112, 32, 32),
+new Wall(game, 1208, 144, 32, 32),
 
-new Wall(game, 1208, 112, 32, 32),
-
-new Wall(game, 1240, 112, 32, 32),
+new Wall(game, 1240, 144, 32, 32),
 
 new Wall(game, 1864, 432, 32, 32),
 
@@ -5046,6 +5113,710 @@ new Wall(game, 4344, 416, 32, 32),
 
 new Wall(game, 4344, 448, 32, 32),
 
+new Wall(game, 4696, 320, 32, 32),
+
+new Wall(game, 4728, 320, 32, 32),
+
+new Wall(game, 4760, 320, 32, 32),
+
+new Wall(game, 4696, 352, 32, 32),
+
+new Wall(game, 4696, 384, 32, 32),
+
+new Wall(game, 4696, 416, 32, 32),
+
+new Wall(game, 4696, 448, 32, 32),
+
+new Wall(game, 4664, 384, 32, 32),
+
+new Wall(game, 4664, 416, 32, 32),
+
+new Wall(game, 4664, 448, 32, 32),
+
+new Wall(game, 4728, 352, 32, 32),
+
+new Wall(game, 4760, 352, 32, 32),
+
+new Wall(game, 4760, 384, 32, 32),
+
+new Wall(game, 4728, 384, 32, 32),
+
+new Wall(game, 4728, 416, 32, 32),
+
+new Wall(game, 4760, 416, 32, 32),
+
+new Wall(game, 4728, 448, 32, 32),
+
+new Wall(game, 4760, 448, 32, 32),
+
+new Wall(game, 4792, 0, 32, 32),
+
+new Wall(game, 4792, 32, 32, 32),
+
+new Wall(game, 4792, 64, 32, 32),
+
+new Wall(game, 4792, 96, 32, 32),
+
+new Wall(game, 4792, 128, 32, 32),
+
+new Wall(game, 4792, 160, 32, 32),
+
+new Wall(game, 4792, 192, 32, 32),
+
+new Wall(game, 4824, 192, 32, 32),
+
+new Wall(game, 4824, 160, 32, 32),
+
+new Wall(game, 4824, 128, 32, 32),
+
+new Wall(game, 4824, 96, 32, 32),
+
+new Wall(game, 4824, 64, 32, 32),
+
+new Wall(game, 4824, 32, 32, 32),
+
+new Wall(game, 4824, 0, 32, 32),
+
+new Wall(game, 4856, 0, 32, 32),
+
+new Wall(game, 4856, 32, 32, 32),
+
+new Wall(game, 4856, 64, 32, 32),
+
+new Wall(game, 4856, 96, 32, 32),
+
+new Wall(game, 4856, 128, 32, 32),
+
+new Wall(game, 4856, 160, 32, 32),
+
+new Wall(game, 4856, 192, 32, 32),
+
+new Wall(game, 4888, 192, 32, 32),
+
+new Wall(game, 4888, 160, 32, 32),
+
+new Wall(game, 4888, 128, 32, 32),
+
+new Wall(game, 4888, 96, 32, 32),
+
+new Wall(game, 4888, 64, 32, 32),
+
+new Wall(game, 4888, 32, 32, 32),
+
+new Wall(game, 4888, 0, 32, 32),
+
+new Wall(game, 4920, 0, 32, 32),
+
+new Wall(game, 4920, 32, 32, 32),
+
+new Wall(game, 4920, 64, 32, 32),
+
+new Wall(game, 4920, 96, 32, 32),
+
+new Wall(game, 4920, 128, 32, 32),
+
+new Wall(game, 4920, 160, 32, 32),
+
+new Wall(game, 4920, 192, 32, 32),
+
+new Wall(game, 4952, 192, 32, 32),
+
+new Wall(game, 4984, 192, 32, 32),
+
+new Wall(game, 5016, 192, 32, 32),
+
+new Wall(game, 5144, 192, 32, 32),
+
+new Wall(game, 5176, 192, 32, 32),
+
+new Wall(game, 5176, 160, 32, 32),
+
+new Wall(game, 4952, 0, 32, 32),
+
+new Wall(game, 4984, 0, 32, 32),
+
+new Wall(game, 5016, 0, 32, 32),
+
+new Wall(game, 5048, 0, 32, 32),
+
+new Wall(game, 5080, 0, 32, 32),
+
+new Wall(game, 5112, 0, 32, 32),
+
+new Wall(game, 5144, 0, 32, 32),
+
+new Wall(game, 5176, 0, 32, 32),
+
+new Wall(game, 4952, 32, 32, 32),
+
+new Wall(game, 4984, 32, 32, 32),
+
+new Wall(game, 5016, 32, 32, 32),
+
+new Wall(game, 5048, 32, 32, 32),
+
+new Wall(game, 5080, 32, 32, 32),
+
+new Wall(game, 5112, 32, 32, 32),
+
+new Wall(game, 5144, 32, 32, 32),
+
+new Wall(game, 5176, 32, 32, 32),
+
+new Wall(game, 4952, 64, 32, 32),
+
+new Wall(game, 4984, 64, 32, 32),
+
+new Wall(game, 5016, 64, 32, 32),
+
+new Wall(game, 4952, 96, 32, 32),
+
+new Wall(game, 4984, 96, 32, 32),
+
+new Wall(game, 5016, 96, 32, 32),
+
+new Wall(game, 4952, 128, 32, 32),
+
+new Wall(game, 4984, 128, 32, 32),
+
+new Wall(game, 5016, 128, 32, 32),
+
+new Wall(game, 4952, 160, 32, 32),
+
+new Wall(game, 4984, 160, 32, 32),
+
+new Wall(game, 5016, 160, 32, 32),
+
+new Wall(game, 5144, 160, 32, 32),
+
+new Wall(game, 4792, 384, 32, 32),
+
+new Wall(game, 4824, 384, 32, 32),
+
+new Wall(game, 4824, 416, 32, 32),
+
+new Wall(game, 4792, 416, 32, 32),
+
+new Wall(game, 4792, 448, 32, 32),
+
+new Wall(game, 4824, 448, 32, 32),
+
+new Wall(game, 4984, 384, 32, 32),
+
+new Wall(game, 4984, 416, 32, 32),
+
+new Wall(game, 4984, 448, 32, 32),
+
+new Wall(game, 5016, 384, 32, 32),
+
+new Wall(game, 5016, 416, 32, 32),
+
+new Wall(game, 5016, 448, 32, 32),
+
+new Wall(game, 5048, 384, 32, 32),
+
+new Wall(game, 5048, 416, 32, 32),
+
+new Wall(game, 5048, 448, 32, 32),
+
+new Wall(game, 5080, 384, 32, 32),
+
+new Wall(game, 5080, 416, 32, 32),
+
+new Wall(game, 5112, 384, 32, 32),
+
+new Wall(game, 5080, 448, 32, 32),
+
+new Wall(game, 5112, 416, 32, 32),
+
+new Wall(game, 5112, 448, 32, 32),
+
+new Wall(game, 5144, 384, 32, 32),
+
+new Wall(game, 5144, 416, 32, 32),
+
+new Wall(game, 5144, 448, 32, 32),
+
+new Wall(game, 5176, 384, 32, 32),
+
+new Wall(game, 5176, 416, 32, 32),
+
+new Wall(game, 5176, 448, 32, 32),
+
+new Wall(game, 5208, 160, 32, 32),
+
+new Wall(game, 5208, 192, 32, 32),
+
+new Wall(game, 5208, 224, 32, 32),
+
+new Wall(game, 5208, 256, 32, 32),
+
+new Wall(game, 5208, 288, 32, 32),
+
+new Wall(game, 5208, 320, 32, 32),
+
+new Wall(game, 5208, 352, 32, 32),
+
+new Wall(game, 5208, 384, 32, 32),
+
+new Wall(game, 5208, 416, 32, 32),
+
+new Wall(game, 5208, 448, 32, 32),
+
+new Wall(game, 5240, 160, 32, 32),
+
+new Wall(game, 5208, 32, 32, 32),
+
+new Wall(game, 5208, 0, 32, 32),
+
+new Wall(game, 5240, 0, 32, 32),
+
+new Wall(game, 5240, 32, 32, 32),
+
+new Wall(game, 5272, 0, 32, 32),
+
+new Wall(game, 5272, 32, 32, 32),
+
+new Wall(game, 5304, 0, 32, 32),
+
+new Wall(game, 5304, 32, 32, 32),
+
+new Wall(game, 5336, 0, 32, 32),
+
+new Wall(game, 5336, 32, 32, 32),
+
+new Wall(game, 5368, 0, 32, 32),
+
+new Wall(game, 5368, 32, 32, 32),
+
+new Wall(game, 5400, 0, 32, 32),
+
+new Wall(game, 5400, 32, 32, 32),
+
+new Wall(game, 5432, 0, 32, 32),
+
+new Wall(game, 5432, 32, 32, 32),
+
+new Wall(game, 5464, 0, 32, 32),
+
+new Wall(game, 5464, 32, 32, 32),
+
+new Wall(game, 5496, 0, 32, 32),
+
+new Wall(game, 5496, 32, 32, 32),
+
+new Wall(game, 5528, 0, 32, 32),
+
+new Wall(game, 5528, 32, 32, 32),
+
+new Wall(game, 5560, 0, 32, 32),
+
+new Wall(game, 5560, 32, 32, 32),
+
+new Wall(game, 5592, 0, 32, 32),
+
+new Wall(game, 5592, 32, 32, 32),
+
+new Wall(game, 5624, 0, 32, 32),
+
+new Wall(game, 5624, 32, 32, 32),
+
+new Wall(game, 5656, 0, 32, 32),
+
+new Wall(game, 5656, 32, 32, 32),
+
+new Wall(game, 5688, 0, 32, 32),
+
+new Wall(game, 5688, 32, 32, 32),
+
+new Wall(game, 5720, 32, 32, 32),
+
+new Wall(game, 5720, 0, 32, 32),
+
+new Wall(game, 5464, 160, 32, 32),
+
+new Wall(game, 5496, 160, 32, 32),
+
+new Wall(game, 5528, 160, 32, 32),
+
+new Wall(game, 5528, 192, 32, 32),
+
+new Wall(game, 5528, 224, 32, 32),
+
+new Wall(game, 5528, 256, 32, 32),
+
+new Wall(game, 5528, 288, 32, 32),
+
+new Wall(game, 5528, 320, 32, 32),
+
+new Wall(game, 5528, 352, 32, 32),
+
+new Wall(game, 5528, 384, 32, 32),
+
+new Wall(game, 5528, 416, 32, 32),
+
+new Wall(game, 5528, 448, 32, 32),
+
+new Wall(game, 5624, 160, 32, 32),
+
+new Wall(game, 5624, 192, 32, 32),
+
+new Wall(game, 5624, 224, 32, 32),
+
+new Wall(game, 5624, 256, 32, 32),
+
+new Wall(game, 5624, 288, 32, 32),
+
+new Wall(game, 5624, 320, 32, 32),
+
+new Wall(game, 5624, 352, 32, 32),
+
+new Wall(game, 5624, 384, 32, 32),
+
+new Wall(game, 5624, 416, 32, 32),
+
+new Wall(game, 5624, 448, 32, 32),
+
+new Wall(game, 5656, 160, 32, 32),
+
+new Wall(game, 5656, 192, 32, 32),
+
+new Wall(game, 5656, 224, 32, 32),
+
+new Wall(game, 5656, 256, 32, 32),
+
+new Wall(game, 5656, 288, 32, 32),
+
+new Wall(game, 5656, 320, 32, 32),
+
+new Wall(game, 5656, 352, 32, 32),
+
+new Wall(game, 5656, 384, 32, 32),
+
+new Wall(game, 5656, 416, 32, 32),
+
+new Wall(game, 5656, 448, 32, 32),
+
+new Wall(game, 5688, 448, 32, 32),
+
+new Wall(game, 5688, 416, 32, 32),
+
+new Wall(game, 5688, 384, 32, 32),
+
+new Wall(game, 5688, 352, 32, 32),
+
+new Wall(game, 5688, 320, 32, 32),
+
+new Wall(game, 5688, 288, 32, 32),
+
+new Wall(game, 5688, 256, 32, 32),
+
+new Wall(game, 5688, 224, 32, 32),
+
+new Wall(game, 5688, 192, 32, 32),
+
+new Wall(game, 5688, 160, 32, 32),
+
+new Wall(game, 5752, 0, 32, 32),
+
+new Wall(game, 5752, 32, 32, 32),
+
+new Wall(game, 5784, 0, 32, 32),
+
+new Wall(game, 5784, 32, 32, 32),
+
+new Wall(game, 5816, 0, 32, 32),
+
+new Wall(game, 5816, 32, 32, 32),
+
+new Wall(game, 5816, 64, 32, 32),
+
+new Wall(game, 5784, 64, 32, 32),
+
+new Wall(game, 5784, 96, 32, 32),
+
+new Wall(game, 5784, 128, 32, 32),
+
+new Wall(game, 5816, 96, 32, 32),
+
+new Wall(game, 5816, 128, 32, 32),
+
+new Wall(game, 5784, 160, 32, 32),
+
+new Wall(game, 5816, 160, 32, 32),
+
+new Wall(game, 5816, 192, 32, 32),
+
+new Wall(game, 5784, 192, 32, 32),
+
+new Wall(game, 5784, 224, 32, 32),
+
+new Wall(game, 5816, 224, 32, 32),
+
+new Wall(game, 5720, 448, 32, 32),
+
+new Wall(game, 5752, 448, 32, 32),
+
+new Wall(game, 5784, 416, 32, 32),
+
+new Wall(game, 5784, 448, 32, 32),
+
+new Wall(game, 5816, 448, 32, 32),
+
+new Wall(game, 5816, 416, 32, 32),
+
+new Wall(game, 5784, 384, 32, 32),
+
+new Wall(game, 5784, 352, 32, 32),
+
+new Wall(game, 5784, 320, 32, 32),
+
+new Wall(game, 5816, 320, 32, 32),
+
+new Wall(game, 5816, 352, 32, 32),
+
+new Wall(game, 5816, 384, 32, 32),
+
+new Wall(game, 5848, 352, 32, 32),
+
+new Wall(game, 5848, 384, 32, 32),
+
+new Wall(game, 5848, 416, 32, 32),
+
+new Wall(game, 5848, 448, 32, 32),
+
+new Wall(game, 5880, 448, 32, 32),
+
+new Wall(game, 5880, 416, 32, 32),
+
+new Wall(game, 5880, 384, 32, 32),
+
+new Wall(game, 5912, 416, 32, 32),
+
+new Wall(game, 5912, 448, 32, 32),
+
+new Wall(game, 5944, 448, 32, 32),
+
+new Wall(game, 5848, 224, 32, 32),
+
+new Wall(game, 5848, 192, 32, 32),
+
+new Wall(game, 5848, 0, 32, 32),
+
+new Wall(game, 5848, 32, 32, 32),
+
+new Wall(game, 5848, 64, 32, 32),
+
+new Wall(game, 5848, 96, 32, 32),
+
+new Wall(game, 5848, 128, 32, 32),
+
+new Wall(game, 5848, 160, 32, 32),
+
+new Wall(game, 5880, 0, 32, 32),
+
+new Wall(game, 5880, 32, 32, 32),
+
+new Wall(game, 5880, 64, 32, 32),
+
+new Wall(game, 5880, 96, 32, 32),
+
+new Wall(game, 5880, 224, 32, 32),
+
+new Wall(game, 5880, 128, 32, 32),
+
+new Wall(game, 5880, 160, 32, 32),
+
+new Wall(game, 5880, 192, 32, 32),
+
+new Wall(game, 5912, 0, 32, 32),
+
+new Wall(game, 5912, 32, 32, 32),
+
+new Wall(game, 5912, 64, 32, 32),
+
+new Wall(game, 5912, 96, 32, 32),
+
+new Wall(game, 5912, 128, 32, 32),
+
+new Wall(game, 5912, 160, 32, 32),
+
+new Wall(game, 5912, 192, 32, 32),
+
+new Wall(game, 5912, 224, 32, 32),
+
+new Wall(game, 5912, 256, 32, 32),
+
+new Wall(game, 5944, 0, 32, 32),
+
+new Wall(game, 5944, 32, 32, 32),
+
+new Wall(game, 5944, 64, 32, 32),
+
+new Wall(game, 5944, 96, 32, 32),
+
+new Wall(game, 5944, 128, 32, 32),
+
+new Wall(game, 5944, 160, 32, 32),
+
+new Wall(game, 5944, 192, 32, 32),
+
+new Wall(game, 5944, 224, 32, 32),
+
+new Wall(game, 5944, 256, 32, 32),
+
+new Wall(game, 5944, 288, 32, 32),
+
+new Wall(game, 5976, 0, 32, 32),
+
+new Wall(game, 5976, 32, 32, 32),
+
+new Wall(game, 5976, 64, 32, 32),
+
+new Wall(game, 5976, 96, 32, 32),
+
+new Wall(game, 5976, 128, 32, 32),
+
+new Wall(game, 5976, 160, 32, 32),
+
+new Wall(game, 5976, 192, 32, 32),
+
+new Wall(game, 5976, 224, 32, 32),
+
+new Wall(game, 6008, 0, 32, 32),
+
+new Wall(game, 6008, 32, 32, 32),
+
+new Wall(game, 6008, 64, 32, 32),
+
+new Wall(game, 6008, 96, 32, 32),
+
+new Wall(game, 6008, 128, 32, 32),
+
+new Wall(game, 6008, 160, 32, 32),
+
+new Wall(game, 6008, 192, 32, 32),
+
+new Wall(game, 6040, 0, 32, 32),
+
+new Wall(game, 6040, 32, 32, 32),
+
+new Wall(game, 6040, 64, 32, 32),
+
+new Wall(game, 6040, 96, 32, 32),
+
+new Wall(game, 6040, 128, 32, 32),
+
+new Wall(game, 6040, 160, 32, 32),
+
+new Wall(game, 6040, 192, 32, 32),
+
+new Wall(game, 6072, 0, 32, 32),
+
+new Wall(game, 6072, 32, 32, 32),
+
+new Wall(game, 6072, 64, 32, 32),
+
+new Wall(game, 6072, 96, 32, 32),
+
+new Wall(game, 6072, 128, 32, 32),
+
+new Wall(game, 6072, 160, 32, 32),
+
+new Wall(game, 6072, 192, 32, 32),
+
+new Wall(game, 6104, 0, 32, 32),
+
+new Wall(game, 6104, 32, 32, 32),
+
+new Wall(game, 6104, 64, 32, 32),
+
+new Wall(game, 6104, 96, 32, 32),
+
+new Wall(game, 6104, 128, 32, 32),
+
+new Wall(game, 6104, 160, 32, 32),
+
+new Wall(game, 6104, 192, 32, 32),
+
+new Wall(game, 6136, 0, 32, 32),
+
+new Wall(game, 6136, 32, 32, 32),
+
+new Wall(game, 6136, 64, 32, 32),
+
+new Wall(game, 6136, 96, 32, 32),
+
+new Wall(game, 6136, 128, 32, 32),
+
+new Wall(game, 6136, 160, 32, 32),
+
+new Wall(game, 6136, 192, 32, 32),
+
+new Wall(game, 6168, 0, 32, 32),
+
+new Wall(game, 6168, 32, 32, 32),
+
+new Wall(game, 6168, 64, 32, 32),
+
+new Wall(game, 6168, 96, 32, 32),
+
+new Wall(game, 6168, 128, 32, 32),
+
+new Wall(game, 6168, 160, 32, 32),
+
+new Wall(game, 6168, 192, 32, 32),
+
+new Wall(game, 6200, 0, 32, 32),
+
+new Wall(game, 6200, 32, 32, 32),
+
+new Wall(game, 6200, 64, 32, 32),
+
+new Wall(game, 6200, 96, 32, 32),
+
+new Wall(game, 6200, 128, 32, 32),
+
+new Wall(game, 6200, 160, 32, 32),
+
+new Wall(game, 6200, 192, 32, 32),
+
+new Wall(game, 6232, 0, 32, 32),
+
+new Wall(game, 6232, 32, 32, 32),
+
+new Wall(game, 6232, 64, 32, 32),
+
+new Wall(game, 6232, 96, 32, 32),
+
+new Wall(game, 6232, 128, 32, 32),
+
+new Wall(game, 6232, 160, 32, 32),
+
+new Wall(game, 6232, 192, 32, 32),
+
+new Wall(game, 6264, 0, 32, 32),
+
+new Wall(game, 6264, 32, 32, 32),
+
+new Wall(game, 6264, 64, 32, 32),
+
+new Wall(game, 6264, 96, 32, 32),
+
+new Wall(game, 6264, 128, 32, 32),
+
+new Wall(game, 6264, 160, 32, 32),
+
+new Wall(game, 6264, 192, 32, 32),
+
+new Wall(game, 6264, 224, 32, 32),
+
+new Wall(game, 6264, 256, 32, 32),
+
+new Wall(game, 6264, 448, 32, 32),
+
+new Wall(game, 6264, 416, 32, 32),
+
 new Platform(game, -968, 448, 0, 0, 0, PLATFORM_BOUNCY),
 
 new Platform(game, 376, 272, 0, 0, 0, PLATFORM_BOUNCY),
@@ -5053,6 +5824,10 @@ new Platform(game, 376, 272, 0, 0, 0, PLATFORM_BOUNCY),
 new Platform(game, 1912, 352, 1, 0, 256, PLATFORM_BOUNCY),
 
 new Platform(game, 3448, 384, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, 5080, 368, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, 5080, 208, 0, 0, 0, PLATFORM_BOUNCY),
 
 new Platform(game, 56, 400, 0, 0, 0, PLATFORM_BREAK),
 
@@ -5084,11 +5859,15 @@ new Platform(game, 3832, 224, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, 4152, 224, 0, 0, 0, PLATFORM_BREAK),
 
-new Platform(game, 4280, 160, 0, 0, 0, PLATFORM_BREAK),
+new Platform(game, 1896, 400, 0, 0, 0, PLATFORM_BREAK),
 
-new Platform(game, 3768, 272, 0, 0, 0, PLATFORM_BREAK),
+new Platform(game, 1960, 400, 0, 0, 0, PLATFORM_BREAK),
 
-new Platform(game, 3832, 320, 0, 0, 0, PLATFORM_BREAK),
+new Platform(game, 2024, 400, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 2088, 400, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 2152, 400, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, 120, 208, 0, 0, 0, PLATFORM_FADE, 0),
 
@@ -5106,14 +5885,6 @@ new Platform(game, 2664, 224, 0, 0, 0, PLATFORM_FADE, 0),
 
 new Platform(game, 2824, 160, 0, 0, 0, PLATFORM_FADE, 60),
 
-new Wall(game, 1896, 416, 32, 32, WALL_SPIKE_UP),
-
-new Wall(game, 1928, 416, 32, 32, WALL_SPIKE_UP),
-
-new Wall(game, 1960, 416, 32, 32, WALL_SPIKE_UP),
-
-new Wall(game, 1992, 416, 32, 32, WALL_SPIKE_UP),
-
 new Wall(game, 2024, 416, 32, 32, WALL_SPIKE_UP),
 
 new Wall(game, 2056, 416, 32, 32, WALL_SPIKE_UP),
@@ -5123,12 +5894,6 @@ new Wall(game, 2088, 416, 32, 32, WALL_SPIKE_UP),
 new Wall(game, 2120, 416, 32, 32, WALL_SPIKE_UP),
 
 new Wall(game, 2152, 416, 32, 32, WALL_SPIKE_UP),
-
-new Wall(game, 2184, 416, 32, 32, WALL_SPIKE_UP),
-
-new Wall(game, 2216, 416, 32, 32, WALL_SPIKE_UP),
-
-new Wall(game, 2248, 416, 32, 32, WALL_SPIKE_UP),
 
 new Wall(game, 2360, 416, 32, 32, WALL_SPIKE_UP),
 
@@ -5176,6 +5941,42 @@ new Wall(game, 4280, 416, 32, 32, WALL_SPIKE_UP),
 
 new Wall(game, 4312, 416, 32, 32, WALL_SPIKE_UP),
 
+new Wall(game, 1992, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 1960, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 1928, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 1896, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 2184, 416, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5240, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5272, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5304, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5336, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5368, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5400, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5432, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5464, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5496, 432, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5720, 400, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5752, 400, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 5160, 336, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, 5160, 304, 32, 32, WALL_SPIKE_LEFT),
+
 new Wall(game, 2312, 288, 32, 32, WALL_SPIKE_DOWN),
 
 new Wall(game, 2408, 288, 32, 32, WALL_SPIKE_DOWN),
@@ -5184,13 +5985,34 @@ new Wall(game, 2504, 288, 32, 32, WALL_SPIKE_DOWN),
 
 new Wall(game, 2600, 288, 32, 32, WALL_SPIKE_DOWN),
 
+new Wall(game, 4856, 224, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 4888, 224, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 4920, 224, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 4952, 224, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 4984, 224, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 5016, 224, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 5144, 224, 32, 32, WALL_SPIKE_DOWN),
+
+new Wall(game, 5176, 224, 32, 32, WALL_SPIKE_DOWN),
+
 
 
 
 			];
 			var enemies = [
 
+
 new Powerup(game, -168, 384, 0),
+
+new Powerup(game, 1176, 80, 0),
+
+new Powerup(game, 2616, 384, 0),
 
 new SeaSlug(game, -1480, 432, -1, 32),
 
@@ -5206,21 +6028,13 @@ new SeaSlug(game, -376, 272, -1, 0),
 
 new SeaSlug(game, -184, 272, -1, 0),
 
-new SeaSlug(game, 296, 432, -1, 0),
-
 new SeaSlug(game, 456, 432, -1, 0),
 
 new SeaSlug(game, 136, 432, -1, 0),
 
-new SeaSlug(game, 1032, 80, -1, 0),
-
-new SeaSlug(game, 1160, 80, -1, 0),
-
 new SeaSlug(game, 1592, 432, -1, 32),
 
 new SeaSlug(game, 1688, 432, -1, 32),
-
-new SeaSlug(game, 1784, 432, -1, 32),
 
 new SeaSlug(game, 2952, 432, 1, 0),
 
@@ -5228,43 +6042,23 @@ new SeaSlug(game, 3048, 432, 1, 0),
 
 new SeaSlug(game, 3192, 432, 1, 0),
 
-new Eel(game, 1544, 368, 1, 64),
-
-new Eel(game, 2136, 160, -1, 64),
-
 new Uni(game, 2456, 176),
 
-new Uni(game, 4008, 144),
-
-new Pirahna(game, -696, 384, 1, 0),
+new Uni(game, 5064, 304),
 
 new Pirahna(game, -744, 400, 1, 0),
 
-new Pirahna(game, -328, 384, -1, 0),
-
 new Pirahna(game, -280, 400, -1, 0),
-
-new Pirahna(game, 136, 144, 1, 128),
-
-new Pirahna(game, 136, 96, 1, 128),
 
 new Pirahna(game, 2216, 64, -1, 0),
 
-new Pirahna(game, 2072, 160, -1, 0),
-
-new Pirahna(game, 1928, 272, -1, 0),
-
-new Pirahna(game, 2408, 368, 1, 32),
-
-new Pirahna(game, 2504, 368, 1, 32),
-
 new Pirahna(game, 2504, 64, 1, 0),
 
-new Pirahna(game, 2456, 112, 1, 0),
+new Pirahna(game, 2424, 112, 1, 0),
 
-new Pirahna(game, 3752, 64, -1, 32),
+new Pirahna(game, 776, 400, 1, 0),
 
-new Pirahna(game, 4088, 144, -1, 32),
+new Pirahna(game, 1048, 400, 1, 0),
 
 new Powerup(game, -1400, 432, JELLY_COIN),
 
@@ -5289,6 +6083,10 @@ new Powerup(game, 2456, 304, JELLY_COIN),
 new Powerup(game, 2552, 304, JELLY_COIN),
 
 new Powerup(game, 4344, 112, JELLY_COIN),
+
+new Powerup(game, 4904, 416, JELLY_COIN),
+
+new Powerup(game, 5576, 432, JELLY_COIN),
 
 new Powerup(game, -1784, 416, JELLY_COIN_SM),
 
@@ -5388,23 +6186,21 @@ new Powerup(game, 40, 432, JELLY_COIN_SM),
 
 new Powerup(game, -40, 432, JELLY_COIN_SM),
 
-new Powerup(game, 1352, 80, JELLY_COIN_SM),
+new Powerup(game, 1352, 112, JELLY_COIN_SM),
 
-new Powerup(game, 1368, 128, JELLY_COIN_SM),
+new Powerup(game, 1368, 176, JELLY_COIN_SM),
 
-new Powerup(game, 1368, 192, JELLY_COIN_SM),
+new Powerup(game, 1368, 256, JELLY_COIN_SM),
 
-new Powerup(game, 1272, 48, JELLY_COIN_SM),
+new Powerup(game, 1272, 96, JELLY_COIN_SM),
 
-new Powerup(game, 1192, 48, JELLY_COIN_SM),
+new Powerup(game, 840, 96, JELLY_COIN_SM),
 
-new Powerup(game, 840, 48, JELLY_COIN_SM),
+new Powerup(game, 888, 96, JELLY_COIN_SM),
 
-new Powerup(game, 888, 48, JELLY_COIN_SM),
+new Powerup(game, 1032, 96, JELLY_COIN_SM),
 
-new Powerup(game, 1032, 48, JELLY_COIN_SM),
-
-new Powerup(game, 1112, 48, JELLY_COIN_SM),
+new Powerup(game, 1112, 96, JELLY_COIN_SM),
 
 new Powerup(game, 1944, 96, JELLY_COIN_SM),
 
@@ -5498,6 +6294,36 @@ new Powerup(game, 888, 288, JELLY_COIN_SM),
 
 new Powerup(game, 808, 288, JELLY_COIN_SM),
 
+new Powerup(game, 4872, 432, JELLY_COIN_SM),
+
+new Powerup(game, 4952, 432, JELLY_COIN_SM),
+
+new Powerup(game, 5096, 176, JELLY_COIN_SM),
+
+new Powerup(game, 5112, 128, JELLY_COIN_SM),
+
+new Powerup(game, 5160, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5304, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5368, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5432, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5496, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5656, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5720, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5752, 256, JELLY_COIN_SM),
+
+new Powerup(game, 5736, 304, JELLY_COIN_SM),
+
+new Powerup(game, 5736, 208, JELLY_COIN_SM),
+
+new Powerup(game, 5752, 352, JELLY_COIN_SM),
+
 new Powerup(game, -520, 176, ENTITY_MARKER),
 
 new Powerup(game, -72, 176, ENTITY_MARKER),
@@ -5539,8 +6365,6 @@ new Powerup(game, 56, 432, ENTITY_MARKER),
 new Powerup(game, 584, 432, ENTITY_MARKER),
 
 new Powerup(game, 952, 80, ENTITY_MARKER),
-
-new Powerup(game, 1272, 80, ENTITY_MARKER),
 
 new Powerup(game, 1848, 48, ENTITY_MARKER),
 
@@ -5596,9 +6420,13 @@ new Powerup(game, 2312, 208, ENTITY_MARKER),
 
 new Powerup(game, 2312, 160, ENTITY_MARKER),
 
-new Kelp(game, -56, -48),
+new Powerup(game, 584, 400, ENTITY_MARKER),
 
-new Kelp(game, 8, 224),
+new Powerup(game, 1272, 400, ENTITY_MARKER),
+
+new Powerup(game, 1272, 432, ENTITY_MARKER),
+
+new Kelp(game, -56, -48),
 
 new Kelp(game, -1928, 224),
 
@@ -5614,29 +6442,30 @@ new Kelp(game, 3416, -32),
 
 new Kelp(game, 2584, 0),
 
-new Kelp(game, 4568, 208),
+new Kelp(game, -952, 192),
 
-new Kelp(game, 4632, 208),
+new Kelp(game, 4472, 208),
 
-new Kelp(game, 4696, 208),
+new Kelp(game, 5208, -96),
 
-new Kelp(game, 4760, 208),
+new Kelp(game, 6040, 224),
 
-new Kelp(game, 4792, 208),
+new Kelp(game, 6072, 224),
 
-new Kelp(game, 4888, 224),
+new Kelp(game, 6104, 224),
 
-new Kelp(game, 5064, 224),
+new Kelp(game, 6136, 224),
 
-new Kelp(game, 4984, 192),
+new Kelp(game, 6168, 224),
 
-new Kelp(game, 5192, 208),
+new Kelp(game, 6200, 224),
+
+new Kelp(game, 6008, 224),
 
 new Powerup(game, -1624, 288, TIP_MARKER, 1),
 
 new Powerup(game, -1096, 112, TIP_MARKER, 2),
 
-new TunaChargeDropper(game, -1800, 0),
 new TunaChargeDropper(game, 936, 0),
 
 new TunaChargeDropper(game, 2760, 0),
@@ -5644,6 +6473,12 @@ new TunaChargeDropper(game, 2760, 0),
 new TunaChargeDropper(game, 3656, 0),
 
 new BubbleCurrent(game, 3384, 144, -8),
+
+new BubbleCurrent(game, 4456, 96, -8),
+
+new BubbleCurrent(game, 4760, 320, 8),
+
+new Powerup(game, 5576, 448, JELLYBAIT),
 
 /*
 			new SeaSlug(game, -1944, 426, 1, 96),
@@ -5723,7 +6558,8 @@ ASSET_MANAGER.queueDownload("./img/UI/PlatformBouncy.png");
 ASSET_MANAGER.queueDownload("./img/UI/PlatformFire.png");
 ASSET_MANAGER.queueDownload("./img/Chat/ChatSquare.png");
 ASSET_MANAGER.queueDownload("./img/Chat/JellySquare.png");
-ASSET_MANAGER.queueDownload("./img/Chat/BrandongSquare.png");
+ASSET_MANAGER.queueDownload("./img/Misc/debug.png");
+ASSET_MANAGER.queueDownload("./img/Chat/UnknownSquare.png");
 
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_idle_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_idle_right.png");

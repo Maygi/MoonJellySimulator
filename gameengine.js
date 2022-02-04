@@ -170,6 +170,14 @@ GameEngine.prototype.startInput = function () {
 		if (String.fromCharCode(e.which) === 'T') {
 			that.interactDown = true;
 		}
+		if (String.fromCharCode(e.which) === 'S') {
+			//that.player1.hitSpike();
+					//	that.player1.x = 5574 - 128;
+					//	that.player1.y = 32;
+		}
+		if (String.fromCharCode(e.which) === 'E') {
+			//that.player1.x += 96;
+		}
 		if (String.fromCharCode(e.which) === 'C') {
 			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER) { //dash
 				that.player1.attackInput = 2;
