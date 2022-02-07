@@ -44,6 +44,9 @@ var AYA_SHOT = 9;
 var ALPHA_SHOT = 10;
 var TUNA_CHARGE = 11;
 var TUNA_CHARGE_EXPLODE = 12;
+var PARTICLE_CLAM_ATTACK = 13;
+var PARTICLE_CLAM_ATTACK2 = 14;
+var PARTICLE_CLAM_ATTACK3 = 15;
 
 var gameStarted = false;
 var mode = "hard";
@@ -149,6 +152,7 @@ var explodeSound = new Audio("./sounds/explode.mp3");
 var treeSound = new Audio("./sounds/tree.mp3");
 var alertSound = new Audio("./sounds/alert.mp3");
 var shootSound = new Audio("./sounds/shoot.wav");
+shootSound.volume = 0.1;
 var ayaSound = new Audio("./sounds/bangbang.mp3");
 var cutSound = new Audio("./sounds/cuteffect.wav");
 var energyMaxSound = new Audio("./sounds/energymax.mp3");
@@ -157,6 +161,7 @@ var energyUpSound = new Audio("./sounds/energyup.wav");
 var thunderboltSound = new Audio("./sounds/pikachu.wav");
 var dieSound = new Audio("./sounds/aiya.wav");
 var dieSound2 = new Audio("./sounds/aiya.wav");
+var yoinkSound = new Audio("./sounds/jelly_yoink.mp3");
 var cannedTunaSound = new Audio("./sounds/cannedtuna.wav");
 var coinSound = new Audio("./sounds/coin.wav");
 var slapSound = new Audio("./sounds/slap.wav");
@@ -474,6 +479,8 @@ function playSoundProx(game, source, audio) {
     audio.play();
 }
 function applyDamage(x, y, game, damage, victim) {
+	if (victim.invuln)
+		return;
 	var displacementX = victim.displacementX || 0;
 	var displacementY = victim.displacementY || 0;
 	var damageParticle = new Particle(TEXT_PART, x + victim.hitBoxDef.width / 2 + victim.hitBoxDef.offsetX + displacementX, y + victim.hitBoxDef.offsetY + displacementY, 0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, game);
@@ -505,7 +512,7 @@ function applyDamage(x, y, game, damage, victim) {
 
 // Draws the frame for an animation
 Animation.prototype.drawFrame = function (tick, ctx, x, y, scaleBy, linger, tint) {
-	var linger = linger || false;
+	var linger = linger || true;
     var scale = scaleBy || 1;
 	var tint = tint || null;
     this.elapsedTime += tick;
@@ -598,6 +605,11 @@ Background.prototype.constructor = Background;
 Background.prototype.update = function () {
 };
 Background.prototype.draw = function (ctx) {
+	for (var i = 0; i < 30; i++) {
+		for (var j = 0; j < 30; j++) {
+			ctx.drawImage(ASSET_MANAGER.getAsset("./img/BackgroundSolid.png"), -2400 + i * 800, j * 500);
+		}
+	}
 	for (var i = 0; i < 30; i++) {
 		ctx.drawImage(ASSET_MANAGER.getAsset("./img/Background.png"), -2400 + i * 800, 0);
 	}
@@ -713,7 +725,8 @@ UI.prototype.draw = function (ctx) { //draw ui
     ctx.fillStyle = "white";
     ctx.font = "20px Calibri";
     //ctx.fillText("Moon Jelly  "/* + Math.floor(this.game.player1.currentHealth) + " / " + this.game.player1.maxHealth*/,this.portraitX + 90 + this.game.liveCamera.x, this.globalY + this.portraitY + 90 + this.game.liveCamera.y);
-    ctx.fillText("Score: " + this.game.score, this.scoreX + this.game.liveCamera.x, this.scoreY + this.game.liveCamera.y);
+    ctx.textAlign = "left"; 
+	ctx.fillText("Score: " + this.game.score, this.scoreX + this.game.liveCamera.x, this.scoreY + this.game.liveCamera.y);
     if (this.game.currentPhase === 2) {
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
@@ -721,19 +734,15 @@ UI.prototype.draw = function (ctx) { //draw ui
     	//ctx.drawImage(ASSET_MANAGER.getAsset("./img/Enemy/brandong_portrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
         ctx.fillText("Demon Kelp                      " + this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
     }
-    if (this.game.currentPhase === 7 || this.game.currentPhase === 8) {
+    if (this.game.currentPhase === GAME_PHASE_CLAM) {
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBar.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealth / this.game.currentBoss.maxHealth), this.bossHealthHeight);
-    	ctx.drawImage(ASSET_MANAGER.getAsset("./img/Enemy/brandong_portrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
-        ctx.fillText("Brandong                        " + this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
-    }
-    if (this.game.currentPhase === 14) {
-        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
-        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
-        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBar.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealth / this.game.currentBoss.maxHealth), this.bossHealthHeight);
-    	ctx.drawImage(ASSET_MANAGER.getAsset("./img/Enemy/alpha_portrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
-        ctx.fillText("Alpha                          " + this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
+    	//ctx.drawImage(ASSET_MANAGER.getAsset("./img/Enemy/brandong_portrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
+        ctx.textAlign = "left"; 
+        ctx.fillText("Giant Clam", this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
+        ctx.textAlign = "right"; 
+        ctx.fillText(this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 300 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
     }
     /*if (this.game.currentPhase === 2 || this.game.currentPhase === 14 || this.game.currentPhase === 21) {
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
@@ -742,12 +751,6 @@ UI.prototype.draw = function (ctx) { //draw ui
     	ctx.drawImage(ASSET_MANAGER.getAsset("./img/Malzahar/MalzaharPortrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
         ctx.fillText("Malzahar                      " + this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth,this.bossPortraitX + 80 + this.game.liveCamera.x,45 + this.game.liveCamera.y);
     }*/
-    if (!this.game.player1.dead) {
-        //ctx.fillText("Homecoming", this.game.player1.x + 5,this.game.player1.y + 0);
-    }
-    if (this.game.currentPhase === 1) {
-        ctx.fillText("Brandong", this.game.currentBoss.x + 50, this.game.currentBoss.y - 5);
-    }
     /*if (this.game.currentPhase === 2 || this.game.currentPhase === 14 || this.game.currentPhase === 21) {
         ctx.fillText("Malzahar", this.game.currentBoss.x + 10, this.game.currentBoss.y - 15);
     }*/
@@ -1356,7 +1359,6 @@ function Particle(particleId, x, y, minHSpeed, maxHSpeed, minVSpeed, maxVSpeed,
 	this.textContent = null;
 	this.highPriority = 0.1;
 	this.hasExploded = false;
-	
 	this.targetX = null;
 	this.targetY = null;
 	this.targetSpeed = 0;
@@ -1381,6 +1383,7 @@ Particle.prototype = new Entity();
 Particle.prototype.constructor = Particle;
 
 Particle.prototype.update = function() {
+	var that = this;
 	if ((this.particleId === BRANDONG_WHIP || this.attackId === BRANDONG_WHIPLINE || this.attackId === BRANDONG_WHIPWALL) && this.game.currentPhase === 9)
 		this.removeFromWorld = true;
 	if ((this.targetX !== null && this.targetY !== null && this.targetSpeed !== 0) || this.converge) { //assign a speed to chase the target
@@ -1415,6 +1418,13 @@ Particle.prototype.update = function() {
 		new Animation(ASSET_MANAGER.getAsset("./img/small_flare.png"), 0, 0, 12, 12, 1, 1, false, false, 0, 0)));*/
 	}
 	if (this.particleId === IMG_PART && this.attackId == TUNA_CHARGE && this.life % 5 == 0) {
+		if (this.life >= 30) {
+			this.game.currentMap.platforms.forEach(function(currentPlatform) {
+				if (checkCollision(that, currentPlatform)) {
+					that.phase = 2;
+				}
+			});
+		}
 	    var newParticle = new Particle(PART_SECONDARY, this.x + 14, this.y + 14, 
 				-2, 2, -2, -2, -0.03, 0.1, 0, 30, 0, 15, .5, .2, true, this.game);
 	    var element = new CircleElement(4 + Math.random() * 3, "#1d40a8", "#306085");
@@ -1436,7 +1446,7 @@ Particle.prototype.update = function() {
 		   	this.vSpeed = 0;
 		    if (this.explodeTime === 0)
 		    	this.removeFromWorld = true; //-4784
-		} else if ((!this.canHit || this.y > this.game.player1.ground) && this.explodeTime === 0) {
+		} else if ((!this.canHit || this.y > this.game.player1.ground || this.phase == 2) && this.explodeTime === 0) {
 	    	this.life = 0;
 	    	this.explodeTime = 5;
 			this.vSpeed = 0;
@@ -1455,6 +1465,62 @@ Particle.prototype.update = function() {
 				y: this.y  - 50 + 16,
 				width: 100, 
 				height: 100
+			};
+			this.game.addEntity(newParticle);
+	    }
+	}
+	if (this.attackId === PARTICLE_CLAM_ATTACK) {
+		if (this.life % 5 == 0) {
+			var newParticle = new Particle(PART_SECONDARY, this.x, this.y, 
+					1, 2, -1, -2, 0, 0.1, 0, 30, 0, 15, .3, 0, true, this.game);
+			var element = new CircleElement(6 + Math.random() * 3, "#ff4e21", "#ff7c2b");
+			newParticle.other = element;
+			this.game.addEntity(newParticle);
+		}
+	}
+	if (this.attackId === PARTICLE_CLAM_ATTACK2) {
+		if (this.life % 2 == 0) {
+			var newParticle = new Particle(PART_SECONDARY, this.x, this.y, 
+					1, 2, -1, -2, 0, 0.1, 0, 30, 0, 15, .3, 0, true, this.game);
+			var element = new CircleElement(6 + Math.random() * 3, "#fae993", "#f0da69");
+			newParticle.other = element;
+			this.game.addEntity(newParticle);
+		}
+		if (this.explodeTime > 0) {
+			this.explodeTime--;
+			for (i = 0; i < 5 + Math.random() * 2; i++) {
+			    var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y + 16, 
+						-7, 7, -7, 7, 0, 0, 20, 0, 0, 30, .7, .2, true, this.game);
+			    var element = new CircleElement(25 + Math.random() * 6, "#f0e375", "#cf915b");
+			   	newParticle.other = element;
+			   	newParticle.acceleration = 0.08;
+			   	newParticle.grow = true;
+			    this.game.addEntity(newParticle);
+			}
+		   	this.alpha = 0;
+		   	this.vSpeed = 0;
+		    if (this.explodeTime === 0)
+		    	this.removeFromWorld = true; //-4784
+		} else if (this.life >= this.maxLife || !this.canHit) {
+	    	this.life = 5;
+	    	this.explodeTime = 5;
+			this.vSpeed = 0;
+			this.hSpeed = 0;
+	    	playSoundProx(this.game, this, explosionSound);
+	    	this.game.cameraShakeTime = 20;
+	    	this.game.cameraShakeAmount = 40;
+	    	this.game.cameraShakeDecay = 1;
+			var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y + 16, 
+					0, 0, 0, 0, 0, 0, 0, 0, 0, 30, .5, .2, false, this.game);
+			var element = new CircleElement(200, "#f0c869", "#dba660");
+			newParticle.other = element;
+			newParticle.grow = true;
+			newParticle.attackId = PARTICLE_CLAM_ATTACK3;
+			newParticle.overrideHitbox = {
+				x: this.x - 100, 
+				y: this.y  - 100,
+				width: 200, 
+				height: 200
 			};
 			this.game.addEntity(newParticle);
 	    }
@@ -1731,9 +1797,9 @@ Particle.prototype.update = function() {
 	var accelMultiplier = 1 + this.acceleration * this.life;
 	this.x += this.hSpeed * accelMultiplier;
 	this.y += this.vSpeed * accelMultiplier;
-	if (this.y >= 600) {
+	/*if (this.y >= 600) {
 		this.removeFromWorld = true;
-    }
+    }*/
 	this.life++;
 	
 	if (this.snapEntity != null) {
@@ -1788,6 +1854,24 @@ Particle.prototype.update = function() {
 		if (this.attackId == TUNA_CHARGE && this.canHit) {
 			this.canHit = false;
 		}
+		if (this.attackId === PARTICLE_CLAM_ATTACK) {
+			this.game.player1.vulnerable = false;
+			applyDamage(this.game.player1.x, this.game.player1.y, this.game, 20, this.game.player1);
+			this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
+			this.game.player1.hitByAttack = true;
+			playSound(hitSound);
+		}
+		if (this.attackId === PARTICLE_CLAM_ATTACK2) {
+			this.canHit = false;
+		}
+		if (this.attackId === PARTICLE_CLAM_ATTACK3) {
+			this.canHit = false;
+			this.game.player1.vulnerable = false;
+			applyDamage(this.game.player1.x, this.game.player1.y, this.game, 40, this.game.player1);
+			this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
+			this.game.player1.hitByAttack = true;
+			playSound(hitSound);
+		}
 		if (this.attackId == TUNA_CHARGE_EXPLODE && this.explodeTime == 0 && this.canHit) {
 			this.canHit = false;
 			this.game.player1.vulnerable = false;
@@ -1796,158 +1880,6 @@ Particle.prototype.update = function() {
 			this.game.player1.hitByAttack = true;
 			playSound(hitSound);
 		}
-    	if (this.particleId === VOID_LIGHTNING && this.explodeTime === 0) {
-    		if (this.game.player1.attacking) {
-    			this.removeFromWorld = true;
-    			burnSound.play();
-    		} else {
-    			var damage = 10;
-    			if (this.game.player1.invincTimer > 0)
-    				damage = 0;
-                var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-            			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-            	damageText.text = damage;
-                damageParticle.other = damageText;
-                this.game.addEntity(damageParticle);
-                this.game.player1.currentHealth -= damage;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-                this.game.player1.hitByAttack = true;
-                playSound(airHitSound);
-                if (this.hSpeed < 0) {
-                    this.game.player1.xVelocity = -3;
-                    this.game.player1.lastDirection = "Right";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-                } else {
-                    this.game.player1.xVelocity = 3;
-                    this.game.player1.lastDirection = "Left";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-                }
-    			this.removeFromWorld = true;
-    			burnSound.play();
-    		}
-    	}
-    	if (this.attackId === 1) { // Reksai Void Ball
-            if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-                this.game.player1.vulnerable = false;
-                var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-            			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-                var damage = 25;
-            	damageText.text = damage;
-                damageParticle.other = damageText;
-                this.game.addEntity(damageParticle);
-                this.game.player1.currentHealth -= damage;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-                this.game.player1.hitByAttack = true;
-                playSound(airHitSound);
-                if (this.hSpeed < 0) {
-                    this.game.player1.xVelocity = -3;
-                    this.game.player1.lastDirection = "Right";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-                } else {
-                    this.game.player1.xVelocity = 3;
-                    this.game.player1.lastDirection = "Left";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-                }
-            }
-    	}
-    	if (this.attackId === 2 || this.attackId === 6) { //malzahar void eruption
-            if (this.attackId === 6 && this.life >= 10) {
-            	
-            } else if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-                this.game.player1.vulnerable = false;
-                var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-            			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-                var damage = 25;
-                if (this.attackId === 6) {
-                	this.game.player1.timesHit++;
-                	damage = 5;
-                	if (this.game.player1.timesHit % 5 === 0) {
-                		var chat;
-                		if (this.game.player1.timesHit === 5)
-                			chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "...press S + U together to do an invulnerable dash.");
-                		else if (this.game.player1.timesHit === 10)
-                			chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "Are you ok? Press S + U together to do an invulnerable dash.");
-                		else if (this.game.player1.timesHit === 15)
-                			chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "You there? Press S + U together to do an invulnerable dash.");
-                		else
-                			chat = new TextBox(this.game, "./img/Chat/EzrealSquare.png", "I give up. Riven, I am disappoint.");
-            	 		if (textBox != null)
-            	 			textBox.removeFromWorld = true;
-            	 		textBox = chat;
-            	 		this.game.addEntity(chat);
-                	}
-                }
-            	damageText.text = damage;
-                damageParticle.other = damageText;
-                this.game.addEntity(damageParticle);
-                this.game.player1.currentHealth -= damage;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-                this.game.player1.hitByAttack = true;
-                playSound(lightningSound);
-                if (this.hSpeed < 0 || this.attackId === 6) {
-                    this.game.player1.xVelocity = -3;
-                    this.game.player1.lastDirection = "Right";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-                } else {
-                    this.game.player1.xVelocity = 3;
-                    this.game.player1.lastDirection = "Left";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-                }
-            }
-    	}
-    	if (this.attackId === 3) { //malzahar void storm
-            if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-                this.game.player1.vulnerable = false;
-                var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-            			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-                var damage = 6; //this is going to tick a lot
-            	damageText.text = damage;
-                damageParticle.other = damageText;
-                this.game.addEntity(damageParticle);
-                this.game.player1.currentHealth -= damage;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-                this.game.player1.hitByAttack = true;
-                playSound(lightningSound);
-                if (this.hSpeed < 0) {
-                    this.game.player1.xVelocity = -3;
-                    this.game.player1.lastDirection = "Right";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-                } else {
-                    this.game.player1.xVelocity = 3;
-                    this.game.player1.lastDirection = "Left";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-                }
-            }
-    	}
-    	if (this.attackId === 4) {
-            if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-                this.game.player1.vulnerable = false;
-                var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-            			0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-                var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-                var damage = 20; //usually around 2 hits
-            	damageText.text = damage;
-                damageParticle.other = damageText;
-                this.game.addEntity(damageParticle);
-                this.game.player1.currentHealth -= damage;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax * 2;
-                this.game.player1.hitByAttack = true;
-                playSound(lightningSound);
-                if (this.hSpeed < 0) {
-                    this.game.player1.xVelocity = -3;
-                    this.game.player1.lastDirection = "Right";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-                } else {
-                    this.game.player1.xVelocity = 3;
-                    this.game.player1.lastDirection = "Left";
-                    this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-                }
-            }
-    	}
     	if (this.attackId === 5 && this.life < this.maxLife / 4) { //platform fire
             if ((this.game.player1.hitBox.y + this.game.player1.hitBox.height <= this.y + 3) && this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
                 this.game.player1.vulnerable = false;
@@ -2086,6 +2018,8 @@ function Powerup(game, x, y, type, specialId) {
 	this.hspeed = 0;
 	this.vspeed = 0;
 	this.phase = 0;
+	this.cooldown = 0;
+	this.mapFlag = false;
     Entity.call(this, game, x, y);
     this.hitBoxDef = {
     	width: 32, height: 32, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
@@ -2126,6 +2060,8 @@ function Powerup(game, x, y, type, specialId) {
 Powerup.prototype.update = function () {
 	// Only update when in the screen
 	this.step++;
+	if (this.cooldown > 0)
+		this.cooldown--;
 	var that = this;
 	if (isOnScreen(this)) {
 		if (this.type === 0) { //health powerup
@@ -2243,10 +2179,11 @@ Powerup.prototype.update = function () {
 						that.game.player1.teleportToX = 5574 - 128;
 						that.game.player1.teleportToY = 32;
 						that.phase = 2;
+						that.cooldown = 5;
 					}, 5000);
 	        }
 		}
-		if (this.type === JELLYBAIT && this.phase == 2) {
+		if (this.type === JELLYBAIT && this.phase == 2 && this.cooldown == 0) {
 	        if (checkCollision(this, this.game.player1)) {
 				this.phase = 3;
 				setTimeout(
@@ -2263,6 +2200,7 @@ Powerup.prototype.update = function () {
 						that.game.player1.teleportToX = 5574 - 128;
 						that.game.player1.teleportToY = 32;
 						that.phase = 4;
+						that.cooldown = 5;
 					}, 5000);
 	        }
 		}
@@ -2560,6 +2498,7 @@ function Character(game) {
     this.bindAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_binded.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
     this.wokeAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_woke.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
     this.wokeAnimation2 = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_woke2.png"), 0, 0, 64, 64, 0.3, 2, true, false, 32, 32);
+    this.channelAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_channel.png"), 0, 0, 64, 144, 1, 1, false, false, 32, -48);
 	
 	//baby jelly
     this.idleAnimationBabyRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_idle_right.png"), 0, 0, 128, 128, .1, 32, true, false, 0, 0);
@@ -2839,7 +2778,7 @@ Character.prototype.update = function () {
 		if (gameStarted) {
 			//game phase management
 			if (this.game.currentPhase < 1) {
-				startMusic.play();
+				//startMusic.play();
 				var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
 				this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
 				this.game.step = 0;
@@ -2849,9 +2788,15 @@ Character.prototype.update = function () {
 					new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_lightning.png"), 0, 0, 384, 192, 1, 1, true, false, -200, -200)));*/
 				this.game.currentPhase = 1;
 			}
-			if (this.game.currentPhase == 3 && this.phaseTick > 90) { //JELLY WOKE
-				if (this.phaseTick == 91)
+			if ((this.game.currentPhase == 3 || this.game.currentPhase == GAME_PHASE_POSTCLAM) && this.phaseTick > 90) { //JELLY WOKE
+				if (this.phaseTick == 91) {
 					playSound(rumbleSound);
+					playSound(boomSound);
+					var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+							0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0.3, 0, false, this.game,
+							new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
+					this.game.addEntity(newParticle);
+				}
 				var maxDiff = 100 + Math.min(800, this.phaseTick * 10);
 				var chosenX = this.x - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.offsetX;
 				var chosenY =  this.y - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.height + this.hitBoxDef.offsetY;
@@ -2867,6 +2812,11 @@ Character.prototype.update = function () {
 				var distMultiplier = Math.min(1, theDistance / maxDiff);
 				newParticle.convergeMulitplier = 10 / distMultiplier + 5;
 				this.game.addEntity(newParticle);
+				if (this.phaseTick > 90 && this.game.step % 5 == 0) {
+					this.game.cameraShakeTime = 5;
+					this.game.cameraShakeAmount = 25;
+					this.game.cameraShakeDecay = 5;
+				}
 			}
 			if (this.phaseTimer > 0) {
 				this.phaseTimer--;
@@ -3081,19 +3031,6 @@ Character.prototype.update = function () {
 						this.xVelocity = 0;
 					}
 				}
-				if (!this.canControl && this.stunned) { 
-					this.x += this.xVelocity;
-				}
-				this.x += this.displacementXSpeed;
-				if (this.displacementXSpeed > 0) {
-					this.displacementXSpeed -= this.displacementFriction;			
-					if (this.displacementXSpeed < 0)
-						this.displacementXSpeed = 0;
-				} else {
-					this.displacementXSpeed += this.displacementFriction;			
-					if (this.displacementXSpeed > 0)
-						this.displacementXSpeed = 0;
-				}
 				if ((this.rightDown || this.leftDown) && this.canControl) {
 					if (this.rightDown) {
 						this.running = true;
@@ -3112,11 +3049,6 @@ Character.prototype.update = function () {
 						this.game.cameraShakeTime = 10;
 						this.game.cameraShakeAmount = 10;
 						this.game.cameraShakeDecay = 1;
-					} else if (this.currentForm == FORM_WATERBREATHE && this.phaseTick > 90 && this.game.step % 5 == 0) {
-						this.game.cameraShakeTime = 5;
-						this.game.cameraShakeAmount = 25;
-						this.game.cameraShakeDecay = 5;
-						
 					}
 				}
 		
@@ -3476,6 +3408,10 @@ Character.prototype.update = function () {
 		var moveSpeed = this.runSpeed;
 		if (this.speedTimer > 0)
 			moveSpeed *= 1.6;
+		if (!this.canControl && this.stunned) { 
+			this.x += this.xVelocity;
+		}
+		this.x += this.displacementXSpeed;
 		if (this.dashing) { //ignore all other input
 			if (this.dashTime % 3 == 0)
 				this.game.addEntity(new Particle(IMG_PART, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.3, 0, false, this.game, this.currentAnimation));
@@ -3573,7 +3509,7 @@ Character.prototype.update = function () {
 							} else {
 								if (!that.falling && !that.jumping) {
 									console.log("last safe X: " + that.lastSafeX);
-									that.lastSafeX = that.x + 20;
+									//that.lastSafeX = that.x + 20;
 									console.log("last safe X: " + that.lastSafeX);
 								}
 								that.hitSpike();
@@ -3589,7 +3525,7 @@ Character.prototype.update = function () {
 							} else {
 								if (!that.falling && !that.jumping) {
 									console.log("last safe X: " + that.lastSafeX);
-									that.lastSafeX = that.x - 20;
+									//that.lastSafeX = that.x - 20;
 									console.log("last safe X: " + that.lastSafeX);
 								}
 								that.hitSpike();
@@ -3599,6 +3535,15 @@ Character.prototype.update = function () {
 				} 
 			}
 		});
+		if (this.displacementXSpeed > 0) {
+			this.displacementXSpeed -= this.displacementFriction;			
+			if (this.displacementXSpeed < 0)
+				this.displacementXSpeed = 0;
+		} else {
+			this.displacementXSpeed += this.displacementFriction;			
+			if (this.displacementXSpeed > 0)
+				this.displacementXSpeed = 0;
+		}
 		if (this.hitBox.x + this.hitBoxDef.width >= this.game.camera.x + this.game.camera.width) {
 			this.x = this.game.camera.x + this.game.camera.width - this.hitBoxDef.width - this.hitBoxDef.offsetX - 4;
 		}
@@ -3611,6 +3556,7 @@ Character.prototype.update = function () {
 		if (this.hitBox.y + this.hitBox.height - this.hitBoxDef.height <= this.game.camera.minY) {
 			this.y = this.game.camera.minY + 1 - this.hitBoxDef.offsetY;
 			this.yVelocity = -1;
+			console.log("bump head");
 		}
 		if (this.x <= 0 && this.game.currentPhase === 0) {
 			this.x = 0;
@@ -3637,17 +3583,20 @@ Character.prototype.draw = function (ctx) {
 			else if (this.phaseTick <= 90)
 				this.currentAnimation = this.wokeAnimation;
 			else {
-				if (this.phaseTick == 91) {
-					playSound(boomSound);
-					var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
-							0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0.3, 0, false, this.game,
-							new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
-					this.game.addEntity(newParticle);
-				}
 				this.currentAnimation = this.wokeAnimation2;
 			}
 		} else if (this.stunned) {
 			this.currentAnimation = this.hurtAnimation;
+		} else if (!this.canControl) {
+			if (this.game.currentPhase == GAME_PHASE_POSTCLAM) {
+				this.currentAnimation = this.attackAnimationBabyGroundRight;
+				if (this.phaseTick >= 30) {
+					this.currentAnimation = this.idleAnimationBabyRight;
+				}
+				if (this.phaseTick >= 90) {
+					this.currentAnimation = this.channelAnimation;
+				}
+			}
 		} else if (this.attacking && this.attackAnimation != null) { // Attacking
 	        this.currentAnimation = this.attackAnimation;
 	    } else if (this.jumping) {
@@ -4135,13 +4084,13 @@ Brandong.prototype.draw = function (ctx) {
 				this.currentAnimation = this.walkAnimationFast;
 			}
 		} else {
-			if (this.game.currentPhase === 5 && this.x < this.game.liveCamera.x) {
+			/*if (this.game.currentPhase === 5 && this.x < this.game.liveCamera.x) {
 				ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BrandongTracker.png"), 50 + this.game.liveCamera.x, 200 + this.game.liveCamera.y, 100, 100);
 				ctx.font = "20px Calibri"; 
 				ctx.fillStyle = "white";
 				ctx.align = "Left";
 				ctx.fillText(Math.round(this.game.liveCamera.x - this.x) - this.hitBoxDef.width, 50 + this.game.liveCamera.x, 300 + this.game.liveCamera.y);
-			}
+			}*/
 			
 		}
     }
@@ -4637,22 +4586,27 @@ Alpha.prototype.draw = function (ctx) {
 
 
 function spawnWave(game, number) {
+	var objects = [];
+	var powerups = [];
+	var platforms = [];
+	var instances = [];
+	var enemies = [];
 	switch(number) {
+		
 		case 1:
-			var objects = [		
+			objects = [		
 				new Spaceship(game, -2400, 370),
 				new LivingKelp(game, 6168, 208),
 			];
-			var powerups = [
+			powerups = [
 			];
-			var platforms = [
+			platforms = [
 /*new Platform(game, -2144, 400, 0, 0, 0, PLATFORM_FADE, 0),
 new Platform(game, -2144 + 64, 400, 0, 0, 0, PLATFORM_FADE, 0),
 new Platform(game, -2144, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
 new Platform(game, -2144 + 64 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),*/
-
 
 new Platform(game, -1544, 400),
 
@@ -5144,8 +5098,6 @@ new Wall(game, 4728, 352, 32, 32),
 
 new Wall(game, 4760, 352, 32, 32),
 
-new Wall(game, 4760, 384, 32, 32),
-
 new Wall(game, 4728, 384, 32, 32),
 
 new Wall(game, 4728, 416, 32, 32),
@@ -5296,10 +5248,6 @@ new Wall(game, 5016, 160, 32, 32),
 
 new Wall(game, 5144, 160, 32, 32),
 
-new Wall(game, 4792, 384, 32, 32),
-
-new Wall(game, 4824, 384, 32, 32),
-
 new Wall(game, 4824, 416, 32, 32),
 
 new Wall(game, 4792, 416, 32, 32),
@@ -5308,29 +5256,19 @@ new Wall(game, 4792, 448, 32, 32),
 
 new Wall(game, 4824, 448, 32, 32),
 
-new Wall(game, 4984, 384, 32, 32),
-
 new Wall(game, 4984, 416, 32, 32),
 
 new Wall(game, 4984, 448, 32, 32),
-
-new Wall(game, 5016, 384, 32, 32),
 
 new Wall(game, 5016, 416, 32, 32),
 
 new Wall(game, 5016, 448, 32, 32),
 
-new Wall(game, 5048, 384, 32, 32),
-
 new Wall(game, 5048, 416, 32, 32),
 
 new Wall(game, 5048, 448, 32, 32),
 
-new Wall(game, 5080, 384, 32, 32),
-
 new Wall(game, 5080, 416, 32, 32),
-
-new Wall(game, 5112, 384, 32, 32),
 
 new Wall(game, 5080, 448, 32, 32),
 
@@ -5338,13 +5276,9 @@ new Wall(game, 5112, 416, 32, 32),
 
 new Wall(game, 5112, 448, 32, 32),
 
-new Wall(game, 5144, 384, 32, 32),
-
 new Wall(game, 5144, 416, 32, 32),
 
 new Wall(game, 5144, 448, 32, 32),
-
-new Wall(game, 5176, 384, 32, 32),
 
 new Wall(game, 5176, 416, 32, 32),
 
@@ -5363,8 +5297,6 @@ new Wall(game, 5208, 288, 32, 32),
 new Wall(game, 5240, 320, 32, 32),
 
 new Wall(game, 5240, 352, 32, 32),
-
-new Wall(game, 5208, 384, 32, 32),
 
 new Wall(game, 5208, 416, 32, 32),
 
@@ -6038,13 +5970,35 @@ new Wall(game, 5144, 224, 32, 32, WALL_SPIKE_DOWN),
 
 new Wall(game, 5176, 224, 32, 32, WALL_SPIKE_DOWN),
 
+new Wall(game, 4760, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 4792, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 4824, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 4984, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 5016, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 5048, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 5080, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 5112, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 5144, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 5176, 384, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 5208, 384, 32, 32, WALL_NOCHECKPOINT),
+
 
 
 
 
 
 			];
-			var enemies = [
+			enemies = [
 
 
 new Powerup(game, -168, 384, 0),
@@ -6495,6 +6449,8 @@ new Kelp(game, 6040, 224),
 
 new Kelp(game, 6072, 224),
 
+new Kelp(game, 6168, 224),
+
 new Kelp(game, 6008, 224),
 
 new Kelp(game, 6104, 224),
@@ -6526,7 +6482,6 @@ new BubbleCurrent(game, 4456, 96, -8),
 new BubbleCurrent(game, 4760, 320, 8),
 
 new Powerup(game, 5576, 448, JELLYBAIT),
-
 /*
 			new SeaSlug(game, -1944, 426, 1, 96),
 			new Isopod(game, -1844, 426 - 32, 1, 96),
@@ -6544,22 +6499,2479 @@ new Powerup(game, 5576, 448, JELLYBAIT),
 */
 			];
 		break;
+		case GAME_LEVEL2:
+		instances = [
+new Powerup(game, 296, 1056, 0),
+
+new Powerup(game, -280, 1056, 0),
+
+new Powerup(game, -968, 1136, 0),
+
+new Powerup(game, -1080, 912, 0),
+
+new SeaSlug(game, -1864, 768, 1, 0),
+
+new SeaSlug(game, -1688, 768, 1, 0),
+
+new SeaSlug(game, -632, 1152, 1, 0),
+
+new SeaSlug(game, 136, 1152, 1, 0),
+
+new SeaSlug(game, -104, 1152, 1, 0),
+
+new SeaSlug(game, 24, 1152, 1, 0),
+
+new Isopod(game, -872, 368, -1, 0),
+
+new Eel(game, 168, 384, -1, 160),
+
+new Uni(game, -280, 864),
+
+new Uni(game, -440, 1264),
+
+new Pirahna(game, -2104, 848, 1, 64),
+
+new Pirahna(game, -1944, 1136, -1, 0),
+
+new Pirahna(game, -1816, 1136, -1, 0),
+
+new Pirahna(game, -840, 672, 1, 64),
+
+new Pirahna(game, -632, 672, -1, 64),
+
+new Pirahna(game, -168, 880, -1, 0),
+
+new Pirahna(game, -72, 880, -1, 0),
+
+new Pirahna(game, 24, 880, -1, 0),
+
+new Pirahna(game, -248, 640, 1, 0),
+
+new Pirahna(game, -152, 592, 1, 0),
+
+new Pirahna(game, -40, 640, 1, 0),
+
+new Powerup(game, -504, 912, JELLY_COIN),
+
+new Powerup(game, 184, 880, JELLY_COIN),
+
+new Powerup(game, 616, 1600, JELLY_COIN),
+
+new Powerup(game, 664, 1552, JELLY_COIN),
+
+new Powerup(game, 712, 1504, JELLY_COIN),
+
+new Powerup(game, 616, 1552, JELLY_COIN),
+
+new Powerup(game, 664, 1504, JELLY_COIN),
+
+new Powerup(game, 712, 1456, JELLY_COIN),
+
+new Powerup(game, 664, 1456, JELLY_COIN),
+
+new Powerup(game, 616, 1504, JELLY_COIN),
+
+new Powerup(game, 616, 1456, JELLY_COIN),
+
+new Powerup(game, -1720, 512, JELLY_COIN_SM),
+
+new Powerup(game, -1576, 544, JELLY_COIN_SM),
+
+new Powerup(game, -1640, 512, JELLY_COIN_SM),
+
+new Powerup(game, -1560, 624, JELLY_COIN_SM),
+
+new Powerup(game, -1560, 704, JELLY_COIN_SM),
+
+new Powerup(game, -1656, 736, JELLY_COIN_SM),
+
+new Powerup(game, -1736, 736, JELLY_COIN_SM),
+
+new Powerup(game, -1816, 736, JELLY_COIN_SM),
+
+new Powerup(game, -1896, 736, JELLY_COIN_SM),
+
+new Powerup(game, -2168, 736, JELLY_COIN_SM),
+
+new Powerup(game, -2088, 880, JELLY_COIN_SM),
+
+new Powerup(game, -2168, 1008, JELLY_COIN_SM),
+
+new Powerup(game, -2184, 1120, JELLY_COIN_SM),
+
+new Powerup(game, -2152, 1120, JELLY_COIN_SM),
+
+new Powerup(game, -2120, 1120, JELLY_COIN_SM),
+
+new Powerup(game, -1976, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -1896, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -1816, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -1736, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -1496, 1168, JELLY_COIN_SM),
+
+new Powerup(game, -1464, 1104, JELLY_COIN_SM),
+
+new Powerup(game, -1416, 1072, JELLY_COIN_SM),
+
+new Powerup(game, -1368, 1104, JELLY_COIN_SM),
+
+new Powerup(game, -1336, 1024, JELLY_COIN_SM),
+
+new Powerup(game, -1240, 1024, JELLY_COIN_SM),
+
+new Powerup(game, -1288, 992, JELLY_COIN_SM),
+
+new Powerup(game, -1352, 1072, JELLY_COIN_SM),
+
+new Powerup(game, -1160, 832, JELLY_COIN_SM),
+
+new Powerup(game, -1240, 768, JELLY_COIN_SM),
+
+new Powerup(game, -1336, 704, JELLY_COIN_SM),
+
+new Powerup(game, -1368, 624, JELLY_COIN_SM),
+
+new Powerup(game, -1304, 544, JELLY_COIN_SM),
+
+new Powerup(game, -1224, 464, JELLY_COIN_SM),
+
+new Powerup(game, -1144, 384, JELLY_COIN_SM),
+
+new Powerup(game, -552, 624, JELLY_COIN_SM),
+
+new Powerup(game, -504, 624, JELLY_COIN_SM),
+
+new Powerup(game, -648, 720, JELLY_COIN_SM),
+
+new Powerup(game, -696, 720, JELLY_COIN_SM),
+
+new Powerup(game, -744, 720, JELLY_COIN_SM),
+
+new Powerup(game, -792, 720, JELLY_COIN_SM),
+
+new Powerup(game, -584, 800, JELLY_COIN_SM),
+
+new Powerup(game, -536, 800, JELLY_COIN_SM),
+
+new Powerup(game, -888, 864, JELLY_COIN_SM),
+
+new Powerup(game, -840, 864, JELLY_COIN_SM),
+
+new Powerup(game, -808, 960, JELLY_COIN_SM),
+
+new Powerup(game, -760, 960, JELLY_COIN_SM),
+
+new Powerup(game, -616, 1040, JELLY_COIN_SM),
+
+new Powerup(game, -568, 1040, JELLY_COIN_SM),
+
+new Powerup(game, -680, 512, JELLY_COIN_SM),
+
+new Powerup(game, -680, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -584, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -488, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -872, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -312, 960, JELLY_COIN_SM),
+
+new Powerup(game, -328, 1024, JELLY_COIN_SM),
+
+new Powerup(game, -312, 1088, JELLY_COIN_SM),
+
+new Powerup(game, -328, 1168, JELLY_COIN_SM),
+
+new Powerup(game, -312, 1232, JELLY_COIN_SM),
+
+new Powerup(game, -328, 1296, JELLY_COIN_SM),
+
+new Powerup(game, 56, 608, JELLY_COIN_SM),
+
+new Powerup(game, -8, 608, JELLY_COIN_SM),
+
+new Powerup(game, -72, 608, JELLY_COIN_SM),
+
+new Powerup(game, -136, 608, JELLY_COIN_SM),
+
+new Powerup(game, -200, 608, JELLY_COIN_SM),
+
+new Powerup(game, -328, 576, JELLY_COIN_SM),
+
+new Powerup(game, -328, 496, JELLY_COIN_SM),
+
+new Powerup(game, -328, 416, JELLY_COIN_SM),
+
+new Powerup(game, -216, 400, JELLY_COIN_SM),
+
+new Powerup(game, -104, 400, JELLY_COIN_SM),
+
+new Powerup(game, 8, 400, JELLY_COIN_SM),
+
+new Powerup(game, 120, 400, JELLY_COIN_SM),
+
+new Powerup(game, 248, 400, JELLY_COIN_SM),
+
+new Powerup(game, 344, 400, JELLY_COIN_SM),
+
+new Powerup(game, 392, 512, JELLY_COIN_SM),
+
+new Powerup(game, 392, 576, JELLY_COIN_SM),
+
+new Powerup(game, 392, 640, JELLY_COIN_SM),
+
+new Powerup(game, 392, 448, JELLY_COIN_SM),
+
+new Powerup(game, 312, 672, JELLY_COIN_SM),
+
+new Powerup(game, 312, 736, JELLY_COIN_SM),
+
+new Powerup(game, 312, 800, JELLY_COIN_SM),
+
+new Powerup(game, 312, 864, JELLY_COIN_SM),
+
+new Powerup(game, 392, 928, JELLY_COIN_SM),
+
+new Powerup(game, 392, 992, JELLY_COIN_SM),
+
+new Powerup(game, 392, 1056, JELLY_COIN_SM),
+
+new Powerup(game, 392, 1120, JELLY_COIN_SM),
+
+new Powerup(game, 168, 1152, JELLY_COIN_SM),
+
+new Powerup(game, 88, 1152, JELLY_COIN_SM),
+
+new Powerup(game, 8, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -72, 1152, JELLY_COIN_SM),
+
+new Powerup(game, 248, 1152, JELLY_COIN_SM),
+
+new Powerup(game, 328, 1152, JELLY_COIN_SM),
+
+new Powerup(game, -2088, 1168, ENTITY_MARKER),
+
+new Powerup(game, -2088, 1136, ENTITY_MARKER),
+
+new Powerup(game, -2088, 1104, ENTITY_MARKER),
+
+new Powerup(game, -1672, 1120, ENTITY_MARKER),
+
+new Powerup(game, -1672, 1152, ENTITY_MARKER),
+
+new Powerup(game, -1976, 768, ENTITY_MARKER),
+
+new Powerup(game, -1496, 768, ENTITY_MARKER),
+
+new Powerup(game, -1160, 400, ENTITY_MARKER),
+
+new Powerup(game, -712, 400, ENTITY_MARKER),
+
+new Powerup(game, -760, 1152, ENTITY_MARKER),
+
+new Powerup(game, -408, 1152, ENTITY_MARKER),
+
+new Powerup(game, -312, 880, ENTITY_MARKER),
+
+new Powerup(game, 168, 880, ENTITY_MARKER),
+
+new Powerup(game, -376, 592, ENTITY_MARKER),
+
+new Powerup(game, -376, 640, ENTITY_MARKER),
+
+new Powerup(game, 136, 592, ENTITY_MARKER),
+
+new Powerup(game, 136, 656, ENTITY_MARKER),
+
+new Powerup(game, -152, 1152, ENTITY_MARKER),
+
+new Powerup(game, 424, 1152, ENTITY_MARKER),
+
+new Kelp(game, -152, 1456),
+
+new Kelp(game, -104, 1456),
+
+new Kelp(game, 344, 1456),
+
+new TunaChargeDropper(game, -1272, 224, 0),
+
+new TunaChargeDropper(game, -232, 480, 0),
+
+new TunaChargeDropper(game, -88, 480, 60),
+
+new TunaChargeDropper(game, 56, 480, 0),
+
+new BubbleCurrent(game, -456, 544, -8),
+
+new BubbleCurrent(game, -536, 1264, -8),
+
+new BubbleCurrent(game, 424, 1120, -8),
+
+new BubbleCurrent(game, -936, 800, 8),
+
+new Clam(game, 472, 1584),
+
+new Platform(game, -2200, 800),
+
+new Platform(game, -2120, 928),
+
+new Platform(game, -2200, 1056),
+
+new Platform(game, -2056, 1200, 2, 0, 160),
+
+new Platform(game, -712, 560),
+
+new Platform(game, -568, 672),
+
+new Platform(game, -504, 672),
+
+new Platform(game, -680, 768),
+
+new Platform(game, -744, 768),
+
+new Platform(game, -808, 768),
+
+new Platform(game, -920, 912),
+
+new Platform(game, -856, 912),
+
+new Platform(game, -520, 960),
+
+new Platform(game, -616, 848),
+
+new Platform(game, -552, 848),
+
+new Platform(game, -840, 1008),
+
+new Platform(game, -776, 1008),
+
+new Platform(game, -648, 1088),
+
+new Platform(game, -584, 1088),
+
+new Platform(game, -184, 928, 1, 0, 320),
+
+new Platform(game, -344, 608),
+
+new Platform(game, -344, 528),
+
+new Platform(game, -344, 448),
+
+new Platform(game, 232, 1104),
+
+new Platform(game, 296, 1104),
+
+new Platform(game, 360, 1104),
+
+new Wall(game, -2200, 560, 32, 32),
+
+new Wall(game, -2168, 560, 32, 32),
+
+new Wall(game, -2136, 560, 32, 32),
+
+new Wall(game, -2104, 560, 32, 32),
+
+new Wall(game, -2072, 560, 32, 32),
+
+new Wall(game, -2040, 560, 32, 32),
+
+new Wall(game, -2008, 560, 32, 32),
+
+new Wall(game, -1976, 560, 32, 32),
+
+new Wall(game, -1944, 560, 32, 32),
+
+new Wall(game, -1912, 560, 32, 32),
+
+new Wall(game, -1880, 560, 32, 32),
+
+new Wall(game, -1848, 560, 32, 32),
+
+new Wall(game, -1816, 560, 32, 32),
+
+new Wall(game, -1784, 560, 32, 32),
+
+new Wall(game, -1752, 560, 32, 32),
+
+new Wall(game, -1720, 560, 32, 32),
+
+new Wall(game, -1688, 560, 32, 32),
+
+new Wall(game, -1656, 560, 32, 32),
+
+new Wall(game, -2200, 592, 32, 32),
+
+new Wall(game, -2168, 592, 32, 32),
+
+new Wall(game, -2136, 592, 32, 32),
+
+new Wall(game, -2104, 592, 32, 32),
+
+new Wall(game, -2072, 592, 32, 32),
+
+new Wall(game, -2040, 592, 32, 32),
+
+new Wall(game, -2008, 592, 32, 32),
+
+new Wall(game, -1976, 592, 32, 32),
+
+new Wall(game, -1944, 592, 32, 32),
+
+new Wall(game, -1912, 592, 32, 32),
+
+new Wall(game, -1880, 592, 32, 32),
+
+new Wall(game, -1848, 592, 32, 32),
+
+new Wall(game, -1816, 592, 32, 32),
+
+new Wall(game, -1784, 592, 32, 32),
+
+new Wall(game, -1752, 592, 32, 32),
+
+new Wall(game, -1720, 592, 32, 32),
+
+new Wall(game, -1688, 592, 32, 32),
+
+new Wall(game, -1656, 592, 32, 32),
+
+new Wall(game, -1496, 0, 32, 32),
+
+new Wall(game, -1496, 32, 32, 32),
+
+new Wall(game, -1496, 64, 32, 32),
+
+new Wall(game, -1496, 96, 32, 32),
+
+new Wall(game, -1496, 128, 32, 32),
+
+new Wall(game, -1496, 160, 32, 32),
+
+new Wall(game, -1496, 192, 32, 32),
+
+new Wall(game, -1496, 224, 32, 32),
+
+new Wall(game, -1496, 256, 32, 32),
+
+new Wall(game, -1496, 288, 32, 32),
+
+new Wall(game, -1496, 320, 32, 32),
+
+new Wall(game, -1496, 352, 32, 32),
+
+new Wall(game, -1496, 384, 32, 32),
+
+new Wall(game, -1496, 416, 32, 32),
+
+new Wall(game, -1496, 448, 32, 32),
+
+new Wall(game, -1496, 480, 32, 32),
+
+new Wall(game, -1496, 512, 32, 32),
+
+new Wall(game, -1496, 544, 32, 32),
+
+new Wall(game, -1496, 576, 32, 32),
+
+new Wall(game, -1496, 608, 32, 32),
+
+new Wall(game, -1496, 640, 32, 32),
+
+new Wall(game, -1496, 672, 32, 32),
+
+new Wall(game, -1496, 704, 32, 32),
+
+new Wall(game, -1496, 736, 32, 32),
+
+new Wall(game, -1496, 768, 32, 32),
+
+new Wall(game, -1464, 0, 32, 32),
+
+new Wall(game, -1464, 32, 32, 32),
+
+new Wall(game, -1464, 64, 32, 32),
+
+new Wall(game, -1464, 96, 32, 32),
+
+new Wall(game, -1464, 128, 32, 32),
+
+new Wall(game, -1464, 160, 32, 32),
+
+new Wall(game, -1464, 192, 32, 32),
+
+new Wall(game, -1464, 224, 32, 32),
+
+new Wall(game, -1464, 256, 32, 32),
+
+new Wall(game, -1464, 288, 32, 32),
+
+new Wall(game, -1464, 320, 32, 32),
+
+new Wall(game, -1464, 352, 32, 32),
+
+new Wall(game, -1464, 384, 32, 32),
+
+new Wall(game, -1464, 416, 32, 32),
+
+new Wall(game, -1464, 448, 32, 32),
+
+new Wall(game, -1464, 480, 32, 32),
+
+new Wall(game, -1464, 512, 32, 32),
+
+new Wall(game, -1464, 544, 32, 32),
+
+new Wall(game, -1464, 576, 32, 32),
+
+new Wall(game, -1464, 608, 32, 32),
+
+new Wall(game, -1464, 640, 32, 32),
+
+new Wall(game, -1464, 672, 32, 32),
+
+new Wall(game, -1464, 704, 32, 32),
+
+new Wall(game, -1464, 736, 32, 32),
+
+new Wall(game, -1464, 768, 32, 32),
+
+new Wall(game, -1432, 0, 32, 32),
+
+new Wall(game, -1432, 32, 32, 32),
+
+new Wall(game, -1432, 64, 32, 32),
+
+new Wall(game, -1432, 96, 32, 32),
+
+new Wall(game, -1432, 128, 32, 32),
+
+new Wall(game, -1432, 160, 32, 32),
+
+new Wall(game, -1432, 192, 32, 32),
+
+new Wall(game, -1432, 224, 32, 32),
+
+new Wall(game, -1432, 256, 32, 32),
+
+new Wall(game, -1432, 288, 32, 32),
+
+new Wall(game, -1432, 320, 32, 32),
+
+new Wall(game, -1432, 352, 32, 32),
+
+new Wall(game, -1432, 384, 32, 32),
+
+new Wall(game, -1432, 416, 32, 32),
+
+new Wall(game, -1432, 448, 32, 32),
+
+new Wall(game, -1432, 480, 32, 32),
+
+new Wall(game, -1432, 512, 32, 32),
+
+new Wall(game, -1432, 544, 32, 32),
+
+new Wall(game, -1432, 576, 32, 32),
+
+new Wall(game, -1432, 608, 32, 32),
+
+new Wall(game, -1432, 640, 32, 32),
+
+new Wall(game, -1432, 672, 32, 32),
+
+new Wall(game, -1432, 704, 32, 32),
+
+new Wall(game, -1432, 736, 32, 32),
+
+new Wall(game, -1432, 768, 32, 32),
+
+new Wall(game, -1528, 800, 32, 32),
+
+new Wall(game, -1560, 800, 32, 32),
+
+new Wall(game, -1944, 800, 32, 32),
+
+new Wall(game, -1912, 800, 32, 32),
+
+new Wall(game, -1880, 800, 32, 32),
+
+new Wall(game, -1848, 800, 32, 32),
+
+new Wall(game, -1816, 800, 32, 32),
+
+new Wall(game, -1784, 800, 32, 32),
+
+new Wall(game, -1752, 800, 32, 32),
+
+new Wall(game, -1720, 800, 32, 32),
+
+new Wall(game, -1688, 800, 32, 32),
+
+new Wall(game, -1656, 800, 32, 32),
+
+new Wall(game, -1624, 800, 32, 32),
+
+new Wall(game, -1592, 800, 32, 32),
+
+new Wall(game, -1944, 832, 32, 32),
+
+new Wall(game, -1912, 832, 32, 32),
+
+new Wall(game, -1880, 832, 32, 32),
+
+new Wall(game, -1848, 832, 32, 32),
+
+new Wall(game, -1816, 832, 32, 32),
+
+new Wall(game, -1784, 832, 32, 32),
+
+new Wall(game, -1752, 832, 32, 32),
+
+new Wall(game, -1720, 832, 32, 32),
+
+new Wall(game, -1688, 832, 32, 32),
+
+new Wall(game, -1656, 832, 32, 32),
+
+new Wall(game, -1624, 832, 32, 32),
+
+new Wall(game, -1592, 832, 32, 32),
+
+new Wall(game, -1560, 832, 32, 32),
+
+new Wall(game, -1528, 832, 32, 32),
+
+new Wall(game, -1496, 832, 32, 32),
+
+new Wall(game, -1464, 832, 32, 32),
+
+new Wall(game, -1432, 832, 32, 32),
+
+new Wall(game, -1496, 800, 32, 32),
+
+new Wall(game, -1464, 800, 32, 32),
+
+new Wall(game, -1432, 800, 32, 32),
+
+new Wall(game, -2088, 1200, 32, 32),
+
+new Wall(game, -2120, 1200, 32, 32),
+
+new Wall(game, -2152, 1200, 32, 32),
+
+new Wall(game, -2184, 1200, 32, 32),
+
+new Wall(game, -2216, 1200, 32, 32),
+
+new Wall(game, -2216, 1168, 32, 32),
+
+new Wall(game, -2184, 1168, 32, 32),
+
+new Wall(game, -2152, 1168, 32, 32),
+
+new Wall(game, -2120, 1168, 32, 32),
+
+new Wall(game, -2200, 1472, 32, 32),
+
+new Wall(game, -2168, 1472, 32, 32),
+
+new Wall(game, -2136, 1472, 32, 32),
+
+new Wall(game, -2104, 1472, 32, 32),
+
+new Wall(game, -2072, 1472, 32, 32),
+
+new Wall(game, -2040, 1472, 32, 32),
+
+new Wall(game, -2008, 1472, 32, 32),
+
+new Wall(game, -1976, 1472, 32, 32),
+
+new Wall(game, -1944, 1472, 32, 32),
+
+new Wall(game, -1912, 1472, 32, 32),
+
+new Wall(game, -1880, 1472, 32, 32),
+
+new Wall(game, -1848, 1472, 32, 32),
+
+new Wall(game, -1816, 1472, 32, 32),
+
+new Wall(game, -1784, 1472, 32, 32),
+
+new Wall(game, -1752, 1472, 32, 32),
+
+new Wall(game, -1720, 1472, 32, 32),
+
+new Wall(game, -1688, 1472, 32, 32),
+
+new Wall(game, -1656, 1472, 32, 32),
+
+new Wall(game, -1672, 1216, 32, 32),
+
+new Wall(game, -1640, 1216, 32, 32),
+
+new Wall(game, -1672, 1248, 32, 32),
+
+new Wall(game, -1672, 1280, 32, 32),
+
+new Wall(game, -1672, 1312, 32, 32),
+
+new Wall(game, -1672, 1344, 32, 32),
+
+new Wall(game, -1672, 1376, 32, 32),
+
+new Wall(game, -1672, 1408, 32, 32),
+
+new Wall(game, -1672, 1440, 32, 32),
+
+new Wall(game, -1640, 1248, 32, 32),
+
+new Wall(game, -1640, 1280, 32, 32),
+
+new Wall(game, -1640, 1312, 32, 32),
+
+new Wall(game, -1640, 1344, 32, 32),
+
+new Wall(game, -1640, 1376, 32, 32),
+
+new Wall(game, -1640, 1408, 32, 32),
+
+new Wall(game, -1640, 1440, 32, 32),
+
+new Wall(game, -1624, 1472, 32, 32),
+
+new Wall(game, -1592, 1472, 32, 32),
+
+new Wall(game, -1560, 1472, 32, 32),
+
+new Wall(game, -1528, 1472, 32, 32),
+
+new Wall(game, -1496, 1472, 32, 32),
+
+new Wall(game, -1464, 1472, 32, 32),
+
+new Wall(game, -1432, 1472, 32, 32),
+
+new Wall(game, -1400, 1472, 32, 32),
+
+new Wall(game, -1368, 1472, 32, 32),
+
+new Wall(game, -1336, 1472, 32, 32),
+
+new Wall(game, -1304, 1472, 32, 32),
+
+new Wall(game, -1272, 1472, 32, 32),
+
+new Wall(game, -1240, 1472, 32, 32),
+
+new Wall(game, -1208, 1472, 32, 32),
+
+new Wall(game, -1176, 1472, 32, 32),
+
+new Wall(game, -1144, 1472, 32, 32),
+
+new Wall(game, -1112, 1024, 32, 32),
+
+new Wall(game, -1112, 1056, 32, 32),
+
+new Wall(game, -1112, 1088, 32, 32),
+
+new Wall(game, -1112, 1120, 32, 32),
+
+new Wall(game, -1112, 1152, 32, 32),
+
+new Wall(game, -1112, 1184, 32, 32),
+
+new Wall(game, -1112, 1216, 32, 32),
+
+new Wall(game, -1112, 1248, 32, 32),
+
+new Wall(game, -1112, 1280, 32, 32),
+
+new Wall(game, -1112, 1312, 32, 32),
+
+new Wall(game, -1112, 1344, 32, 32),
+
+new Wall(game, -1112, 1376, 32, 32),
+
+new Wall(game, -1112, 1408, 32, 32),
+
+new Wall(game, -1112, 1440, 32, 32),
+
+new Wall(game, -1112, 1472, 32, 32),
+
+new Wall(game, -1080, 992, 32, 32),
+
+new Wall(game, -1080, 1024, 32, 32),
+
+new Wall(game, -1080, 1056, 32, 32),
+
+new Wall(game, -1080, 1088, 32, 32),
+
+new Wall(game, -1080, 1120, 32, 32),
+
+new Wall(game, -1080, 1152, 32, 32),
+
+new Wall(game, -1080, 1184, 32, 32),
+
+new Wall(game, -1080, 1216, 32, 32),
+
+new Wall(game, -1080, 1248, 32, 32),
+
+new Wall(game, -1080, 1280, 32, 32),
+
+new Wall(game, -1080, 1312, 32, 32),
+
+new Wall(game, -1080, 1344, 32, 32),
+
+new Wall(game, -1080, 1376, 32, 32),
+
+new Wall(game, -1080, 1408, 32, 32),
+
+new Wall(game, -1080, 1440, 32, 32),
+
+new Wall(game, -1080, 1472, 32, 32),
+
+new Wall(game, -1048, 960, 32, 32),
+
+new Wall(game, -1048, 992, 32, 32),
+
+new Wall(game, -1048, 1024, 32, 32),
+
+new Wall(game, -1048, 1056, 32, 32),
+
+new Wall(game, -1048, 1088, 32, 32),
+
+new Wall(game, -1048, 1120, 32, 32),
+
+new Wall(game, -1048, 1152, 32, 32),
+
+new Wall(game, -1048, 1184, 32, 32),
+
+new Wall(game, -1048, 1216, 32, 32),
+
+new Wall(game, -1048, 1248, 32, 32),
+
+new Wall(game, -1048, 1280, 32, 32),
+
+new Wall(game, -1048, 1312, 32, 32),
+
+new Wall(game, -1048, 1344, 32, 32),
+
+new Wall(game, -1048, 1376, 32, 32),
+
+new Wall(game, -1048, 1408, 32, 32),
+
+new Wall(game, -1048, 1440, 32, 32),
+
+new Wall(game, -1048, 1472, 32, 32),
+
+new Wall(game, -1128, 432, 32, 32),
+
+new Wall(game, -1096, 432, 32, 32),
+
+new Wall(game, -1064, 432, 32, 32),
+
+new Wall(game, -1032, 432, 32, 32),
+
+new Wall(game, -1000, 432, 32, 32),
+
+new Wall(game, -968, 432, 32, 32),
+
+new Wall(game, -936, 432, 32, 32),
+
+new Wall(game, -904, 432, 32, 32),
+
+new Wall(game, -872, 432, 32, 32),
+
+new Wall(game, -840, 432, 32, 32),
+
+new Wall(game, -808, 432, 32, 32),
+
+new Wall(game, -776, 432, 32, 32),
+
+new Wall(game, -744, 432, 32, 32),
+
+new Wall(game, -1128, 464, 32, 32),
+
+new Wall(game, -1096, 464, 32, 32),
+
+new Wall(game, -1064, 464, 32, 32),
+
+new Wall(game, -1032, 464, 32, 32),
+
+new Wall(game, -1000, 464, 32, 32),
+
+new Wall(game, -968, 464, 32, 32),
+
+new Wall(game, -936, 464, 32, 32),
+
+new Wall(game, -904, 464, 32, 32),
+
+new Wall(game, -872, 464, 32, 32),
+
+new Wall(game, -840, 464, 32, 32),
+
+new Wall(game, -808, 464, 32, 32),
+
+new Wall(game, -776, 464, 32, 32),
+
+new Wall(game, -744, 464, 32, 32),
+
+new Wall(game, -1016, 496, 32, 32),
+
+new Wall(game, -1016, 528, 32, 32),
+
+new Wall(game, -1016, 560, 32, 32),
+
+new Wall(game, -1016, 592, 32, 32),
+
+new Wall(game, -1016, 624, 32, 32),
+
+new Wall(game, -1016, 656, 32, 32),
+
+new Wall(game, -1016, 688, 32, 32),
+
+new Wall(game, -1016, 720, 32, 32),
+
+new Wall(game, -1016, 752, 32, 32),
+
+new Wall(game, -1016, 784, 32, 32),
+
+new Wall(game, -1016, 816, 32, 32),
+
+new Wall(game, -1016, 848, 32, 32),
+
+new Wall(game, -1016, 880, 32, 32),
+
+new Wall(game, -1016, 912, 32, 32),
+
+new Wall(game, -1016, 944, 32, 32),
+
+new Wall(game, -984, 496, 32, 32),
+
+new Wall(game, -984, 528, 32, 32),
+
+new Wall(game, -984, 560, 32, 32),
+
+new Wall(game, -984, 592, 32, 32),
+
+new Wall(game, -984, 624, 32, 32),
+
+new Wall(game, -984, 656, 32, 32),
+
+new Wall(game, -984, 688, 32, 32),
+
+new Wall(game, -984, 720, 32, 32),
+
+new Wall(game, -984, 752, 32, 32),
+
+new Wall(game, -984, 784, 32, 32),
+
+new Wall(game, -984, 816, 32, 32),
+
+new Wall(game, -984, 848, 32, 32),
+
+new Wall(game, -984, 880, 32, 32),
+
+new Wall(game, -984, 912, 32, 32),
+
+new Wall(game, -984, 944, 32, 32),
+
+new Wall(game, -1016, 976, 32, 32),
+
+new Wall(game, -984, 976, 32, 32),
+
+new Wall(game, -408, 0, 32, 32),
+
+new Wall(game, -408, 32, 32, 32),
+
+new Wall(game, -408, 64, 32, 32),
+
+new Wall(game, -408, 96, 32, 32),
+
+new Wall(game, -408, 128, 32, 32),
+
+new Wall(game, -408, 160, 32, 32),
+
+new Wall(game, -408, 192, 32, 32),
+
+new Wall(game, -408, 224, 32, 32),
+
+new Wall(game, -408, 256, 32, 32),
+
+new Wall(game, -408, 288, 32, 32),
+
+new Wall(game, -408, 320, 32, 32),
+
+new Wall(game, -408, 352, 32, 32),
+
+new Wall(game, -408, 384, 32, 32),
+
+new Wall(game, -408, 416, 32, 32),
+
+new Wall(game, -408, 448, 32, 32),
+
+new Wall(game, -408, 480, 32, 32),
+
+new Wall(game, -408, 512, 32, 32),
+
+new Wall(game, -408, 544, 32, 32),
+
+new Wall(game, -408, 576, 32, 32),
+
+new Wall(game, -408, 608, 32, 32),
+
+new Wall(game, -408, 640, 32, 32),
+
+new Wall(game, -408, 672, 32, 32),
+
+new Wall(game, -408, 704, 32, 32),
+
+new Wall(game, -408, 736, 32, 32),
+
+new Wall(game, -408, 768, 32, 32),
+
+new Wall(game, -408, 800, 32, 32),
+
+new Wall(game, -408, 832, 32, 32),
+
+new Wall(game, -408, 864, 32, 32),
+
+new Wall(game, -408, 896, 32, 32),
+
+new Wall(game, -408, 928, 32, 32),
+
+new Wall(game, -408, 960, 32, 32),
+
+new Wall(game, -408, 992, 32, 32),
+
+new Wall(game, -408, 1024, 32, 32),
+
+new Wall(game, -408, 1056, 32, 32),
+
+new Wall(game, -408, 1088, 32, 32),
+
+new Wall(game, -408, 1120, 32, 32),
+
+new Wall(game, -408, 1152, 32, 32),
+
+new Wall(game, -376, 0, 32, 32),
+
+new Wall(game, -376, 32, 32, 32),
+
+new Wall(game, -376, 64, 32, 32),
+
+new Wall(game, -376, 96, 32, 32),
+
+new Wall(game, -376, 128, 32, 32),
+
+new Wall(game, -376, 160, 32, 32),
+
+new Wall(game, -376, 192, 32, 32),
+
+new Wall(game, -376, 224, 32, 32),
+
+new Wall(game, -376, 256, 32, 32),
+
+new Wall(game, -376, 288, 32, 32),
+
+new Wall(game, -376, 320, 32, 32),
+
+new Wall(game, -376, 352, 32, 32),
+
+new Wall(game, -376, 384, 32, 32),
+
+new Wall(game, -376, 416, 32, 32),
+
+new Wall(game, -376, 448, 32, 32),
+
+new Wall(game, -376, 480, 32, 32),
+
+new Wall(game, -376, 512, 32, 32),
+
+new Wall(game, -376, 544, 32, 32),
+
+new Wall(game, -376, 576, 32, 32),
+
+new Wall(game, -376, 608, 32, 32),
+
+new Wall(game, -376, 640, 32, 32),
+
+new Wall(game, -376, 672, 32, 32),
+
+new Wall(game, -376, 704, 32, 32),
+
+new Wall(game, -376, 736, 32, 32),
+
+new Wall(game, -376, 768, 32, 32),
+
+new Wall(game, -376, 800, 32, 32),
+
+new Wall(game, -376, 832, 32, 32),
+
+new Wall(game, -376, 864, 32, 32),
+
+new Wall(game, -376, 896, 32, 32),
+
+new Wall(game, -376, 928, 32, 32),
+
+new Wall(game, -376, 960, 32, 32),
+
+new Wall(game, -376, 992, 32, 32),
+
+new Wall(game, -376, 1024, 32, 32),
+
+new Wall(game, -376, 1056, 32, 32),
+
+new Wall(game, -376, 1088, 32, 32),
+
+new Wall(game, -376, 1120, 32, 32),
+
+new Wall(game, -376, 1152, 32, 32),
+
+new Wall(game, -408, 1184, 32, 32),
+
+new Wall(game, -728, 1184, 32, 32),
+
+new Wall(game, -696, 1184, 32, 32),
+
+new Wall(game, -664, 1184, 32, 32),
+
+new Wall(game, -632, 1184, 32, 32),
+
+new Wall(game, -600, 1184, 32, 32),
+
+new Wall(game, -568, 1184, 32, 32),
+
+new Wall(game, -536, 1184, 32, 32),
+
+new Wall(game, -504, 1184, 32, 32),
+
+new Wall(game, -472, 1184, 32, 32),
+
+new Wall(game, -440, 1184, 32, 32),
+
+new Wall(game, -376, 1184, 32, 32),
+
+new Wall(game, -728, 1216, 32, 32),
+
+new Wall(game, -696, 1216, 32, 32),
+
+new Wall(game, -664, 1216, 32, 32),
+
+new Wall(game, -632, 1216, 32, 32),
+
+new Wall(game, -600, 1216, 32, 32),
+
+new Wall(game, -568, 1216, 32, 32),
+
+new Wall(game, -536, 1216, 32, 32),
+
+new Wall(game, -504, 1216, 32, 32),
+
+new Wall(game, -472, 1216, 32, 32),
+
+new Wall(game, -440, 1216, 32, 32),
+
+new Wall(game, -408, 1216, 32, 32),
+
+new Wall(game, -376, 1216, 32, 32),
+
+new Wall(game, -1016, 1184, 32, 32),
+
+new Wall(game, -984, 1184, 32, 32),
+
+new Wall(game, -952, 1184, 32, 32),
+
+new Wall(game, -1016, 1216, 32, 32),
+
+new Wall(game, -984, 1216, 32, 32),
+
+new Wall(game, -952, 1216, 32, 32),
+
+new Wall(game, -1016, 1376, 32, 32),
+
+new Wall(game, -984, 1376, 32, 32),
+
+new Wall(game, -952, 1376, 32, 32),
+
+new Wall(game, -920, 1376, 32, 32),
+
+new Wall(game, -888, 1376, 32, 32),
+
+new Wall(game, -856, 1376, 32, 32),
+
+new Wall(game, -824, 1376, 32, 32),
+
+new Wall(game, -792, 1376, 32, 32),
+
+new Wall(game, -760, 1376, 32, 32),
+
+new Wall(game, -728, 1376, 32, 32),
+
+new Wall(game, -696, 1376, 32, 32),
+
+new Wall(game, -664, 1376, 32, 32),
+
+new Wall(game, -632, 1376, 32, 32),
+
+new Wall(game, -600, 1376, 32, 32),
+
+new Wall(game, -568, 1376, 32, 32),
+
+new Wall(game, -536, 1376, 32, 32),
+
+new Wall(game, -920, 1184, 32, 32),
+
+new Wall(game, -920, 1216, 32, 32),
+
+new Wall(game, -888, 1216, 32, 32),
+
+new Wall(game, -888, 1184, 32, 32),
+
+new Wall(game, -856, 1184, 32, 32),
+
+new Wall(game, -856, 1216, 32, 32),
+
+new Wall(game, -1608, 1360, 32, 32),
+
+new Wall(game, -1576, 1360, 32, 32),
+
+new Wall(game, -1544, 1360, 32, 32),
+
+new Wall(game, -1512, 1360, 32, 32),
+
+new Wall(game, -1480, 1360, 32, 32),
+
+new Wall(game, -1448, 1360, 32, 32),
+
+new Wall(game, -1416, 1360, 32, 32),
+
+new Wall(game, -1384, 1360, 32, 32),
+
+new Wall(game, -1352, 1360, 32, 32),
+
+new Wall(game, -1320, 1360, 32, 32),
+
+new Wall(game, -1288, 1360, 32, 32),
+
+new Wall(game, -1256, 1360, 32, 32),
+
+new Wall(game, -1224, 1360, 32, 32),
+
+new Wall(game, -1192, 1360, 32, 32),
+
+new Wall(game, -1160, 1360, 32, 32),
+
+new Wall(game, -2216, 1360, 32, 32),
+
+new Wall(game, -2216, 1392, 32, 32),
+
+new Wall(game, -2184, 1360, 32, 32),
+
+new Wall(game, -2152, 1360, 32, 32),
+
+new Wall(game, -2120, 1360, 32, 32),
+
+new Wall(game, -2088, 1360, 32, 32),
+
+new Wall(game, -2056, 1360, 32, 32),
+
+new Wall(game, -2024, 1360, 32, 32),
+
+new Wall(game, -1992, 1360, 32, 32),
+
+new Wall(game, -1960, 1360, 32, 32),
+
+new Wall(game, -1928, 1360, 32, 32),
+
+new Wall(game, -1896, 1360, 32, 32),
+
+new Wall(game, -1864, 1360, 32, 32),
+
+new Wall(game, -1832, 1360, 32, 32),
+
+new Wall(game, -1800, 1360, 32, 32),
+
+new Wall(game, -1768, 1360, 32, 32),
+
+new Wall(game, -1736, 1360, 32, 32),
+
+new Wall(game, -1704, 1360, 32, 32),
+
+new Wall(game, -2184, 1392, 32, 32),
+
+new Wall(game, -2152, 1392, 32, 32),
+
+new Wall(game, -2120, 1392, 32, 32),
+
+new Wall(game, -2088, 1392, 32, 32),
+
+new Wall(game, -2056, 1392, 32, 32),
+
+new Wall(game, -2024, 1392, 32, 32),
+
+new Wall(game, -1992, 1392, 32, 32),
+
+new Wall(game, -1960, 1392, 32, 32),
+
+new Wall(game, -1928, 1392, 32, 32),
+
+new Wall(game, -1896, 1392, 32, 32),
+
+new Wall(game, -1864, 1392, 32, 32),
+
+new Wall(game, -1832, 1392, 32, 32),
+
+new Wall(game, -1800, 1392, 32, 32),
+
+new Wall(game, -1768, 1392, 32, 32),
+
+new Wall(game, -1736, 1392, 32, 32),
+
+new Wall(game, -1704, 1392, 32, 32),
+
+new Wall(game, -1608, 1392, 32, 32),
+
+new Wall(game, -1576, 1392, 32, 32),
+
+new Wall(game, -1544, 1392, 32, 32),
+
+new Wall(game, -1512, 1392, 32, 32),
+
+new Wall(game, -1480, 1392, 32, 32),
+
+new Wall(game, -1448, 1392, 32, 32),
+
+new Wall(game, -1416, 1392, 32, 32),
+
+new Wall(game, -1384, 1392, 32, 32),
+
+new Wall(game, -1352, 1392, 32, 32),
+
+new Wall(game, -1320, 1392, 32, 32),
+
+new Wall(game, -1288, 1392, 32, 32),
+
+new Wall(game, -1256, 1392, 32, 32),
+
+new Wall(game, -1224, 1392, 32, 32),
+
+new Wall(game, -1192, 1392, 32, 32),
+
+new Wall(game, -1160, 1392, 32, 32),
+
+new Wall(game, -504, 1376, 32, 32),
+
+new Wall(game, -504, 1344, 32, 32),
+
+new Wall(game, -472, 1344, 32, 32),
+
+new Wall(game, -472, 1376, 32, 32),
+
+new Wall(game, -440, 1344, 32, 32),
+
+new Wall(game, -440, 1376, 32, 32),
+
+new Wall(game, -408, 1344, 32, 32),
+
+new Wall(game, -408, 1376, 32, 32),
+
+new Wall(game, -376, 1344, 32, 32),
+
+new Wall(game, -376, 1376, 32, 32),
+
+new Wall(game, -344, 1376, 32, 32),
+
+new Wall(game, -312, 1376, 32, 32),
+
+new Wall(game, -280, 1376, 32, 32),
+
+new Wall(game, -280, 1344, 32, 32),
+
+new Wall(game, -280, 1312, 32, 32),
+
+new Wall(game, -280, 1280, 32, 32),
+
+new Wall(game, -280, 1248, 32, 32),
+
+new Wall(game, -280, 1216, 32, 32),
+
+new Wall(game, -280, 1184, 32, 32),
+
+new Wall(game, -280, 1152, 32, 32),
+
+new Wall(game, -280, 1120, 32, 32),
+
+new Wall(game, -248, 1120, 32, 32),
+
+new Wall(game, -248, 1088, 32, 32),
+
+new Wall(game, -248, 1056, 32, 32),
+
+new Wall(game, -248, 1024, 32, 32),
+
+new Wall(game, -280, 992, 32, 32),
+
+new Wall(game, -280, 960, 32, 32),
+
+new Wall(game, -280, 928, 32, 32),
+
+new Wall(game, -248, 928, 32, 32),
+
+new Wall(game, -248, 832, 32, 32),
+
+new Wall(game, -280, 832, 32, 32),
+
+new Wall(game, -312, 832, 32, 32),
+
+new Wall(game, -344, 832, 32, 32),
+
+new Wall(game, -568, 1344, 32, 32),
+
+new Wall(game, -248, 960, 32, 32),
+
+new Wall(game, -248, 992, 32, 32),
+
+new Wall(game, -216, 960, 32, 32),
+
+new Wall(game, -216, 992, 32, 32),
+
+new Wall(game, -216, 1024, 32, 32),
+
+new Wall(game, -216, 1056, 32, 32),
+
+new Wall(game, -216, 1088, 32, 32),
+
+new Wall(game, -216, 1120, 32, 32),
+
+new Wall(game, -248, 1152, 32, 32),
+
+new Wall(game, -248, 1184, 32, 32),
+
+new Wall(game, -248, 1216, 32, 32),
+
+new Wall(game, -248, 1248, 32, 32),
+
+new Wall(game, -248, 1280, 32, 32),
+
+new Wall(game, -248, 1312, 32, 32),
+
+new Wall(game, -248, 1344, 32, 32),
+
+new Wall(game, -248, 1376, 32, 32),
+
+new Wall(game, -216, 1152, 32, 32),
+
+new Wall(game, -216, 1184, 32, 32),
+
+new Wall(game, -216, 1216, 32, 32),
+
+new Wall(game, -216, 1248, 32, 32),
+
+new Wall(game, -216, 1280, 32, 32),
+
+new Wall(game, -216, 1312, 32, 32),
+
+new Wall(game, -216, 1344, 32, 32),
+
+new Wall(game, -216, 1376, 32, 32),
+
+new Wall(game, -216, 832, 32, 32),
+
+new Wall(game, -184, 832, 32, 32),
+
+new Wall(game, -152, 832, 32, 32),
+
+new Wall(game, -120, 832, 32, 32),
+
+new Wall(game, -88, 832, 32, 32),
+
+new Wall(game, -56, 832, 32, 32),
+
+new Wall(game, -216, 928, 32, 32),
+
+new Wall(game, 168, 928, 32, 32),
+
+new Wall(game, -184, 1056, 32, 32),
+
+new Wall(game, -152, 1056, 32, 32),
+
+new Wall(game, -120, 1056, 32, 32),
+
+new Wall(game, -88, 1056, 32, 32),
+
+new Wall(game, -56, 1056, 32, 32),
+
+new Wall(game, -24, 1056, 32, 32),
+
+new Wall(game, 8, 1056, 32, 32),
+
+new Wall(game, 40, 1056, 32, 32),
+
+new Wall(game, 72, 1056, 32, 32),
+
+new Wall(game, 104, 1056, 32, 32),
+
+new Wall(game, 136, 1056, 32, 32),
+
+new Wall(game, 168, 960, 32, 32),
+
+new Wall(game, 168, 992, 32, 32),
+
+new Wall(game, 168, 1024, 32, 32),
+
+new Wall(game, 168, 1056, 32, 32),
+
+new Wall(game, -184, 1088, 32, 32),
+
+new Wall(game, -152, 1088, 32, 32),
+
+new Wall(game, -120, 1088, 32, 32),
+
+new Wall(game, -88, 1088, 32, 32),
+
+new Wall(game, -56, 1088, 32, 32),
+
+new Wall(game, -24, 1088, 32, 32),
+
+new Wall(game, 8, 1088, 32, 32),
+
+new Wall(game, 40, 1088, 32, 32),
+
+new Wall(game, 72, 1088, 32, 32),
+
+new Wall(game, 104, 1088, 32, 32),
+
+new Wall(game, 136, 1088, 32, 32),
+
+new Wall(game, 168, 1088, 32, 32),
+
+new Wall(game, 200, 928, 32, 32),
+
+new Wall(game, 200, 960, 32, 32),
+
+new Wall(game, 200, 992, 32, 32),
+
+new Wall(game, 200, 1024, 32, 32),
+
+new Wall(game, 200, 1056, 32, 32),
+
+new Wall(game, 200, 1088, 32, 32),
+
+new Wall(game, 232, 928, 32, 32),
+
+new Wall(game, 232, 960, 32, 32),
+
+new Wall(game, 264, 960, 32, 32),
+
+new Wall(game, 264, 928, 32, 32),
+
+new Wall(game, 232, 448, 32, 32),
+
+new Wall(game, 232, 480, 32, 32),
+
+new Wall(game, 232, 512, 32, 32),
+
+new Wall(game, 232, 544, 32, 32),
+
+new Wall(game, 232, 576, 32, 32),
+
+new Wall(game, 232, 608, 32, 32),
+
+new Wall(game, 232, 640, 32, 32),
+
+new Wall(game, 232, 672, 32, 32),
+
+new Wall(game, 232, 704, 32, 32),
+
+new Wall(game, 232, 736, 32, 32),
+
+new Wall(game, 232, 768, 32, 32),
+
+new Wall(game, 232, 800, 32, 32),
+
+new Wall(game, 232, 832, 32, 32),
+
+new Wall(game, 232, 864, 32, 32),
+
+new Wall(game, 232, 896, 32, 32),
+
+new Wall(game, 264, 448, 32, 32),
+
+new Wall(game, 264, 480, 32, 32),
+
+new Wall(game, 264, 512, 32, 32),
+
+new Wall(game, 264, 544, 32, 32),
+
+new Wall(game, 264, 576, 32, 32),
+
+new Wall(game, 264, 608, 32, 32),
+
+new Wall(game, 264, 640, 32, 32),
+
+new Wall(game, 264, 672, 32, 32),
+
+new Wall(game, 264, 704, 32, 32),
+
+new Wall(game, 264, 736, 32, 32),
+
+new Wall(game, 264, 768, 32, 32),
+
+new Wall(game, 264, 800, 32, 32),
+
+new Wall(game, 264, 832, 32, 32),
+
+new Wall(game, 264, 864, 32, 32),
+
+new Wall(game, 264, 896, 32, 32),
+
+new Wall(game, -344, 800, 32, 32),
+
+new Wall(game, -312, 800, 32, 32),
+
+new Wall(game, -280, 800, 32, 32),
+
+new Wall(game, -248, 800, 32, 32),
+
+new Wall(game, -216, 800, 32, 32),
+
+new Wall(game, -184, 800, 32, 32),
+
+new Wall(game, -152, 800, 32, 32),
+
+new Wall(game, -120, 800, 32, 32),
+
+new Wall(game, -88, 800, 32, 32),
+
+new Wall(game, -56, 800, 32, 32),
+
+new Wall(game, -24, 800, 32, 32),
+
+new Wall(game, 8, 800, 32, 32),
+
+new Wall(game, 40, 800, 32, 32),
+
+new Wall(game, 72, 800, 32, 32),
+
+new Wall(game, 104, 800, 32, 32),
+
+new Wall(game, 136, 800, 32, 32),
+
+new Wall(game, -24, 832, 32, 32),
+
+new Wall(game, 8, 832, 32, 32),
+
+new Wall(game, 40, 832, 32, 32),
+
+new Wall(game, 72, 832, 32, 32),
+
+new Wall(game, 104, 832, 32, 32),
+
+new Wall(game, 136, 832, 32, 32),
+
+new Wall(game, -344, 768, 32, 32),
+
+new Wall(game, -312, 768, 32, 32),
+
+new Wall(game, -280, 768, 32, 32),
+
+new Wall(game, -248, 768, 32, 32),
+
+new Wall(game, -216, 768, 32, 32),
+
+new Wall(game, -184, 768, 32, 32),
+
+new Wall(game, -152, 768, 32, 32),
+
+new Wall(game, -120, 768, 32, 32),
+
+new Wall(game, -88, 768, 32, 32),
+
+new Wall(game, -56, 768, 32, 32),
+
+new Wall(game, -24, 768, 32, 32),
+
+new Wall(game, 8, 768, 32, 32),
+
+new Wall(game, 40, 768, 32, 32),
+
+new Wall(game, 72, 768, 32, 32),
+
+new Wall(game, 104, 768, 32, 32),
+
+new Wall(game, 136, 768, 32, 32),
+
+new Wall(game, -344, 736, 32, 32),
+
+new Wall(game, -312, 736, 32, 32),
+
+new Wall(game, 104, 736, 32, 32),
+
+new Wall(game, 136, 736, 32, 32),
+
+new Wall(game, -216, 448, 32, 32),
+
+new Wall(game, -184, 448, 32, 32),
+
+new Wall(game, -152, 448, 32, 32),
+
+new Wall(game, -120, 448, 32, 32),
+
+new Wall(game, -88, 448, 32, 32),
+
+new Wall(game, -56, 448, 32, 32),
+
+new Wall(game, -24, 448, 32, 32),
+
+new Wall(game, 8, 448, 32, 32),
+
+new Wall(game, 40, 448, 32, 32),
+
+new Wall(game, 72, 448, 32, 32),
+
+new Wall(game, 104, 448, 32, 32),
+
+new Wall(game, 136, 448, 32, 32),
+
+new Wall(game, 168, 448, 32, 32),
+
+new Wall(game, 200, 448, 32, 32),
+
+new Wall(game, -248, 448, 32, 32),
+
+new Wall(game, -280, 448, 32, 32),
+
+new Wall(game, -344, 672, 32, 32),
+
+new Wall(game, -312, 672, 32, 32),
+
+new Wall(game, -312, 704, 32, 32),
+
+new Wall(game, -344, 704, 32, 32),
+
+new Wall(game, 296, 448, 32, 32),
+
+new Wall(game, 296, 480, 32, 32),
+
+new Wall(game, 328, 448, 32, 32),
+
+new Wall(game, 328, 480, 32, 32),
+
+new Wall(game, -344, 352, 32, 32),
+
+new Wall(game, -344, 320, 32, 32),
+
+new Wall(game, -312, 320, 32, 32),
+
+new Wall(game, -280, 320, 32, 32),
+
+new Wall(game, -248, 320, 32, 32),
+
+new Wall(game, -216, 320, 32, 32),
+
+new Wall(game, -184, 320, 32, 32),
+
+new Wall(game, -152, 320, 32, 32),
+
+new Wall(game, -120, 320, 32, 32),
+
+new Wall(game, -88, 320, 32, 32),
+
+new Wall(game, -56, 320, 32, 32),
+
+new Wall(game, -24, 320, 32, 32),
+
+new Wall(game, 8, 320, 32, 32),
+
+new Wall(game, 40, 320, 32, 32),
+
+new Wall(game, 72, 320, 32, 32),
+
+new Wall(game, 104, 320, 32, 32),
+
+new Wall(game, 136, 320, 32, 32),
+
+new Wall(game, 168, 320, 32, 32),
+
+new Wall(game, 200, 320, 32, 32),
+
+new Wall(game, -312, 352, 32, 32),
+
+new Wall(game, -280, 352, 32, 32),
+
+new Wall(game, -248, 352, 32, 32),
+
+new Wall(game, -216, 352, 32, 32),
+
+new Wall(game, -184, 352, 32, 32),
+
+new Wall(game, -152, 352, 32, 32),
+
+new Wall(game, -120, 352, 32, 32),
+
+new Wall(game, -88, 352, 32, 32),
+
+new Wall(game, -56, 352, 32, 32),
+
+new Wall(game, -24, 352, 32, 32),
+
+new Wall(game, 8, 352, 32, 32),
+
+new Wall(game, 40, 352, 32, 32),
+
+new Wall(game, 72, 352, 32, 32),
+
+new Wall(game, 104, 352, 32, 32),
+
+new Wall(game, 136, 352, 32, 32),
+
+new Wall(game, 168, 352, 32, 32),
+
+new Wall(game, 200, 352, 32, 32),
+
+new Wall(game, 232, 320, 32, 32),
+
+new Wall(game, 264, 320, 32, 32),
+
+new Wall(game, 296, 320, 32, 32),
+
+new Wall(game, 328, 320, 32, 32),
+
+new Wall(game, 360, 320, 32, 32),
+
+new Wall(game, 392, 320, 32, 32),
+
+new Wall(game, 424, 320, 32, 32),
+
+new Wall(game, 232, 352, 32, 32),
+
+new Wall(game, 264, 352, 32, 32),
+
+new Wall(game, 296, 352, 32, 32),
+
+new Wall(game, 328, 352, 32, 32),
+
+new Wall(game, 360, 352, 32, 32),
+
+new Wall(game, 392, 352, 32, 32),
+
+new Wall(game, 424, 352, 32, 32),
+
+new Wall(game, 424, 384, 32, 32),
+
+new Wall(game, 424, 416, 32, 32),
+
+new Wall(game, 424, 448, 32, 32),
+
+new Wall(game, 424, 480, 32, 32),
+
+new Wall(game, 424, 512, 32, 32),
+
+new Wall(game, 424, 544, 32, 32),
+
+new Wall(game, 424, 576, 32, 32),
+
+new Wall(game, 424, 608, 32, 32),
+
+new Wall(game, 424, 640, 32, 32),
+
+new Wall(game, 424, 672, 32, 32),
+
+new Wall(game, 424, 704, 32, 32),
+
+new Wall(game, 424, 736, 32, 32),
+
+new Wall(game, 424, 768, 32, 32),
+
+new Wall(game, 424, 800, 32, 32),
+
+new Wall(game, 424, 832, 32, 32),
+
+new Wall(game, 424, 864, 32, 32),
+
+new Wall(game, 424, 896, 32, 32),
+
+new Wall(game, 424, 928, 32, 32),
+
+new Wall(game, 424, 960, 32, 32),
+
+new Wall(game, 360, 672, 32, 32),
+
+new Wall(game, 392, 672, 32, 32),
+
+new Wall(game, 360, 704, 32, 32),
+
+new Wall(game, 392, 704, 32, 32),
+
+new Wall(game, 296, 928, 32, 32),
+
+new Wall(game, 328, 928, 32, 32),
+
+new Wall(game, 328, 960, 32, 32),
+
+new Wall(game, 296, 960, 32, 32),
+
+new Wall(game, 296, 896, 32, 32),
+
+new Wall(game, 328, 896, 32, 32),
+
+new Wall(game, 424, 992, 32, 32),
+
+new Wall(game, 424, 1024, 32, 32),
+
+new Wall(game, 424, 1056, 32, 32),
+
+new Wall(game, 424, 1088, 32, 32),
+
+new Wall(game, 424, 1120, 32, 32),
+
+new Wall(game, 424, 1152, 32, 32),
+
+new Wall(game, 424, 1184, 32, 32),
+
+new Wall(game, -88, 1184, 32, 32),
+
+new Wall(game, -56, 1184, 32, 32),
+
+new Wall(game, -24, 1184, 32, 32),
+
+new Wall(game, 8, 1184, 32, 32),
+
+new Wall(game, 40, 1184, 32, 32),
+
+new Wall(game, 72, 1184, 32, 32),
+
+new Wall(game, 104, 1184, 32, 32),
+
+new Wall(game, 136, 1184, 32, 32),
+
+new Wall(game, 168, 1184, 32, 32),
+
+new Wall(game, 200, 1184, 32, 32),
+
+new Wall(game, 232, 1184, 32, 32),
+
+new Wall(game, 264, 1184, 32, 32),
+
+new Wall(game, 296, 1184, 32, 32),
+
+new Wall(game, 328, 1184, 32, 32),
+
+new Wall(game, 360, 1184, 32, 32),
+
+new Wall(game, 392, 1184, 32, 32),
+
+new Wall(game, -216, 1408, 32, 32),
+
+new Wall(game, -216, 1440, 32, 32),
+
+new Wall(game, -216, 1472, 32, 32),
+
+new Wall(game, -216, 1504, 32, 32),
+
+new Wall(game, -216, 1536, 32, 32),
+
+new Wall(game, -216, 1568, 32, 32),
+
+new Wall(game, -216, 1600, 32, 32),
+
+new Wall(game, -216, 1632, 32, 32),
+
+new Wall(game, -216, 1664, 32, 32),
+
+new Wall(game, -216, 1696, 32, 32),
+
+new Wall(game, -184, 1712, 32, 32),
+
+new Wall(game, -152, 1712, 32, 32),
+
+new Wall(game, -120, 1712, 32, 32),
+
+new Wall(game, -88, 1712, 32, 32),
+
+new Wall(game, -56, 1712, 32, 32),
+
+new Wall(game, -24, 1712, 32, 32),
+
+new Wall(game, 8, 1712, 32, 32),
+
+new Wall(game, 40, 1712, 32, 32),
+
+new Wall(game, 72, 1712, 32, 32),
+
+new Wall(game, 104, 1712, 32, 32),
+
+new Wall(game, 136, 1712, 32, 32),
+
+new Wall(game, 168, 1712, 32, 32),
+
+new Wall(game, 200, 1712, 32, 32),
+
+new Wall(game, 232, 1712, 32, 32),
+
+new Wall(game, 264, 1712, 32, 32),
+
+new Wall(game, 296, 1712, 32, 32),
+
+new Wall(game, 328, 1712, 32, 32),
+
+new Wall(game, 360, 1712, 32, 32),
+
+new Wall(game, 392, 1712, 32, 32),
+
+new Wall(game, 424, 1712, 32, 32),
+
+new Wall(game, 456, 1712, 32, 32),
+
+new Wall(game, 488, 1712, 32, 32),
+
+new Wall(game, 520, 1712, 32, 32),
+
+new Wall(game, 552, 1712, 32, 32),
+
+new Wall(game, 584, 1712, 32, 32),
+
+new Wall(game, -216, 1728, 32, 32),
+
+new Wall(game, -184, 1744, 32, 32),
+
+new Wall(game, -152, 1744, 32, 32),
+
+new Wall(game, -120, 1744, 32, 32),
+
+new Wall(game, -88, 1744, 32, 32),
+
+new Wall(game, -56, 1744, 32, 32),
+
+new Wall(game, -24, 1744, 32, 32),
+
+new Wall(game, 8, 1744, 32, 32),
+
+new Wall(game, 40, 1744, 32, 32),
+
+new Wall(game, 72, 1744, 32, 32),
+
+new Wall(game, 104, 1744, 32, 32),
+
+new Wall(game, 136, 1744, 32, 32),
+
+new Wall(game, 168, 1744, 32, 32),
+
+new Wall(game, 200, 1744, 32, 32),
+
+new Wall(game, 232, 1744, 32, 32),
+
+new Wall(game, 264, 1744, 32, 32),
+
+new Wall(game, 296, 1744, 32, 32),
+
+new Wall(game, 328, 1744, 32, 32),
+
+new Wall(game, 360, 1744, 32, 32),
+
+new Wall(game, 392, 1744, 32, 32),
+
+new Wall(game, 424, 1744, 32, 32),
+
+new Wall(game, 456, 1744, 32, 32),
+
+new Wall(game, 488, 1744, 32, 32),
+
+new Wall(game, 520, 1744, 32, 32),
+
+new Wall(game, 552, 1744, 32, 32),
+
+new Wall(game, 584, 1744, 32, 32),
+
+new Wall(game, -248, 1408, 32, 32),
+
+new Wall(game, -248, 1440, 32, 32),
+
+new Wall(game, -248, 1472, 32, 32),
+
+new Wall(game, -248, 1504, 32, 32),
+
+new Wall(game, -248, 1536, 32, 32),
+
+new Wall(game, -248, 1568, 32, 32),
+
+new Wall(game, -248, 1600, 32, 32),
+
+new Wall(game, -248, 1632, 32, 32),
+
+new Wall(game, -248, 1664, 32, 32),
+
+new Wall(game, -248, 1696, 32, 32),
+
+new Wall(game, -248, 1728, 32, 32),
+
+new Wall(game, -120, 1184, 32, 32),
+
+new Wall(game, 616, 1680, 32, 32),
+
+new Wall(game, 616, 1712, 32, 32),
+
+new Wall(game, 616, 1744, 32, 32),
+
+new Wall(game, 648, 1648, 32, 32),
+
+new Wall(game, 648, 1680, 32, 32),
+
+new Wall(game, 648, 1712, 32, 32),
+
+new Wall(game, 648, 1744, 32, 32),
+
+new Wall(game, 680, 1616, 32, 32),
+
+new Wall(game, 680, 1648, 32, 32),
+
+new Wall(game, 680, 1680, 32, 32),
+
+new Wall(game, 680, 1712, 32, 32),
+
+new Wall(game, 680, 1744, 32, 32),
+
+new Wall(game, 712, 1584, 32, 32),
+
+new Wall(game, 712, 1616, 32, 32),
+
+new Wall(game, 712, 1648, 32, 32),
+
+new Wall(game, 712, 1680, 32, 32),
+
+new Wall(game, 712, 1712, 32, 32),
+
+new Wall(game, 712, 1744, 32, 32),
+
+new Wall(game, 744, 1552, 32, 32),
+
+new Wall(game, 744, 1584, 32, 32),
+
+new Wall(game, 744, 1616, 32, 32),
+
+new Wall(game, 744, 1648, 32, 32),
+
+new Wall(game, 744, 1680, 32, 32),
+
+new Wall(game, 744, 1712, 32, 32),
+
+new Wall(game, 744, 1744, 32, 32),
+
+new Platform(game, -824, 1328, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, -344, 1344, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, -344, 1120, 0, 0, 0, PLATFORM_BOUNCY),
+
+new Platform(game, -1176, 880, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -1336, 752, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -1336, 592, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -1192, 432, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 168, 832, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 168, 736, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -184, 1184, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -40, 1648, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 24, 1600, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 104, 1552, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 232, 1552, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 296, 1600, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 360, 1648, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -104, 1600, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -184, 1552, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, -1512, 1216, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, -1400, 1136, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, -1272, 1056, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, -1256, 816, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Platform(game, -1400, 672, 0, 0, 0, PLATFORM_FADE, 60),
+
+new Platform(game, -1256, 512, 0, 0, 0, PLATFORM_FADE, 0),
+
+new Wall(game, -2200, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -2168, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -2136, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -2104, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -2072, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -2040, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -2008, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1976, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1944, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1912, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1880, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1848, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1816, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1784, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1752, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1720, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1592, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1560, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1528, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1496, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1464, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1432, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1400, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1368, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1336, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1304, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1272, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1240, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1208, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1176, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -1144, 1312, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -184, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -152, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -120, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -88, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -56, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -24, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 8, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 40, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 72, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 104, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 136, 1008, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 104, 688, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, 8, 688, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -24, 688, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -136, 688, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -168, 688, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -280, 688, 32, 32, WALL_SPIKE_UP),
+
+new Wall(game, -952, 496, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 528, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 560, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 592, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 624, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 656, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 688, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 720, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 752, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 784, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 816, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 848, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 880, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 912, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -952, 944, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -1016, 1248, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -1016, 1280, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, 296, 512, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, 296, 544, 32, 32, WALL_SPIKE_RIGHT),
+
+new Wall(game, -456, 496, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 528, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 560, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 592, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 624, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 656, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 688, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 720, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 752, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 784, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 816, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 848, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 880, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 912, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -456, 944, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, 376, 736, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, 376, 768, 32, 32, WALL_SPIKE_LEFT),
+
+new Wall(game, -1016, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -984, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -952, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -920, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -888, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -856, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -824, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -792, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -760, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -728, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -696, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -664, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -632, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -600, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -568, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -536, 1344, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -280, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -248, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -216, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -184, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -152, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -120, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -88, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -56, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -24, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 8, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 40, 736, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 72, 736, 32, 32, WALL_NOCHECKPOINT),
+
+
+
+		];
+		break;
+	}
+	for (i = 0; i < instances.length; i++ ) {
+		var e = instances[i];
+		if (e instanceof Platform || e instanceof Wall) {
+			game.currentMap.platforms.push(e);
+		} else {
+			game.addEntity(e);
+		}
+		e.mapFlag = true;
 	}
 	for (i = 0; i < enemies.length; i++) {
 		var v = enemies[i];
 		game.addEntity(v);
+		v.mapFlag = true;
 	}
 	for (i = 0; i < powerups.length; i++) {
 		var v = powerups[i];
 		game.addEntity(v);
+		v.mapFlag = true;
 	}
 	for (i = 0; i < platforms.length; i++) {
 		var p = platforms[i];
 		game.currentMap.platforms.push(p);
+		p.mapFlag = true;
 	}
 	for (i = 0; i < objects.length; i++) {
 		var o = objects[i];
 		game.addEntity(o);
+		o.mapFlag = true;
 	}
 }
 
@@ -6587,6 +8999,7 @@ ASSET_MANAGER.queueDownload("./img/Particle/ulti_cut.png");
 ASSET_MANAGER.queueDownload("./img/Particle/jelly_cut.png");
 ASSET_MANAGER.queueDownload("./img/Particle/brandong_cut.png");
 
+ASSET_MANAGER.queueDownload("./img/BackgroundSolid.png");
 ASSET_MANAGER.queueDownload("./img/Background.png");
 ASSET_MANAGER.queueDownload("./img/Background2.png");
 ASSET_MANAGER.queueDownload("./img/Background3.png");
@@ -6623,6 +9036,7 @@ ASSET_MANAGER.queueDownload("./img/Jelly/jelly_walk_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_binded.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_woke.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_woke2.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_channel.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_idle_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_jump_left.png");
@@ -6710,6 +9124,12 @@ ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slam_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slam_left.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slammed_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/tentacle_slammed_left.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/clam.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/clam_idle_open.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/clam_vulnerable.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/clam_open.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/clam_close.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/clam_dead.png");
 
 ASSET_MANAGER.queueDownload("./img/Misc/ship.png");
 ASSET_MANAGER.queueDownload("./img/Misc/ship_contact.png");
@@ -6728,32 +9148,6 @@ ASSET_MANAGER.queueDownload("./img/Particle/ground_slam.png");
 ASSET_MANAGER.queueDownload("./img/UI/jelly_waterbreathe.png");
 ASSET_MANAGER.queueDownload("./img/UI/jelly_lightning.png");
 ASSET_MANAGER.queueDownload("./img/UI/blackscreen_bar.png");
-
-
-ASSET_MANAGER.queueDownload("./img/Enemy/chicken.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/boar_idle.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/boar_prep.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/boar_charge.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandong.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandong_left.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandong_right_fast.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandong_right_slow.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandongboss_idle_right.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandongboss_idle_left.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandongboss_walk_right.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandongboss_walk_left.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandong_portrait.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/alpha_portrait.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/alpha_dead.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/alpha_idle.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/alpha_swing.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/alpha_prep.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/alpha_lunge.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandong_spin.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/brandong_whip.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/blue_viper.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/aya.png");
-ASSET_MANAGER.queueDownload("./img/Enemy/aya_shoot.png");
 
 ASSET_MANAGER.queueDownload("./img/Powerup/jellycoin.png");
 ASSET_MANAGER.queueDownload("./img/Powerup/jellycoin_sm.png");

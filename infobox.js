@@ -229,10 +229,11 @@ class BigInfoBox extends InfoBox {
  * A object to pause the game as it fades to black, unpausing after the fade ends.
  */
 class BlackScreenFade extends InfoBox {
-	constructor(game, fadeTime) {
+	constructor(game, fadeTime, nextMap) {
 		super(game, "");
 		this.fadeTime = fadeTime;
 		this.tick = 0;
+		this.nextMap = nextMap || 0;
 		this.stage = 0;
 		this.opacity = 0;
 		this.highPriority = 5;
@@ -249,6 +250,10 @@ class BlackScreenFade extends InfoBox {
 				this.tick = 0;
 			}
 		} else if (this.stage == 1) {
+			if (this.nextMap != 0) {
+				this.game.changeMap(this.nextMap);
+				this.nextMap = 0;
+			}
 			this.game.pauseTime = 0;
 			this.opacity -= 1 / this.fadeTime;
 			if (this.opacity <= 0) {

@@ -74,6 +74,7 @@ GameEngine.prototype.init = function (ctx) {
 	this.cutTime = 0; // the time where the black cross-screen cut effect is in play
 	this.pauseTime = 0;
 	this.buttonChallenge = null;
+	this.currentMapId = GAME_START;
 	this.tipsShown = [
 		false, false, false
 	];
@@ -81,7 +82,7 @@ GameEngine.prototype.init = function (ctx) {
     	x: -2400,
     	y: 0,
     	minX: -2400,
-    	maxX: 10000,
+    	maxX: 5800,
     	minY: 0,
     	maxY: 0,
     	width: 800,
@@ -108,6 +109,10 @@ GameEngine.prototype.start = function () {
 var TIP_KELP = 0;
 var TIP_ATTACK = 1;
 var TIP_DROPTHROUGH = 2;
+
+var GAME_PHASE_CLAM = 5;
+var GAME_PHASE_POSTCLAM = 6;
+var GAME_PHASE_AFTER_CLAM = 7;
 
 GameEngine.prototype.showTip = function (idx) {
 	if (!this.tipsShown[idx]) {
@@ -205,13 +210,29 @@ GameEngine.prototype.startInput = function () {
 				}
 				that.score = Math.round(that.score / 2);
 			}
-        } else if (String.fromCharCode(e.which) === 'Q') {
+        } else if (String.fromCharCode(e.which) === 'C') {
 			that.player1.attackInput = 2;
         } else if (String.fromCharCode(e.which) === 'A') {
 			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER && that.player1.currentStamina >= 100) { //ulti
 				that.player1.currentStamina = 0;
 				cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
 			}
+        } else if (String.fromCharCode(e.which) === 'Q') {
+			that.changeMap(GAME_LEVEL2);
+        } else if (String.fromCharCode(e.which) === 'W') {
+			that.camera = {
+				x: -184,
+				y: 1248,
+				minX: -184,
+				maxX: -184,
+				minY: 1248,
+				maxY: 1248,
+				width: 800,
+				height: 500
+			};
+			that.player1.teleportToX = -182;
+			that.player1.teleportToY = 1250;
+			that.advancePhase(GAME_PHASE_CLAM);
         }
         if (String.fromCharCode(e.which) === 'O') {
 			playSound(healSound);
@@ -275,6 +296,53 @@ GameEngine.prototype.setMap = function (entity) {
     this.currentMap = entity;
 };
 
+GameEngine.prototype.advancePhase = function(phase) {
+	this.currentPhase = phase;
+	this.player1.phaseTick = 0;
+};
+
+var GAME_START = 1;
+var GAME_LEVEL2 = 2;
+GameEngine.prototype.changeMap = function (id) {
+    for (var i = this.entities.length - 1; i >= 0; --i) {
+        if (this.entities[i].mapFlag) {
+            this.entities.splice(i, 1);
+        }
+    }
+	this.currentMap.platforms = [];
+    var map = new Map(this);
+    this.setMap(map);
+	this.player1.teleportToX = -2100;
+	this.player1.teleportToY = 300;
+	this.currentMapId = GAME_LEVEL2;
+	switch(id) {
+		case GAME_LEVEL2:
+			spawnWave(this, GAME_LEVEL2);
+			if (this.player1.currentForm < FORM_WATERBREATHE)
+				this.player1.currentForm = FORM_WATERBREATHE;
+			this.currentPhase = 4;
+			this.player1.ground = 5000;
+			this.camera = { //where the camera wants to be
+				x: -2400,
+				y: 0,
+				minX: -2200,
+				maxX: 10000,
+				minY: 0,
+				maxY: 5000,
+				width: 800,
+				height: 500
+			};
+			this.liveCamera = { //where the camera actually is
+				x: -2400,
+				y: 0,
+				width: 800,
+				height: 500
+			};
+			this.addEntity(map);
+		break;
+	}
+};
+
 GameEngine.prototype.setUI = function (entity) {
     this.UI = entity;
 };
@@ -335,8 +403,8 @@ GameEngine.prototype.update = function () {
 			this.score = this.scoreToSet;
 			this.scoreToSet = 0;
 		}
-		this.camera.x = this.player1.x - 200;
-		this.camera.y = this.player1.y;
+		this.camera.x = this.player1.x - 200 - (this.camera.maxY > 500 ? 100 : 0);
+		this.camera.y = this.player1.y - (this.camera.maxY > 500 ? 200 : 0);
 		//console.log("Updating camera coords to (" + this.camera.x+", "+this.camera.y+")");
 		if (this.camera.x < this.camera.minX) {
 			this.camera.x = this.camera.minX;
@@ -353,6 +421,32 @@ GameEngine.prototype.update = function () {
 		
 		if (this.currentPhase === 1) { //starting game phase: scroll to the right
             //this.camera.x = -2400 + (this.step) * 2;
+		}
+		if (this.currentMapId == GAME_START) {
+			if (this.player1.x >= 6300) {
+				this.currentMapId = -1;
+				this.addEntity(new BlackScreenFade(this, 60, GAME_LEVEL2));
+			}
+		}
+		if (this.currentPhase == 4) {
+			if (this.player1.y >= 1216 && this.player1.x >= -184) {
+				this.camera = {
+					x: -184,
+					y: 1248,
+					minX: -184,
+					maxX: -184,
+					minY: 1248,
+					maxY: 1248,
+					width: 800,
+					height: 500
+				};
+				this.advancePhase(GAME_PHASE_CLAM);
+
+				startMusic.pause();
+				bossMusic.play();
+				var chat = new TextBox(this, "./img/Chat/JellySquare.png", "That looks like trouble...");
+				this.addEntity(chat);
+			}
 		}
 		if (this.currentPhase === 13) { //starting game phase: scroll to the right
             this.camera.x = 15200 + (this.step) * 2;

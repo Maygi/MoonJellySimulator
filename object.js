@@ -23,6 +23,7 @@ class BackgroundObject {
 		this.sound = null;
 		this.tick = 0;
 		this.phase = 0;
+		this.mapFlag = false;
 	}
 	
 	getX() {
@@ -136,6 +137,65 @@ class Spaceship extends BackgroundObject {
 	}
 }
 
+class ClamObject extends BackgroundObject {
+	constructor(game, x, y) {
+		super(game, x, y);
+		this.interactText = "Absorb";
+		
+		this.interactCooldown = 1500;
+		this.currentAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/clam_dead.png"), 0, 0, 160, 128, 0.25, 4, false, false, 0, 0);
+		this.hitBoxDef = {
+			width: 128, height: 128, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+		};
+		this.sound = healSound;
+		this.pauseTime = 0;
+		drawHitBox(this);
+	}
+	
+	interact() {
+		this.game.advancePhase(GAME_PHASE_POSTCLAM);
+		var that = this;
+		playSound(boomSound);
+		var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0.3, 0, false, this.game,
+				new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.03, 1, true, false, 0, 0));
+		this.game.addEntity(newParticle);
+		this.explodeTimer = 300;
+		this.game.player1.canControl = false;
+		super.interact();
+	}
+	
+	update() {
+		var that = this;
+		if (this.explodeTimer > 0) {
+			this.explodeTimer--;
+			if (this.explodeTimer == 80)
+				playSound(chargedBurstSound);
+			if (this.explodeTimer == 0) {
+				for (var i = 0; i < 22; i++) {
+					for (var parts = 0; parts < 3; parts++) {
+						var newParticle = new Particle(PART_SECONDARY, (this.x + 28 + i * 5), (this.y + 63 + Math.random() * 120), 
+								-4, 4, -3, -3, 0.3, 0.03, 0, 0, 0, 60, .7, .15, true, this.game);
+						var element = new SquareElement(16, 16, "#f5f0df", "#dbd4c8");
+						newParticle.other = element;
+						this.game.addEntity(newParticle);
+					}
+				}
+				playSound(yoinkSound);
+				this.removeFromWorld = true;
+				this.game.advancePhase(GAME_PHASE_AFTER_CLAM);
+				setTimeout(
+					function() {
+					that.game.addEntity(new BigInfoBox(that.game, "Evolution Complete", "Consumed the GIANT GLAM", "Press [A] to channel energy to heal yourself. Gain energy by damaging enemies with basic attacks.",
+							new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_waterbreathe.png"), 0, 0, 192, 432, 1, 1, true, false, -96, -450)));
+						that.game.player1.canControl = true;
+					}, 2000);
+			}
+		}
+		super.update();
+	}
+}
+
 class Kelp extends BackgroundObject {
 	constructor(game, x, y) {
 		super(game, x, y);
@@ -198,13 +258,14 @@ class LivingKelp extends BackgroundObject {
 					}
 				}
 				this.removeFromWorld = true;
-				this.game.player1.canControl = true;
+				this.game.player1.canControl = false;
 				this.game.player1.binded = false;
 				this.game.currentPhase = 4;
 				setTimeout(
 					function() {
 						that.game.addEntity(new BigInfoBox(that.game, "Evolution Complete", "Consumed the DEMON KELP", "You can now breathe underwater. Your oxygen will no longer deplete over time, and your oxygen meter is replaced with an energy meter.",
 							new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_waterbreathe.png"), 0, 0, 192, 432, 1, 1, true, false, -96, -450)));
+						that.game.player1.canControl = true;
 					}, 2000);
 			}
 		}
@@ -244,8 +305,9 @@ class LivingKelp extends BackgroundObject {
 }
 
 class TunaChargeDropper extends BackgroundObject {
-	constructor(game, x, y) {
+	constructor(game, x, y, delay) {
 		super(game, x, y);
+		this.delay = delay || 0;
 		this.backgroundObject = true;
 		this.currentAnimation = null;
 		this.hitBoxDef = {
@@ -255,7 +317,7 @@ class TunaChargeDropper extends BackgroundObject {
 	}
 	
 	update() {
-		if (isOnScreen(this) && this.tick % 150 == 0) {
+		if (isOnScreen(this) && (this.tick + this.delay) % 150 == 0) {
 			var tuna = new Particle(IMG_PART, this.x, this.y - 32, 0, 0, 2, 2, 0.02, 0, 0, 240, 0, 0, 1.0, 0, false, this.game,
 				new Animation(ASSET_MANAGER.getAsset("./img/Misc/tuna_charge.png"), 0, 0, 32, 32, 0.08, 13, true, false, 0, 0));
 			tuna.overrideHitbox = {

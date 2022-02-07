@@ -173,6 +173,7 @@ var WALL_SPIKE_UP = 1;
 var WALL_SPIKE_DOWN = 2;
 var WALL_SPIKE_RIGHT = 3;
 var WALL_SPIKE_LEFT = 4;
+var WALL_NOCHECKPOINT = 5;
 
 
 function Wall(game, x, y, width, height, specialId) {

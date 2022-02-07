@@ -6,6 +6,8 @@ class Enemy {
 		this.hspeed = 0;
 		this.vspeed = 0;
 		this.hFriction = 0;
+		this.gravity = 0;
+		this.proposedGravity = 0.2;
 		this.displacementX = 0;
 		this.displacementY = 0;
 		this.displacementXTarget = 0;
@@ -47,6 +49,8 @@ class Enemy {
 		this.groundlocked = false;
 		this.meleeInvuln = false;
 		this.invulnFromTop = 0;
+		this.invuln = false;
+		this.mapFlag = false;
 		
 	}
 	
@@ -79,13 +83,15 @@ class Enemy {
 	}
 	
 	flip() {
-		if (this.bounceCd == 0) {
+		if (this.bounceCd == 0 && this.currentHealth == this.maxHealth) {
 			this.hspeed *= -1;
 			this.bounceCd = 30;
 		}
 	}
 	
 	update() {
+		var that = this;
+		var checkPlatforms = false;
 		if (!isOnScreen(this))
 			return;
 		if (this.displacementXSpeed != 0) {
@@ -99,6 +105,71 @@ class Enemy {
 					this.displacementXSpeed = 0;
 			}
 			this.displacementX += this.displacementXSpeed;
+			checkPlatforms = true;
+		}
+		if (this.currentHealth < this.maxHealth)
+			checkPlatforms = true;
+		if (checkPlatforms) {
+			var found = false;
+			if (this.groundlocked && that.getY() + that.hitBoxDef.height + that.hitBoxDef.offsetY >= this.game.player1.ground) {
+				found = true;
+				that.gravity = 0;
+				that.vspeed = 0;
+			}
+			this.game.currentMap.platforms.forEach(function(currentPlatform) {
+				if (that.getX() + that.hitBoxDef.offsetX + that.hitBoxDef.width > currentPlatform.hitBox.x) {
+					if (that.getX() < (currentPlatform.hitBox.x + currentPlatform.hitBox.width - 1)) {
+						if ((that.getY() + that.hitBoxDef.height + that.hitBoxDef.offsetY) + currentPlatform.vSpeed <= currentPlatform.hitBox.y + 16 || 
+								(that.getY() + that.hitBoxDef.height + that.hitBoxDef.offsetY) - currentPlatform.vSpeed <= currentPlatform.hitBox.y + 16) {
+							if ((that.getY() + that.hitBoxDef.height + that.hitBoxDef.offsetY + (that.vspeed + that.proposedGravity)) >= currentPlatform.hitBox.y) {
+								if (!currentPlatform.isWall && !that.groundlocked) {
+									//FOREACH LOOP CONTINUE LETS GO HOW TO DISCRETE LOGIC
+								} else {
+									found = true;
+									that.gravity = 0;
+									that.vspeed = 0;
+								}
+								if (currentPlatform.specialId == WALL_SPIKE_UP && currentPlatform.isWall) {
+									applyDamage(that.x, that.y, that.game, 9999, that);
+									playSound(shotHitSound);
+								}
+							}
+						}
+					}
+				}
+				if (currentPlatform.isWall) {
+					if (that.getX() + that.hitBoxDef.width > currentPlatform.x && that.getX() < currentPlatform.x + currentPlatform.width - 1) {
+						if (that.lastY + that.hitBoxDef.offsetY > currentPlatform.y + currentPlatform.height && that.y + that.hitBoxDef.offsetY < currentPlatform.y + currentPlatform.height) {
+							that.y = currentPlatform.y + currentPlatform.height - that.hitBoxDef.growthY - that.hitBoxDef.offsetY - that.displacementY;
+							that.vspeed = 0;
+							that.gravity = 0;	
+							if (currentPlatform.specialId == WALL_SPIKE_DOWN) {
+								applyDamage(that.getX(), that.getY(), that.game, 9999, that);
+								playSound(shotHitSound);
+							}
+						}
+					}
+					if (that.getY() + that.hitBoxDef.height > currentPlatform.y && that.getY() < currentPlatform.y + currentPlatform.height) {
+						if (that.getX() < currentPlatform.x && that.getX() + that.hitBoxDef.width >= currentPlatform.x && (that.displacementXSpeed > 0 || that.hspeed > 0)) {
+							that.x = currentPlatform.x - that.hitBoxDef.width - that.hitBoxDef.offsetX - that.displacementX;
+							if (currentPlatform.specialId == WALL_SPIKE_LEFT) {
+								applyDamage(that.getX(), that.getY(), that.game, 9999, that);
+								playSound(shotHitSound);
+							}
+						} else if (that.getX() < currentPlatform.x + currentPlatform.width && that.getX() + that.hitBoxDef.width >= currentPlatform.x + currentPlatform.width && (that.displacementXSpeed < 0 || that.hspeed < 0)) {
+							that.x = currentPlatform.x + currentPlatform.width - that.hitBoxDef.growthX - that.hitBoxDef.offsetX - 1 - that.displacementX;
+							if (currentPlatform.specialId == WALL_SPIKE_RIGHT) {
+								applyDamage(that.getX(), that.getY(), that.game, 9999, that);
+								playSound(shotHitSound);
+							}
+						}
+					}
+				}
+			});
+			if (!found) {
+				this.gravity = this.groundlocked ? this.proposedGravity : 0;
+				this.vspeed += this.gravity;
+			}
 		}
 		if (this.displacementYSpeed != 0 && !this.groundlocked) {
 			if (this.displacementYSpeed > 0) {
@@ -213,8 +284,10 @@ class Enemy {
 				this.currentAnimation = this.deadAnimationRight;
 			else
 				this.currentAnimation = this.deadAnimationLeft;
-			this.game.addEntity(new Particle(IMG_PART, this.x + this.displacementX, this.y + this.displacementY,
-				0, 0, 0, 0, 0, 0, 0, 30, 0, 10, 1, 0, false, this.game, this.currentAnimation));
+			if (this.maxHealth < 300) {
+				this.game.addEntity(new Particle(IMG_PART, this.x + this.displacementX, this.y + this.displacementY,
+					0, 0, 0, 0, 0, 0, 0, 30, 0, 10, 1, 0, false, this.game, this.currentAnimation));
+			}
 			var coins = this.scoreValue / 25;
 			var bigCoins = 0;
 			if (coins >= 8) {
@@ -650,12 +723,12 @@ class Uni extends Enemy {
 		super(game, x, y);
 		
 		this.scoreValue = 200;
-		this.maxHealth = 100.0;
+		this.maxHealth = 90.0;
 		this.autoDamage = 30;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
 		this.displacementFriction = 5; //basically, how "heavy" a mob is
-		this.groundlocked = true;
+		this.groundlocked = false;
 		
 		//unique vars
 		this.changing = false;
@@ -724,6 +797,176 @@ class Uni extends Enemy {
 				this.aniRight = this.unchangeAnimationRight;
 				this.meleeInvuln = false;
 				this.hitBoxDef = this.hitBoxSmall;
+			}
+		}
+		super.update();
+	}
+}
+
+class Clam extends Enemy {
+	
+	constructor(game, x, y) {
+		super(game, x, y);
+		
+		this.scoreValue = 500;
+		this.maxHealth = 300.0;
+		this.autoDamage = 20;
+		this.currentHealth = this.maxHealth;
+		this.currentHealthTemp = this.currentHealth;
+		this.displacementFriction = 1000; //basically, how "heavy" a mob is
+		this.groundlocked = false;
+		
+		//unique vars
+		this.changing = false;
+		this.unchanging = false;
+		this.changeTime = 0;
+		this.attackStep = 0;
+		this.changeCooldown = 0;
+		this.attackSequence = 0;
+		this.totalAttacks = 0;
+		this.attackMax = 5;
+		this.dieTime = 0;
+		
+		// Animations
+		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/clam.png"), 0, 0, 160, 128, 1, 1, true, false, 0, 0);
+		this.walkAnimationRight = this.walkAnimationLeft;
+		this.changeAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/clam_open.png"), 0, 0, 160, 128, 0.2, 3, false, false, 0, 0);
+		this.changeAnimationRight = this.changeAnimationLeft;
+		this.changedAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/clam_idle_open.png"), 0, 0, 160, 128, 0.5, 2, true, false, 0, 0);
+		this.changedAnimationRight = this.changeAnimationLeft;
+		this.unchangeAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/clam_close.png"), 0, 0, 160, 128, 0.2, 3, false, false, 0, 0);
+		this.unchangeAnimationRight = this.unchangeAnimationLeft;
+		this.vulnAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/clam_vulnerable.png"), 0, 0, 256, 128, 1, 1, true, false, 0, 0);
+		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/clam.png"), 0, 0, 160, 128, 1, 1, true, false, 0, 0);
+		this.deadAnimationRight = this.deadAnimationLeft;
+		this.aniLeft = this.walkAnimationLeft;
+		this.aniRight = this.walkAnimationRight;
+		this.currentAnimation = this.aniLeft;
+		
+		this.hitBoxSmall = {
+			width: 110, height: 80, offsetX: 8, offsetY: 45, growthX: 0, growthY: 0
+		};
+		this.hitBoxDefBig = {
+			width: 110, height: 110, offsetX: 8, offsetY: 45, growthX: 0, growthY: 0
+		};
+		this.hitBoxDef = this.hitBoxSmall;
+		this.hitBoxInitial = this.hitBoxDef;
+		drawHitBox(this);
+	}
+	
+	
+	update() {
+		if (this.game.currentPhase == GAME_PHASE_CLAM);
+			this.game.currentBoss = this;
+		if (this.changeCooldown > 0)
+			this.changeCooldown--;
+		if (this.changeCooldown == 0 && !this.changing && this.changeTime == 0 && !this.unchanging) {
+			this.changing = true;
+			this.aniLeft = this.changeAnimationLeft;
+			this.aniRight = this.changeAnimationRight;
+		}
+		if (this.changeTime > 0) {
+			this.attackStep++;
+			switch(this.attackSequence) {
+				case 0: //targeted
+					if (this.attackStep >= 30 && this.attackStep % 15 == 0) {
+						var newParticle = new Particle(PART_SECONDARY, this.x + 60, this.y + 94, 
+								0, 0, 0, 0, 0.1, 0.1, 0, 150, 0, 0, .8, .1, false, this.game);
+						var element = new CircleElement(14 + Math.random() * 5, "#ff4e21", "#ff7c2b");
+						newParticle.other = element;
+						newParticle.attackId = PARTICLE_CLAM_ATTACK;
+						newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
+						newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.game.player1.hitBoxDef.offsetY - 20 + Math.random() * 40;
+						newParticle.targetSpeed = 14;
+						this.game.addEntity(newParticle);
+						playSound(shootSound);
+					}
+				break;
+				case 1: //rain
+					if (this.attackStep >= 30 && this.attackStep % 5 == 0) {
+						var newParticle = new Particle(PART_SECONDARY, this.x + 60, this.y + 94, 
+								-5, -20, -10, -20, 0.3, 0.1, 0, 210, 0, 0, .8, .1, false, this.game);
+						var element = new CircleElement(14 + Math.random() * 5, "#ff4e21", "#ff7c2b");
+						newParticle.other = element;
+						newParticle.attackId = PARTICLE_CLAM_ATTACK;
+						this.game.addEntity(newParticle);
+						playSound(shootSound);
+					}
+				break;
+				case 2: //explosive charges
+					if (this.attackStep >= 60 && this.attackStep % 60 == 0) {
+						var newParticle = new Particle(PART_SECONDARY, this.x + 60, this.y + 94, 
+								-5, -12, -15, -15, 0.3, 0.1, 0, 90, 0, 0, .8, .1, false, this.game);
+						var element = new CircleElement(25, "#fae993", "#f0da69");
+						newParticle.other = element;
+						newParticle.attackId = PARTICLE_CLAM_ATTACK2;
+						this.game.addEntity(newParticle);
+						playSound(shootSound);
+					}
+				break;
+				case 3: //vulnerable
+					if (this.attackStep % 5 == 0) {
+						var newParticle = new Particle(PART_SECONDARY, this.x + 30 + Math.random() * 60, this.y + 94, 
+								-2, 2, -3, -5, 0.05, 0.1, 0, 30, 0, 0, .8, .1, false, this.game);
+						var element = new CircleElement(10, "#d9d9d9", "#bab8b1");
+						newParticle.other = element;
+						this.game.addEntity(newParticle);
+					}
+				break;
+			}
+		}
+		if (this.changing && this.currentAnimation.isDone()) {
+			this.changing = false;
+			this.currentAnimation.restart();
+			this.changeTime = 210;
+			this.attackStep = 0;
+			this.totalAttacks++;
+			this.attackSequence = Math.round(Math.random() * 2);
+			this.meleeInvuln = true;
+			this.aniLeft = this.changedAnimationLeft;
+			this.aniRight = this.changedAnimationRight;
+			if (this.totalAttacks >= this.attackMax) {
+				this.changeTime = 300;
+				this.totalAttacks = 0;
+				this.attackSequence = 3; //vulnerable
+				this.meleeInvuln = false;
+				this.aniLeft = this.vulnAnimation;
+				this.aniRight = this.vulnAnimation;
+				playSound(breakSound);
+			}
+			this.hitBoxDef = this.hitBoxDefBig;
+		}
+		if (this.unchanging && this.currentAnimation.isDone()) {
+			this.unchanging = false;
+			this.changeCooldown = 90;
+			this.currentAnimation.restart();
+			this.aniLeft = this.walkAnimationLeft;
+			this.aniRight = this.walkAnimationRight;
+		}
+		if (this.changeTime > 0) {
+			this.changeTime--;
+			if (this.changeTime == 0) {
+				this.unchanging = true;
+				this.aniLeft = this.unchangeAnimationLeft;
+				this.aniRight = this.unchangeAnimationRight;
+				this.meleeInvuln = true;
+				this.hitBoxDef = this.hitBoxSmall;
+			}
+		}
+		if (this.currentHealth <= 0 && this.dieTime == 0) { //close before dying
+			this.dieTime = 120;
+			this.currentHealth = 1;
+			this.meleeInvuln = true;
+			this.unchanging = true;
+			this.aniLeft = this.unchangeAnimationLeft;
+			this.aniRight = this.unchangeAnimationRight;
+			this.invuln = true;
+		}
+		if (this.dieTime > 0) {
+			this.dieTime--;
+			if (this.dieTime == 0) {
+				this.currentHealth = 0;
+				this.game.addEntity(new ClamObject(this.game, this.x, this.y));
 			}
 		}
 		super.update();
