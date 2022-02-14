@@ -229,7 +229,7 @@ class BigInfoBox extends InfoBox {
  * A object to pause the game as it fades to black, unpausing after the fade ends.
  */
 class BlackScreenFade extends InfoBox {
-	constructor(game, fadeTime, nextMap) {
+	constructor(game, fadeTime, nextMap, blackStart) {
 		super(game, "");
 		this.fadeTime = fadeTime;
 		this.tick = 0;
@@ -237,6 +237,7 @@ class BlackScreenFade extends InfoBox {
 		this.stage = 0;
 		this.opacity = 0;
 		this.highPriority = 5;
+		this.blackStart = blackStart || false;
 	}
 	
 	update() {
@@ -263,11 +264,71 @@ class BlackScreenFade extends InfoBox {
 	}
 	
 	draw(ctx) {
-		
 		ctx.fillStyle = "#000000";
 		ctx.globalAlpha = this.opacity;
+		if (this.blackStart && this.stage == 0)
+			ctx.globalAlpha = 1;
 		ctx.fillRect(this.game.liveCamera.x, this.game.liveCamera.y, 800, 500);
 		ctx.globalAlpha = 1;
+		Entity.prototype.draw.call(this);
+	}
+}
+
+
+/**
+ * An object to represent a movie. 
+ */
+class Movie extends InfoBox {
+	
+	constructor(game, movieDir, movieName, frames) {
+		super(game, "");
+		this.movieDir = movieDir;
+		this.movieName = movieName;
+		this.frames = frames;
+		this.tick = 0;
+		this.stage = 0;
+		this.opacity = 0;
+		this.highPriority = 5;
+		for (var i = 0; i <= this.frames; i++) {
+			ASSET_MANAGER.queueDownload("./img/" + this.movieDir + "/" + this.movieName + "_" + this.getMovieIndex(i) + ".png");
+			if (this.getMovieIndex(i) >= frames)
+				break;
+		}
+		ASSET_MANAGER.downloadAll();
+		this.currentAnimation = null;
+	}
+	
+	getMovieIndex(tick) {
+		var index = Math.min(this.frames, tick);
+		var stringIndex = index;
+		if (index < 10)
+			stringIndex = "0000" + index;
+		else if (index < 100)
+			stringIndex = "000" + index;
+		else if (index < 1000)
+			stringIndex = "00" + index;
+		return stringIndex;
+	}
+	
+	update() {
+		if (this.movieDir.indexOf("Angler") != -1) {
+			if (this.tick == 0)
+				playSound(suspenseSound);
+			if (this.tick == 100)
+				playSound(suspenseSound2);
+			if (this.tick == 270)
+				playSound(getEatenSound);
+		}
+		if (this.tick >= this.frames) {
+			this.removeFromWorld = true;
+			this.game.addEntity(new BlackScreenFade(this.game, 120, 0, true));
+		}
+		this.game.pauseTime = 20; //continously pause until window is faded out
+		this.tick++;
+	}
+	
+	draw(ctx) {
+		ctx.drawImage(ASSET_MANAGER.getAsset("./img/" + this.movieDir + "/" + this.movieName + "_" + this.getMovieIndex(this.tick) + ".png"), this.game.liveCamera.x, this.game.liveCamera.y);
 		Entity.prototype.draw.call(this);
 	}
 }

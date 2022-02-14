@@ -78,6 +78,11 @@ class Enemy {
 		return Math.abs(this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2));
 	}
 	
+	distanceToPlayerTrue() {
+		return Math.abs(this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2)) + 
+				Math.abs(this.getYMidpoint() - (this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2));
+	}
+	
 	handleSideHit() {
 		
 	}
@@ -360,6 +365,41 @@ class SeaSlug extends Enemy {
 	}
 }
 
+class AnglerSlime extends Enemy {
+	
+	constructor(game, x, y) {
+		super(game, x, y);
+
+		this.hspeed = 0;
+		this.walkDistance = 0;
+		this.scoreValue = 50;
+		this.maxHealth = 90.0;
+		this.autoDamage = 5;
+		this.currentHealth = this.maxHealth;
+		this.currentHealthTemp = this.currentHealth;
+		this.displacementFriction = 5000; //basically, how "heavy" a mob is
+		this.groundlocked = true;
+		
+		// Animations
+		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerslime.png"), 0, 0, 64, 64, 0.5, 2, true, false, 0, 0);
+		this.walkAnimationRight = this.walkAnimationLeft;
+		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerslime_dead.png"), 0, 0, 64, 64, 1, 1, true, false, 0, 0);
+		this.deadAnimationRight = this.deadAnimationLeft;
+		this.aniLeft = this.walkAnimationLeft;
+		this.aniRight = this.walkAnimationRight;
+		this.currentAnimation = this.aniLeft;
+		
+		this.hitBoxDef = {
+			width: 60, height: 48, offsetX: 2, offsetY: 16, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	update() {
+		super.update();
+	}
+}
+
 class ShellSnail extends SeaSlug {
 	
 	constructor(game, x, y, hspeed, walkDistance) {
@@ -446,6 +486,60 @@ class Pirahna extends SeaSlug {
 	}
 }
 
+
+class AnglerSlime2 extends Enemy {
+	
+	constructor(game, x, y) {
+		super(game, x, y);
+
+		this.hspeed = 0;
+		this.walkDistance = 0;
+		this.scoreValue = 50;
+		this.maxHealth = 45.0;
+		this.autoDamage = 20;
+		this.currentHealth = this.maxHealth;
+		this.currentHealthTemp = this.currentHealth;
+		this.displacementFriction = 1; //basically, how "heavy" a mob is
+		this.groundlocked = true;
+		
+		// Animations
+		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerslime2.png"), 0, 0, 64, 64, 0.5, 2, true, false, 0, 0);
+		this.walkAnimationRight = this.walkAnimationLeft;
+		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerslime2_dead.png"), 0, 0, 64, 64, 1, 1, true, false, 0, 0);
+		this.deadAnimationRight = this.deadAnimationLeft;
+		this.aniLeft = this.walkAnimationLeft;
+		this.aniRight = this.walkAnimationRight;
+		this.currentAnimation = this.aniLeft;
+		
+		this.hitBoxDef = {
+			width: 56, height: 56, offsetX: 4, offsetY: 4, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	update() {
+		if (this.distanceToPlayerTrue() <= 500 || this.activated) {
+			this.activated = true;
+			this.lineUpTargetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.game.player1.hitBoxDef.offsetY;
+			var deltaY = this.getYMidpoint() - this.lineUpTargetY;
+			if (Math.abs(deltaY) < 30) {
+				this.vspeed = 0;
+			} else if (deltaY < 0) {
+				this.vspeed = 1.5;
+			} else {
+				this.vspeed = -1.5;
+			}
+			var deltaX = this.getXMidpoint() - (this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX);
+			if (Math.abs(deltaX) < 30)
+				this.hspeed = 0;
+			else if (deltaX < 0)
+				this.hspeed = 1.5;
+			else
+				this.hspeed = -1.5;
+		}
+		super.update();
+	}
+}
 
 class Isopod extends Enemy {
 	

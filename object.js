@@ -186,9 +186,10 @@ class ClamObject extends BackgroundObject {
 				this.game.advancePhase(GAME_PHASE_AFTER_CLAM);
 				setTimeout(
 					function() {
-					that.game.addEntity(new BigInfoBox(that.game, "Evolution Complete", "Consumed the GIANT GLAM", "Press [A] to channel energy to heal yourself. Gain energy by damaging enemies with basic attacks.",
-							new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_waterbreathe.png"), 0, 0, 192, 432, 1, 1, true, false, -96, -450)));
-						that.game.player1.canControl = true;
+						that.game.player1.currentForm = FORM_HEAL;
+						that.game.addEntity(new BigInfoBox(that.game, "Evolution Complete", "Consumed the GIANT CLAM", "Press [A] to channel energy to heal yourself. Gain energy by damaging enemies with basic attacks.",
+								new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_waterbreathe.png"), 0, 0, 192, 432, 1, 1, true, false, -96, -450)));
+							that.game.player1.canControl = true;
 					}, 2000);
 			}
 		}
@@ -260,6 +261,7 @@ class LivingKelp extends BackgroundObject {
 				this.removeFromWorld = true;
 				this.game.player1.canControl = false;
 				this.game.player1.binded = false;
+				this.game.player1.currentAnimation = this.game.player1.idleAnimation;
 				this.game.currentPhase = 4;
 				setTimeout(
 					function() {
@@ -448,7 +450,6 @@ class BubbleCurrent extends BackgroundObject {
 			var inYPushRange = Math.abs((this.y + this.hitBoxDef.height/2) - 
 				(this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2)) < 60;
 			if (inYPushRange && inXPushRange) { //push
-				console.log("PUSHHHH");
 				this.game.player1.displacementXSpeed = this.pushHspeed * 3 / 4;
 			}
 			var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y + Math.random() * 64, 
@@ -457,6 +458,51 @@ class BubbleCurrent extends BackgroundObject {
 			newParticle.other = element;
 			//newParticle.acceleration = 0.03;
 			this.game.addEntity(newParticle);
+		}
+
+		super.update();
+	}
+}
+
+class GasVent extends BackgroundObject {
+	constructor(game, x, y, interval, offset) {
+		super(game, x, y);
+		this.backgroundObject = true;
+		this.currentAnimation = null;
+		this.interval = interval;
+		this.cooldown = interval;
+		this.offset = offset || 0;
+		this.hitBoxDef = {
+			width: 32, height: 64, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	update() {
+		if (this.tick % 10 == 0 && isNearbyScreen(this)) {
+			var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y, 
+					-2, 2, -3, -3, -0.1, 0.1, 0, 75, 0, 30, .9, 0, false, this.game);
+			var element = new CircleElement(3, "#298f44", "#286640");
+			newParticle.other = element;
+			//newParticle.acceleration = 0.03;
+			this.game.addEntity(newParticle);
+		}
+		if ((this.tick + this.offset) % this.interval == 0) {
+			if (isNearbyScreen(this)) {
+				if (Math.random() >= 0.66)
+					playSoundProx(this.game, this, bubbleSound);
+				else if (Math.random() >= 0.66)
+					playSoundProx(this.game, this, bubbleSound2);
+				else
+					playSoundProx(this.game, this, bubbleSound3);
+				var newParticle = new Particle(PART_SECONDARY, this.x + 16, this.y, 
+						-2, 2, -3, -3, -0.2, 0.2, 0, 75, 0, 30, .9, 0, false, this.game);
+				var element = new CircleElement(18, "#298f44", "#286640");
+				newParticle.other = element;
+				newParticle.attackId = PARTICLE_GASBUBBLE;
+				//newParticle.acceleration = 0.03;
+				this.game.addEntity(newParticle);
+			}
 		}
 
 		super.update();

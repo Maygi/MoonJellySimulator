@@ -47,6 +47,8 @@ GameEngine.prototype.init = function (ctx) {
 			families: ['Proxima Nova:300,400,700']
 		}
 	});
+
+	this.movieAngler = new Movie(this, "Movie_Angler", "movie", 299);
 	this.highPriority = 1000;
 	this.score = 0;
 	this.cameraShakeAmount = 0;
@@ -113,6 +115,7 @@ var TIP_DROPTHROUGH = 2;
 var GAME_PHASE_CLAM = 5;
 var GAME_PHASE_POSTCLAM = 6;
 var GAME_PHASE_AFTER_CLAM = 7;
+var GAME_PHASE_EATEN = 8;
 
 GameEngine.prototype.showTip = function (idx) {
 	if (!this.tipsShown[idx]) {
@@ -181,7 +184,7 @@ GameEngine.prototype.startInput = function () {
 					//	that.player1.y = 32;
 		}
 		if (String.fromCharCode(e.which) === 'E') {
-			//that.player1.x += 96;
+			that.player1.x += 96;
 		}
 		if (String.fromCharCode(e.which) === 'C') {
 			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER) { //dash
@@ -194,7 +197,7 @@ GameEngine.prototype.startInput = function () {
 				that.player1.dead = false;
 				that.player1.currentHealth = that.player1.maxHealth;
 				if (that.player1.currentForm == FORM_BABY) {
-					this.game.player1.currentStamina = this.game.player1.maxStamina;
+					this.player1.currentStamina = this.player1.maxStamina;
 				}
 				that.player1.vulnerable = false;
 				that.player1.invulnTimer = that.player1.invulnTimerMax * 2;
@@ -213,6 +216,11 @@ GameEngine.prototype.startInput = function () {
         } else if (String.fromCharCode(e.which) === 'C') {
 			that.player1.attackInput = 2;
         } else if (String.fromCharCode(e.which) === 'A') {
+			if (that.player1.currentStamina >= 30) {
+				that.player1.attackInput = 3;
+				that.player1.jumpDown = false;
+			}
+        } else if (String.fromCharCode(e.which) === 'D') {
 			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER && that.player1.currentStamina >= 100) { //ulti
 				that.player1.currentStamina = 0;
 				cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
@@ -246,16 +254,23 @@ GameEngine.prototype.startInput = function () {
 			that.player1.notBaby();
 			that.player1.longRangeAnimations();
 		}
+        if (String.fromCharCode(e.which) === 'R') {
+			that.player1.jumping = true;
+			that.player1.yVelocity = 6;
+		}
         e.preventDefault();
     }, false);
     this.ctx.canvas.addEventListener("keyup", function (e) {
-		if (String.fromCharCode(e.which) === 'D' || String.fromCharCode(e.which) === '\'' ) { 
+		if (String.fromCharCode(e.which) === '\'' ) { 
 			that.player1.rightDown = false;
-		} else if (String.fromCharCode(e.which) === 'A' || String.fromCharCode(e.which) === '%') {
+		} else if (String.fromCharCode(e.which) === '%') {
 			that.player1.leftDown = false;
 		}
-		if (String.fromCharCode(e.which) === 'W' || String.fromCharCode(e.which) === '&') {
+		if (String.fromCharCode(e.which) === '&') {
 			that.player1.upDown = false;
+		}
+		if (String.fromCharCode(e.which) === 'A') {
+			that.player1.attackInput = 0;
 		}
 		if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
 			that.player1.jumpDown = false;
@@ -299,10 +314,26 @@ GameEngine.prototype.setMap = function (entity) {
 GameEngine.prototype.advancePhase = function(phase) {
 	this.currentPhase = phase;
 	this.player1.phaseTick = 0;
+	if (this.currentPhase == GAME_PHASE_AFTER_CLAM) {
+		startMusic.pause();
+		bossMusic.pause();
+		this.cameraSpeed = 15;
+		this.camera = { 
+			x: -2400,
+			y: 0,
+			minX: -2200,
+			maxX: 10000,
+			minY: 0,
+			maxY: 5000,
+			width: 800,
+			height: 500
+		};
+	}
 };
 
 var GAME_START = 1;
 var GAME_LEVEL2 = 2;
+var GAME_EATENPART = 3;
 GameEngine.prototype.changeMap = function (id) {
     for (var i = this.entities.length - 1; i >= 0; --i) {
         if (this.entities[i].mapFlag) {
@@ -340,6 +371,29 @@ GameEngine.prototype.changeMap = function (id) {
 			};
 			this.addEntity(map);
 		break;
+		case GAME_EATENPART:
+			spawnWave(this, GAME_EATENPART);
+			if (this.player1.currentForm < FORM_HEAL)
+				this.player1.currentForm = FORM_HEAL;
+			this.player1.ground = 5000;
+			this.camera = { //where the camera wants to be
+				x: -2400,
+				y: 0,
+				minX: -2200,
+				maxX: 10000,
+				minY: 0,
+				maxY: 5000,
+				width: 800,
+				height: 500
+			};
+			this.liveCamera = { //where the camera actually is
+				x: -2400,
+				y: 0,
+				width: 800,
+				height: 500
+			};
+			this.addEntity(map);
+		break;
 	}
 };
 
@@ -358,7 +412,7 @@ GameEngine.prototype.draw = function () {
 		if (this.entities[i] instanceof Character)
 			continue;
 		if (this.entities[i].highPriority > 0) {
-			if (this.entities[i].highPriority === 3)
+			if (this.entities[i].highPriority >= 3)
 				highPriorityEntities3.push(i);
 			else if (this.entities[i].highPriority === 2)
 				highPriorityEntities2.push(i);
@@ -379,6 +433,21 @@ GameEngine.prototype.draw = function () {
     for (var i = 0; i < highPriorityEntities3.length; i++) {
 		this.entities[highPriorityEntities3[i]].draw(this.ctx);
     }
+	if (this.currentPhase == GAME_PHASE_AFTER_CLAM) {
+		if (this.player1.x >= 800) {
+			var alpha = (1600 - this.player1.x) / 800;
+			this.ctx.globalAlpha = 1 - alpha;
+			this.ctx.fillStyle = "#000000";
+			this.ctx.fillRect(this.liveCamera.x, this.liveCamera.y, 800, 500);
+			this.ctx.globalAlpha = 1;
+			if (alpha <= 0.25) {
+				this.addEntity(this.movieAngler);
+				this.advancePhase(GAME_PHASE_EATEN);
+				this.changeMap(GAME_EATENPART);
+			}
+		}
+	}
+	//playVideo(); //video??
     this.ctx.restore();
 };
 
