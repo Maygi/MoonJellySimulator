@@ -137,6 +137,49 @@ class Spaceship extends BackgroundObject {
 	}
 }
 
+class Virus extends BackgroundObject {
+	constructor(game, x, y) {
+		super(game, x, y);
+		this.interactText = "Communicate";
+		var text = new TextBox(this.game, null, "It's an alien cell. It doesn't belong here either...");
+		text.next = new TextBox(this.game, null, "The cell sends a command, creating platforms.");
+		this.interactChat = [text];
+		this.baseAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Misc/virus.png"), 0, 0, 32, 32, 0.5, 2, true, false, 0, 0);
+		this.currentAnimation = this.baseAnimation;
+		this.interactCooldown = 300;
+		this.hitBoxDef = {
+			width: 32, height: 32, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	interact() {
+		var that = this;
+		var platforms = [
+			new Wall(that.game, that.x + 32, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
+			new Wall(that.game, that.x + 32 * 2, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
+			new Wall(that.game, that.x + 32 * 3, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
+			new Wall(that.game, that.x + 32 * 3, that.y - 32 * 10, 32, 32, WALL_NOCHECKPOINT),
+		];
+		for (var i = -9; i < 4; i += 2) {
+			platforms.push(new Platform(that.game, that.x + 32, that.y + 32 * i));
+		}
+		for (var i = -9; i < 4; i++) {
+			platforms.push(new Wall(that.game, that.x + 32 * 4, that.y + 32 * i, 32, 32, WALL_NOCHECKPOINT));
+		}
+		setTimeout(
+			function() {
+				platforms.forEach(function(currentPlatform) {
+					currentPlatform.hSpeed = 2;
+					currentPlatform.temporary = true;
+					currentPlatform.life = 900;
+					that.game.currentMap.platforms.push(currentPlatform);
+				});
+			}, 90);
+		super.interact();
+	}
+}
+
 class ClamObject extends BackgroundObject {
 	constructor(game, x, y) {
 		super(game, x, y);

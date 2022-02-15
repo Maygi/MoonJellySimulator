@@ -205,12 +205,12 @@ GameEngine.prototype.startInput = function () {
 				that.player1.xVelocity = 0;
 				that.player1.stunTimer = 2;
 				that.player1.stunned = true;
-				if (that.player1.teleportToX != -1) {
-					that.player1.x = that.player1.teleportToX;
-					that.player1.y = that.player1.teleportToY;
-					that.player1.teleportToY = -1;
-					that.player1.teleportToY = -1;
-				}
+				
+				that.pauseTime = 5;
+				that.addEntity(new BlackScreenFade(that, 30));
+				that.player1.teleportToX = that.player1.lastSafeX;
+				that.player1.teleportToY = that.player1.lastSafeY - 3;
+				
 				that.score = Math.round(that.score / 2);
 			}
         } else if (String.fromCharCode(e.which) === 'C') {
@@ -512,7 +512,7 @@ GameEngine.prototype.update = function () {
 				this.advancePhase(GAME_PHASE_CLAM);
 
 				startMusic.pause();
-				bossMusic.play();
+				//bossMusic.play();
 				var chat = new TextBox(this, "./img/Chat/JellySquare.png", "That looks like trouble...");
 				this.addEntity(chat);
 			}
@@ -562,6 +562,11 @@ GameEngine.prototype.update = function () {
         var entity = this.entities[i];
         if (!entity.removeFromWorld && (this.pauseTime === 0 || (entity.highPriority > 0 || entity instanceof TextBox))) {
             entity.update();
+        }
+    }
+    for (var i = this.currentMap.platforms.length - 1; i >= 0; --i) {
+        if (this.currentMap.platforms[i].removeFromWorld) {
+            this.currentMap.platforms.splice(i, 1);
         }
     }
     for (var i = this.entities.length - 1; i >= 0; --i) {

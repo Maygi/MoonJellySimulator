@@ -423,7 +423,7 @@ function addEnergy(game, amount) {
 	if (game.player1.currentStamina < game.player1.maxStamina && amount > 0) {
 		var oldStamina = game.player1.currentStamina;
 		game.player1.currentStamina += amount;
-		if (game.player1.currentForm >= FORM_ANGLER && oldStamina <= game.player1.maxStamina && game.player1.currentStamina >= game.player1.maxStamina) {
+		if (game.player1.currentForm >= FORM_HEAL && oldStamina <= game.player1.maxStamina && game.player1.currentStamina >= game.player1.maxStamina) {
 			playSound(energyMaxSound);
 			game.player1.currentStamina = game.player1.maxStamina;
 			for (var i = 0; i < 50; i++) {
@@ -2794,7 +2794,7 @@ Character.prototype.update = function () {
 		if (gameStarted) {
 			//game phase management
 			if (this.game.currentPhase < 1) {
-				startMusic.play();
+				//startMusic.play();
 				var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
 				this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
 				this.game.step = 0;
@@ -2837,41 +2837,6 @@ Character.prototype.update = function () {
 			}
 			if (this.phaseTimer > 0) {
 				this.phaseTimer--;
-				switch(this.game.currentPhase) {
-					case 6: //brandong tp
-						var newParticle = new Particle(PART_SECONDARY, 15700 + Math.random() * 150, 200 + Math.random() * 150, -3, 3, -3, 3, 0, 0.1, 0, 0, 0, 15, .2, .05, true, this.game);
-						element = new SquareElement(30 + Math.random() * 20, 30 + Math.random() * 20, "#a6f9ff", "#6ae2eb");
-						newParticle.other = element;
-						this.game.addEntity(newParticle);
-					break;
-				}
-				if (this.phaseTimer === 0) {
-					switch(this.game.currentPhase) {
-						case 4: //brandong grrrr
-							this.game.player1.canControl = true;
-							this.game.currentPhase = 5;
-							this.game.cameraLock = false;
-							this.game.cameraSpeed = 10;
-							this.game.camera.minX = 1100;
-							this.game.camera.maxX = 16200;
-						break;
-						case 6: //brandong tp
-							var brandongBoss = new BrandongBoss(this.game, 15700, 200);
-							this.game.currentBoss = brandongBoss;
-							this.game.currentPhase = 7;
-							bossMusic.play();
-							var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "Are you serious?");
-							this.game.addEntity(chat);
-							this.game.addEntity(brandongBoss);
-						break;
-						case 11: //brandong dead
-							var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "...");
-							this.game.addEntity(chat);
-							this.game.currentPhase = 12;
-							//this.game.gameWon = true; //temp!
-						break;
-					}
-				}
 			}
 			if (invincible) {
 				this.currentHealth = 1;
@@ -2884,50 +2849,6 @@ Character.prototype.update = function () {
 				/*var newParticle = new Particle(VOID_GOOP, this.game.liveCamera.x + Math.random() * this.game.liveCamera.width, this.game.liveCamera.y + this.game.liveCamera.height - 1, 
 						-4, 4, -6, -4, .2, 0, 0, 60, 10, 15, .5, .2, true, this.game);
 				this.game.addEntity(newParticle);*/
-			}
-			if (this.game.currentPhase === 10 || this.game.currentPhase === 17) {
-				if (this.game.liveCamera.y <= -120 && this.hitBox.y + this.hitBox.height >= this.game.liveCamera.y + 500) {
-					if (mode === "easy") {
-						this.yVelocity = 20;
-						this.jumping = true;
-						this.y = this.game.liveCamera.y + 500 - this.hitBox.height - 10;
-						this.currentHealth -= 50;
-						if (this.currentHealth > 0) {
-							playSound(lightningSound);
-						}
-						var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-								0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-						var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-						var damage = 50;
-						damageText.text = damage;
-						damageParticle.other = damageText;
-						this.game.addEntity(damageParticle);
-					} else if (mode === "medium") {
-						this.yVelocity = 15;
-						this.jumping = true;
-						this.y = this.game.liveCamera.y + 500 - this.hitBox.height - 10;
-						this.currentHealth -= 75;
-						if (this.currentHealth > 0) {
-							playSound(lightningSound);
-						}
-						var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-								0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-						var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-						var damage = 75;
-						damageText.text = damage;
-						damageParticle.other = damageText;
-						this.game.addEntity(damageParticle);
-					} else {
-						this.currentHealth = 0;
-						var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
-								0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
-						var damageText = new TextElement("", "Lucida Console", 25, "red", "black");
-						var damage = 100;
-						damageText.text = damage;
-						damageParticle.other = damageText;
-					}
-					//console.log(mode);
-				}
 			}
 			if (this.bounceTimer > 0) {
 				this.bounceTimer--;
@@ -3413,7 +3334,7 @@ Character.prototype.update = function () {
 								damage = 15;
 							applyDamage(targetEntity.x, targetEntity.y, this.game, damage, targetEntity);
 							playSound(this.currentForm < FORM_ANGLER ? shotHitSound : lightningSound);
-							addEnergy(this.game, this.currentForm >= FORM_HEAL ? damage : 0);
+							addEnergy(this.game, this.currentForm >= FORM_HEAL ? damage / 2 : 0);
 						}
 						switch(this.game.player1.attackIndex) {
 							case 1: //side hit
@@ -4688,6 +4609,7 @@ ASSET_MANAGER.queueDownload("./img/Background3.png");
 ASSET_MANAGER.queueDownload("./img/ArrowGoUp.png");
 ASSET_MANAGER.queueDownload("./img/ArrowGoRight.png");
 ASSET_MANAGER.queueDownload("./img/UI/Bottom.png");
+ASSET_MANAGER.queueDownload("./img/Platform/wall_red.png");
 ASSET_MANAGER.queueDownload("./img/UI/OugiBar.png");
 ASSET_MANAGER.queueDownload("./img/UI/OugiBarActive.png");
 ASSET_MANAGER.queueDownload("./img/UI/BarBack.png");
@@ -4772,6 +4694,7 @@ ASSET_MANAGER.queueDownload("./img/Enemy/uni_spiked.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/uni_dead.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/anglerslime.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/anglerslime_dead.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/anglerslime2_right.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/anglerslime2.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/anglerslime2_dead.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/pirahna_right.png");
@@ -4823,6 +4746,7 @@ ASSET_MANAGER.queueDownload("./img/Misc/ship_contact.png");
 ASSET_MANAGER.queueDownload("./img/Misc/t_key.png");
 ASSET_MANAGER.queueDownload("./img/Misc/kelp.png");
 ASSET_MANAGER.queueDownload("./img/Misc/tuna_charge.png");
+ASSET_MANAGER.queueDownload("./img/Misc/virus.png");
 
 ASSET_MANAGER.queueDownload("./img/Platform/invisible_shine.png");
 ASSET_MANAGER.queueDownload("./img/Platform/platform_crumble.png");

@@ -112,7 +112,7 @@ class Enemy {
 			this.displacementX += this.displacementXSpeed;
 			checkPlatforms = true;
 		}
-		if (this.currentHealth < this.maxHealth)
+		if (this.currentHealth < this.maxHealth || this instanceof AnglerSlime2)
 			checkPlatforms = true;
 		if (checkPlatforms) {
 			var found = false;
@@ -144,7 +144,7 @@ class Enemy {
 				}
 				if (currentPlatform.isWall) {
 					if (that.getX() + that.hitBoxDef.width > currentPlatform.x && that.getX() < currentPlatform.x + currentPlatform.width - 1) {
-						if (that.lastY + that.hitBoxDef.offsetY > currentPlatform.y + currentPlatform.height && that.y + that.hitBoxDef.offsetY < currentPlatform.y + currentPlatform.height) {
+						if (that.getY() + that.hitBoxDef.offsetY + that.hitBoxDef.height > currentPlatform.y + currentPlatform.height && that.getY() + that.hitBoxDef.offsetY < currentPlatform.y + currentPlatform.height) {
 							that.y = currentPlatform.y + currentPlatform.height - that.hitBoxDef.growthY - that.hitBoxDef.offsetY - that.displacementY;
 							that.vspeed = 0;
 							that.gravity = 0;	
@@ -153,19 +153,20 @@ class Enemy {
 								playSound(shotHitSound);
 							}
 						}
-					}
-					if (that.getY() + that.hitBoxDef.height > currentPlatform.y && that.getY() < currentPlatform.y + currentPlatform.height) {
-						if (that.getX() < currentPlatform.x && that.getX() + that.hitBoxDef.width >= currentPlatform.x && (that.displacementXSpeed > 0 || that.hspeed > 0)) {
-							that.x = currentPlatform.x - that.hitBoxDef.width - that.hitBoxDef.offsetX - that.displacementX;
-							if (currentPlatform.specialId == WALL_SPIKE_LEFT) {
-								applyDamage(that.getX(), that.getY(), that.game, 9999, that);
-								playSound(shotHitSound);
-							}
-						} else if (that.getX() < currentPlatform.x + currentPlatform.width && that.getX() + that.hitBoxDef.width >= currentPlatform.x + currentPlatform.width && (that.displacementXSpeed < 0 || that.hspeed < 0)) {
-							that.x = currentPlatform.x + currentPlatform.width - that.hitBoxDef.growthX - that.hitBoxDef.offsetX - 1 - that.displacementX;
-							if (currentPlatform.specialId == WALL_SPIKE_RIGHT) {
-								applyDamage(that.getX(), that.getY(), that.game, 9999, that);
-								playSound(shotHitSound);
+					} else {
+						if (that.getY() + that.hitBoxDef.offsetY + that.hitBoxDef.height > currentPlatform.y && that.getY() + that.hitBoxDef.offsetY < currentPlatform.y + currentPlatform.height) {
+							if (that.getX() < currentPlatform.x && that.getX() + that.hitBoxDef.width >= currentPlatform.x && (that.displacementXSpeed > 0 || that.hspeed > 0)) {
+								that.x = currentPlatform.x - that.hitBoxDef.width - that.hitBoxDef.offsetX - that.displacementX;
+								if (currentPlatform.specialId == WALL_SPIKE_LEFT) {
+									applyDamage(that.getX(), that.getY(), that.game, 9999, that);
+									playSound(shotHitSound);
+								}
+							} else if (that.getX() < currentPlatform.x + currentPlatform.width && that.getX() + that.hitBoxDef.width >= currentPlatform.x + currentPlatform.width && (that.displacementXSpeed < 0 || that.hspeed < 0)) {
+								that.x = currentPlatform.x + currentPlatform.width - that.hitBoxDef.growthX - that.hitBoxDef.offsetX - 1 - that.displacementX;
+								if (currentPlatform.specialId == WALL_SPIKE_RIGHT) {
+									applyDamage(that.getX(), that.getY(), that.game, 9999, that);
+									playSound(shotHitSound);
+								}
 							}
 						}
 					}
@@ -500,11 +501,11 @@ class AnglerSlime2 extends Enemy {
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
 		this.displacementFriction = 1; //basically, how "heavy" a mob is
-		this.groundlocked = true;
+		this.groundlocked = false;
 		
 		// Animations
 		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerslime2.png"), 0, 0, 64, 64, 0.5, 2, true, false, 0, 0);
-		this.walkAnimationRight = this.walkAnimationLeft;
+		this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerslime2_right.png"), 0, 0, 64, 64, 0.5, 2, true, false, 0, 0);
 		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerslime2_dead.png"), 0, 0, 64, 64, 1, 1, true, false, 0, 0);
 		this.deadAnimationRight = this.deadAnimationLeft;
 		this.aniLeft = this.walkAnimationLeft;

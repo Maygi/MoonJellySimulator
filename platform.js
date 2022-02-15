@@ -20,6 +20,9 @@ function Platform(game, x, y, hSpeed, vSpeed, switchDelay, specialId, stepOffset
     this.delay = 0;
 	this.fadeAmount = 0;
 	this.trigger = false;
+	this.temporary = false;
+	this.tick = 0;
+	this.life = 0;
     if (this.vSpeed !== 0 && this.step > 0) {
     	this.delay = this.step;
     	this.step = 0;
@@ -47,12 +50,33 @@ function Platform(game, x, y, hSpeed, vSpeed, switchDelay, specialId, stepOffset
 Platform.prototype = new Entity();
 Platform.prototype.constructor = Platform;
 
+Platform.prototype.remove = function() {
+	for (i = 0; i < this.hitBox.width; i += 10) {
+		playSound(breakSound);
+		var particle = new Particle(SHAPE_PART, this.x + i, this.y, 4, -4, 0, -4, 0.15, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
+		var element;
+		if (this.specialId === 0)
+			element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#123D5C", "#386586");
+		else if (this.specialId === 1)
+			element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#39682D", "#41850B");
+		else
+			element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#3A1F0E", "#7F5336");	        	
+		particle.other = element;
+		this.game.addEntity(particle);
+	}
+	this.removeFromWorld = true;
+};
+
 Platform.prototype.update = function () {
 	// Only update when it is visible on the screen
 	if (this.delay > 0) {
 		this.delay--;
 	} else {
 		this.step++;
+		this.tick++;
+		if (this.tick >= this.life && this.life != 0) {
+			this.remove();
+		}
 		if (this.switchDelay > 0 && this.step % this.switchDelay === 0) {
 			this.hSpeed *= -1;
 			this.vSpeed *= -1;
@@ -124,24 +148,6 @@ Platform.prototype.update = function () {
 		this.x += this.hSpeed;
 		this.y += this.vSpeed;
 	}
-    if ((this.game.currentPhase === 10 || this.game.currentPhase === 17) && !this.removeFromWorld) {
-        if (this.game.liveCamera.y <= -120 && this.hitBox.y + this.hitBox.height >= this.game.liveCamera.y + 500) {
-			for (i = 0; i < this.hitBox.width; i += 10) {
-	            playSound(breakSound);
-	            var particle = new Particle(SHAPE_PART, this.x + i, this.y, 4, -4, 0, -4, 0.15, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
-	            var element;
-	            if (this.specialId === 0)
-	            	element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#123D5C", "#386586");
-	            else if (this.specialId === 1)
-	            	element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#39682D", "#41850B");
-	            else
-	            	element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#3A1F0E", "#7F5336");	            	
-	            particle.other = element;
-	            this.game.addEntity(particle);
-			}
-			this.removeFromWorld = true;
-        }
-    }
     Entity.prototype.update.call(this);
 };
 
@@ -176,18 +182,28 @@ var WALL_SPIKE_LEFT = 4;
 var WALL_NOCHECKPOINT = 5;
 
 
-function Wall(game, x, y, width, height, specialId) {
+function Wall(game, x, y, width, height, specialId, specialFunction, stepOffset) {
     // Number Variables
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
+	this.tick = 0;
     this.platformPicture = ASSET_MANAGER.getAsset("./img/UI/Bottom.png");
+	if (game.currentPhase == GAME_PHASE_EATEN)
+		this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/wall_red.png");
     this.isWall = true;
 	this.hSpeed = 0;
 	this.vSpeed = 0;
 	this.fadeAmount = 0;
 	this.specialId = specialId || 0;
+	this.specialFunction = specialFunction || 0;
+	this.stepOffset = stepOffset || 0;
+	this.phase = 0;
+	if (this.stepOffset > 30) //limit offset for walls. too lazy to make another offset value adjustor
+		this.stepOffset = 30;
+	this.temporary = false;
+	this.life = 0;
 	if (this.specialId == WALL_SPIKE_UP) {
 		this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/spike_up.png");
 		this.width = 32;
@@ -220,8 +236,74 @@ function Wall(game, x, y, width, height, specialId) {
 Wall.prototype = new Entity();
 Wall.prototype.constructor = Wall;
 
+Wall.prototype.remove = function() {
+	for (i = 0; i < this.hitBox.width; i += 10) {
+		playSound(breakSound);
+		var particle = new Particle(SHAPE_PART, this.x + i, this.y, 4, -4, 0, -4, 0.15, 0.1, 0, 5, 0, 50, 1, 0, true, this.game);
+		var element;
+		element = new SquareElement(6 + Math.random() * 4, 6 + Math.random() * 4, "#123D5C", "#386586");            	
+		particle.other = element;
+		this.game.addEntity(particle);
+	}
+	this.removeFromWorld = true;
+};
+
+Wall.prototype.canHit = function() {
+	if (this.phase == 1)
+		return false;
+	return true;
+}
+
 Wall.prototype.update = function () {
     Entity.prototype.update.call(this);
+	this.tick++;
+	if (this.specialFunction == 1 && this.specialId >= WALL_SPIKE_UP && this.specialId <= WALL_SPIKE_LEFT) {
+		if ((this.tick - this.stepOffset) % 60 == 0) {
+			if (this.phase == 0) { //spikes retreat
+				this.phase = 1;
+				switch(this.specialId) {
+					case WALL_SPIKE_UP:
+						this.vSpeed = 11;
+					break;
+					case WALL_SPIKE_DOWN:
+						this.vSpeed = -10;
+					break;
+					case WALL_SPIKE_LEFT:
+						this.hSpeed = 10;
+					break;
+					case WALL_SPIKE_RIGHT:
+						this.hSpeed = -10;
+					break;
+				}
+			} else {
+				this.phase = 0;
+				switch(this.specialId) {
+					case WALL_SPIKE_UP:
+						this.vSpeed = -11;
+					break;
+					case WALL_SPIKE_DOWN:
+						this.vSpeed = 10;
+					break;
+					case WALL_SPIKE_LEFT:
+						this.hSpeed = -10;
+					break;
+					case WALL_SPIKE_RIGHT:
+						this.hSpeed = 10;
+					break;
+				}
+			}
+		}
+	}
+	this.x += this.hSpeed;
+	this.y += this.vSpeed;
+	if (this.specialFunction == 1) {
+		this.vSpeed *= 0.8;
+		this.hSpeed *= 0.8;
+	}
+		
+	if (this.tick >= this.life && this.life != 0) {
+		this.remove();
+	}
 };
 
 Wall.prototype.draw = function (ctx) {
