@@ -226,21 +226,21 @@ GameEngine.prototype.startInput = function () {
 				cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
 			}
         } else if (String.fromCharCode(e.which) === 'Q') {
-			that.changeMap(GAME_LEVEL2);
+			that.advancePhase(GAME_PHASE_EATEN);
+			that.changeMap(GAME_EATENPART);
         } else if (String.fromCharCode(e.which) === 'W') {
 			that.camera = {
-				x: -184,
-				y: 1248,
-				minX: -184,
-				maxX: -184,
-				minY: 1248,
-				maxY: 1248,
+				x: 2730,
+				y: 3136,
+				minX: -2200,
+				maxX: 10000,
+				minY: 0,
+				maxY: 5000,
 				width: 800,
 				height: 500
 			};
-			that.player1.teleportToX = -182;
-			that.player1.teleportToY = 1250;
-			that.advancePhase(GAME_PHASE_CLAM);
+			that.player1.teleportToX = 2730;
+			that.player1.teleportToY = 3136;
         }
         if (String.fromCharCode(e.which) === 'O') {
 			playSound(healSound);

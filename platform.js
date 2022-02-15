@@ -200,8 +200,25 @@ function Wall(game, x, y, width, height, specialId, specialFunction, stepOffset)
 	this.specialFunction = specialFunction || 0;
 	this.stepOffset = stepOffset || 0;
 	this.phase = 0;
-	if (this.stepOffset > 30) //limit offset for walls. too lazy to make another offset value adjustor
-		this.stepOffset = 30;
+	if (this.stepOffset != 0 && this.specialId >= 1 && this.specialId <= 4) { //limit offset for walls. too lazy to make another offset value adjustor
+		this.phase = 1;
+		this.stepOffset = 0;
+		switch(this.specialId) {
+			case WALL_SPIKE_UP:
+				this.y += 64;
+			break;
+			case WALL_SPIKE_DOWN:
+				this.y -= 64;
+			break;
+			case WALL_SPIKE_LEFT:
+				this.x += 64;
+			break;
+			case WALL_SPIKE_RIGHT:
+				this.x -= 64;
+			break;
+		}
+		
+	}
 	this.temporary = false;
 	this.life = 0;
 	if (this.specialId == WALL_SPIKE_UP) {
@@ -225,7 +242,7 @@ function Wall(game, x, y, width, height, specialId, specialFunction, stepOffset)
 		this.height = 48;
 	}
     
-    Entity.call(this, game, x, y);
+    Entity.call(this, game, this.x, this.y);
     
     this.hitBoxDef = {
     	width: this.width, height: this.height, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
