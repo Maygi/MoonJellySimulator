@@ -211,6 +211,7 @@ GameEngine.prototype.startInput = function () {
 				that.player1.teleportToX = that.player1.lastSafeX;
 				that.player1.teleportToY = that.player1.lastSafeY - 3;
 				
+				that.player1.displacementXSpeed = 0;
 				that.score = Math.round(that.score / 2);
 			}
         } else if (String.fromCharCode(e.which) === 'C') {

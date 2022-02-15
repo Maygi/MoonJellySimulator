@@ -159,7 +159,6 @@ class Virus extends BackgroundObject {
 			new Wall(that.game, that.x + 32, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
 			new Wall(that.game, that.x + 32 * 2, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
 			new Wall(that.game, that.x + 32 * 3, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
-			new Wall(that.game, that.x + 32 * 3, that.y - 32 * 10, 32, 32, WALL_NOCHECKPOINT),
 		];
 		for (var i = -9; i < 4; i += 2) {
 			platforms.push(new Platform(that.game, that.x + 32, that.y + 32 * i));
@@ -175,7 +174,7 @@ class Virus extends BackgroundObject {
 					currentPlatform.life = 900;
 					that.game.currentMap.platforms.push(currentPlatform);
 				});
-			}, 90);
+			}, 2000);
 		super.interact();
 	}
 }

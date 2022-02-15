@@ -500,7 +500,7 @@ class AnglerSlime2 extends Enemy {
 		this.autoDamage = 20;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
-		this.displacementFriction = 1; //basically, how "heavy" a mob is
+		this.displacementFriction = 0.5; //basically, how "heavy" a mob is
 		this.groundlocked = false;
 		
 		// Animations

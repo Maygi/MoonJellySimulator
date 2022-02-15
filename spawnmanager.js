@@ -354,9 +354,7 @@ new AnglerSlime2(game, -440, 1856),
 
 new AnglerSlime2(game, -248, 2336),
 
-new AnglerSlime2(game, 1912, 3104),
-
-new AnglerSlime2(game, 1752, 3008),
+new AnglerSlime2(game, 1512, 3072),
 
 new Virus(game, -136, 2576),
 
@@ -1815,6 +1813,20 @@ new Wall(game, 2424, 3424, 32, 32),
 new Wall(game, 2456, 3424, 32, 32),
 
 new Wall(game, 2488, 3424, 32, 32),
+
+new Wall(game, 1944, 2880, 32, 32),
+
+new Wall(game, 1944, 2912, 32, 32),
+
+new Wall(game, 1944, 2944, 32, 32),
+
+new Wall(game, 1944, 2976, 32, 32),
+
+new Wall(game, 1944, 3008, 32, 32),
+
+new Wall(game, 1944, 3040, 32, 32),
+
+new Wall(game, 1944, 3072, 32, 32),
 
 new Platform(game, -504, 1712, 0, 0, 0, PLATFORM_BOUNCY),
 
@@ -5904,8 +5916,6 @@ new Isopod(game, -872, 368, -1, 128),
 
 new Eel(game, 168, 384, -1, 0, 160),
 
-new Uni(game, -280, 864),
-
 new Uni(game, -440, 1264),
 
 new Pirahna(game, -2104, 848, 1, 64),
@@ -6213,8 +6223,6 @@ new BubbleCurrent(game, -936, 800, 8),
 new Clam(game, 472, 1584),
 
 new Platform(game, -2200, 800),
-
-new Platform(game, -2120, 928),
 
 new Platform(game, -2200, 1056),
 
@@ -9296,6 +9304,26 @@ new Wall(game, -808, 432, 32, 32),
 
 new Wall(game, -840, 432, 32, 32),
 
+new Wall(game, -1944, 864, 32, 32),
+
+new Wall(game, -1944, 896, 32, 32),
+
+new Wall(game, -1976, 896, 32, 32),
+
+new Wall(game, -2008, 896, 32, 32),
+
+new Wall(game, -2040, 896, 32, 32),
+
+new Wall(game, -2072, 896, 32, 32),
+
+new Wall(game, -2104, 896, 32, 32),
+
+new Wall(game, -2104, 928, 32, 32),
+
+new Wall(game, -2104, 960, 32, 32),
+
+new Wall(game, -2136, 960, 32, 32),
+
 new Platform(game, -824, 1328, 0, 0, 0, PLATFORM_BOUNCY),
 
 new Platform(game, -344, 1344, 0, 0, 0, PLATFORM_BOUNCY),
@@ -9370,173 +9398,173 @@ new Platform(game, -1400, 672, 0, 0, 0, PLATFORM_FADE, 60),
 
 new Platform(game, -1256, 512, 0, 0, 0, PLATFORM_FADE, 0),
 
-new Wall(game, -2200, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -2200, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -2168, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -2168, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -2136, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -2136, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -2104, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -2104, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -2072, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -2072, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -2040, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -2040, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -2008, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -2008, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1976, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1976, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1944, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1944, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1912, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1912, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1880, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1880, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1848, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1848, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1816, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1816, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1784, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1784, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1560, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1560, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1528, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1528, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1496, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1496, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1464, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1464, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1432, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1432, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1400, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1400, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1368, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1368, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1336, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1336, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1304, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1304, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1272, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1272, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1240, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1240, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1208, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1208, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1176, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1176, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1144, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1144, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -184, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -184, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -152, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -152, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -120, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -120, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -88, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -88, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -56, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -56, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -24, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -24, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 8, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 8, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 40, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 40, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 72, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 72, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 104, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 104, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 136, 1008, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 136, 1008, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 104, 688, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 104, 688, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 8, 688, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 8, 688, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -24, 688, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -24, 688, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -136, 688, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -136, 688, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -168, 688, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -168, 688, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -280, 688, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -280, 688, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1752, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1752, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1720, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1720, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -1592, 1312, 32, 32, WALL_SPIKE_UP),
+new Wall(game, -1592, 1312, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, -952, 496, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 496, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 528, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 528, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 560, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 560, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 592, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 592, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 624, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 624, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 656, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 656, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 688, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 688, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 720, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 720, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 752, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 752, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 784, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 784, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 816, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 816, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 848, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 848, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 880, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 880, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 912, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 912, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -952, 944, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -952, 944, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -1016, 1248, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -1016, 1248, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -1016, 1280, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, -1016, 1280, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, 296, 512, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, 296, 512, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, 296, 544, 32, 32, WALL_SPIKE_RIGHT),
+new Wall(game, 296, 544, 32, 32, WALL_SPIKE_RIGHT, 0, 0),
 
-new Wall(game, -456, 496, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 496, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 528, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 528, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 560, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 560, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 592, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 592, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 624, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 624, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 656, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 656, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 688, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 688, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 720, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 720, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 752, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 752, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 784, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 784, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 816, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 816, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 848, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 848, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 880, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 880, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 912, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 912, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, -456, 944, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, -456, 944, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, 376, 736, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, 376, 736, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, 376, 768, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, 376, 768, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
 new Wall(game, -1016, 1344, 32, 32, WALL_NOCHECKPOINT),
 

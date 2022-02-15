@@ -2693,6 +2693,7 @@ Character.prototype.hitSpike = function() {
 	this.teleportToX = this.lastSafeX;
 	this.teleportToY = this.lastSafeY - 3;
 	this.yVelocity = 0;
+	this.displacementXSpeed = 0;
 	applyDamage(this.x, this.y, this.game, 20, this);
 }
 
