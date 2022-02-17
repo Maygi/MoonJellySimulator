@@ -1243,7 +1243,7 @@ class AnglerSpirit extends Enemy {
 		super(game, x, y);
 		
 		this.scoreValue = 2000;
-		this.maxHealth = 500.0;
+		this.maxHealth = 3000.0;
 		this.autoDamage = 25;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
