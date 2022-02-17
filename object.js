@@ -142,7 +142,7 @@ class Virus extends BackgroundObject {
 		super(game, x, y);
 		this.interactText = "Communicate";
 		var text = new TextBox(this.game, null, "It's an alien cell. It doesn't belong here either...");
-		text.next = new TextBox(this.game, null, "The cell sends a command, creating platforms.");
+		text.nextText = new TextBox(this.game, null, "The cell sends a command, manipulating mass to create a mobile wall...");
 		this.interactChat = [text];
 		this.baseAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Misc/virus.png"), 0, 0, 32, 32, 0.5, 2, true, false, 0, 0);
 		this.currentAnimation = this.baseAnimation;
@@ -166,15 +166,17 @@ class Virus extends BackgroundObject {
 		for (var i = -9; i < 4; i++) {
 			platforms.push(new Wall(that.game, that.x + 32 * 4, that.y + 32 * i, 32, 32, WALL_NOCHECKPOINT));
 		}
+		platforms.forEach(function(currentPlatform) {
+			that.game.currentMap.platforms.push(currentPlatform);
+		});
 		setTimeout(
 			function() {
 				platforms.forEach(function(currentPlatform) {
 					currentPlatform.hSpeed = 2;
 					currentPlatform.temporary = true;
 					currentPlatform.life = 900;
-					that.game.currentMap.platforms.push(currentPlatform);
 				});
-			}, 2000);
+			}, 4000);
 		super.interact();
 	}
 }
@@ -393,12 +395,30 @@ class ButtonChallenge extends BackgroundObject {
 		this.buttonScrollTime = 0;
 		this.buttonScrollSpeed = 0;
 		this.buttonScrollAmount = 0;
+		this.completeCount = 0;
+		this.awawa = false;
+		this.laser = null;
+		this.laser2 = null;
 		for (var i = 0; i < 5; i++) {
 			this.currentButtons.push(this.buttonOptions[Math.floor(Math.random() * this.buttonOptions.length)]);
 		}
 		console.log(this.currentButtons);
 		drawHitBox(this);
 	}
+	
+	setAwawa(laser, laser2) {
+		this.awawa = true;
+		this.laser = laser;
+		this.laser2 = laser2;
+		this.buttonOptions = ["a","w"];
+		this.currentButtons = [];
+		this.currentButtons.push("a");
+		this.currentButtons.push("w");
+		this.currentButtons.push("a");
+		this.currentButtons.push("w");
+		this.currentButtons.push("a");
+	}
+	
 	success() {
 		var particle = new Particle(TEXT_PART, 300 + this.game.liveCamera.x + 6, 150 + this.game.liveCamera.y, 
 				0, 0, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
@@ -406,10 +426,25 @@ class ButtonChallenge extends BackgroundObject {
 		particle.other = damageText;
 		this.game.addEntity(particle);
 		this.currentButtons.shift();
-		this.currentButtons.push(this.buttonOptions[Math.floor(Math.random() * this.buttonOptions.length)]);
 		this.buttonScrollSpeed = 15;
 		this.buttonScrollAmount = 0;
 		this.cooldown = 5;
+		this.completeCount++;
+		if (this.awawa) {
+			this.laser.distanceMultiplier -= 0.018;
+			this.laser2.distanceMultiplier += 0.018;
+			if (this.currentButtons[this.currentButtons.length - 1] == 'w')
+				this.currentButtons.push("a");
+			else
+				this.currentButtons.push("w");
+			this.cooldown = 3;
+			if (this.laser2.distanceMultiplier >= 1) {
+				this.laser.finish();
+				this.laser2.finish();
+				this.removeFromWorld = true;
+			}
+		} else
+			this.currentButtons.push(this.buttonOptions[Math.floor(Math.random() * this.buttonOptions.length)]);
 		playSound(beepSound);
 		if (this.kelp != null) {
 			this.kelp.currentHealth -= 1;
@@ -437,6 +472,21 @@ class ButtonChallenge extends BackgroundObject {
 		playSound(breakSound);
 	}
 	update() {
+		if (this.awawa) {
+			this.laser.distanceMultiplier += 0.002;
+			this.laser2.distanceMultiplier -= 0.002;
+			if (this.laser.distanceMultiplier > 1) {
+				this.laser.distanceMultiplier = 1;
+				this.laser2.distanceMultiplier = 0;
+				if (this.game.player1.vulnerable) {
+					this.game.player1.vulnerable = false;
+					applyDamage(this.game.player1.x, this.game.player1.y, this.game, 20, this.game.player1);
+					this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
+					this.game.player1.hitByAttack = true;
+					playSound(hitSound);
+				}
+			}
+		}
 		if (this.buttonScrollSpeed > 0) {
 			this.buttonScrollAmount += this.buttonScrollSpeed;
 			this.buttonScrollSpeed *= 0.72;

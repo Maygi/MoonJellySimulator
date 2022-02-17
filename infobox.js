@@ -132,6 +132,10 @@ class BigInfoBox extends InfoBox {
 	}
 	
 	update() {
+		if (this.tick == 0 && this.stage == 0) {
+			startMusic.pause();
+			playSound(powerupMusic);
+		}
 		this.tick++;
 		if (this.stage == 4 && this.game.spaceDown) {
 			this.stage = 5;
@@ -189,6 +193,7 @@ class BigInfoBox extends InfoBox {
 					this.imageOpacity -= 0.01;
 					if (this.descOpacity <= 0) {
 						this.removeFromWorld = true;
+						startMusic.play();
 					}
 				}
 			break;
@@ -310,6 +315,11 @@ class Movie extends InfoBox {
 		return stringIndex;
 	}
 	
+	rewind() {
+		this.tick = 0;
+		this.removeFromWorld = false;
+	}
+	
 	update() {
 		if (this.movieDir.indexOf("Angler") != -1) {
 			if (this.tick == 0)
@@ -320,11 +330,15 @@ class Movie extends InfoBox {
 				playSound(getEatenSound);
 		}
 		if (this.tick >= this.frames) {
+			this.tick = 0;
 			this.removeFromWorld = true;
-			this.game.addEntity(new BlackScreenFade(this.game, 120, 0, true));
+			if (this.movieDir.indexOf("Angler") != -1)
+				this.game.addEntity(new BlackScreenFade(this.game, 120, 0, true));
+		} else {
+			this.tick++;
 		}
-		this.game.pauseTime = 20; //continously pause until window is faded out
-		this.tick++;
+		if (this.movieDir.indexOf("Angler") != -1)
+			this.game.pauseTime = 20; //continously pause until window is faded out
 	}
 	
 	draw(ctx) {

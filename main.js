@@ -52,9 +52,14 @@ var PARTICLE_GASBUBBLE = 16;
 var gameStarted = false;
 var mode = "hard";
 // Sounds
+var powerupMusic = new Audio("./sounds/noreply.wav");
+powerupMusic.volume = 0.3;
 var bossMusic = new Audio("./sounds/bgm_boss.mp3");
 bossMusic.loop = true;
 bossMusic.volume = bossMusicVolume;
+var bossMusic2 = new Audio("./sounds/bgm_boss2.mp3");
+bossMusic2.loop = true;
+bossMusic2.volume = bossMusicVolume;
 var climbMusic = new Audio("./sounds/malz.mp3");
 climbMusic.loop = true;
 climbMusic.volume = 0.2;
@@ -112,7 +117,7 @@ var teleportSound = new Audio("./sounds/teleport.wav");
 teleportSound.volume = 0.3;
 teleportSound.playbackRate = 1.5;
 var voidGateSound = new Audio("./sounds/voidgate.wav");
-voidGateSound.volume = 1;
+voidGateSound.volume = 0.2;
 var laserSound = new Audio("./sounds/laser.wav");
 laserSound.volume = 0.04;
 var jumpSound = new Audio("./sounds/jumpSound.mp3");
@@ -150,6 +155,8 @@ var coinSound = new Audio("./sounds/coin.wav");
 var slapSound = new Audio("./sounds/slap.wav");
 var beepSound = new Audio("./sounds/beep.mp3");
 var rumbleSound = new Audio("./sounds/rumble.wav");
+var rumbleSound2 = new Audio("./sounds/rumble.wav");
+rumbleSound2.loop = true;
 var beepsSound = new Audio("./sounds/beeps.wav");
 var wooshSound = new Audio("./sounds/woosh.wav");
 var boomSound = new Audio("./sounds/boom.mp3");
@@ -176,6 +183,11 @@ suspenseSound2.volume = 0.05;
 var getEatenSound = new Audio("./sounds/geteaten.wav");
 getEatenSound.volume = 0.3;
 
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max + 1);
+  return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+}
 /**
     Useful methods
 */
@@ -413,7 +425,7 @@ function addEnergy(game, amount) {
 	var height = game.UI.staminaHeight;
 	if (game.player1.currentStamina + amount < 0) {
 		game.player1.currentStamina = 0;
-		if (game.player1.currentForm = FORM_BABY) {
+		if (game.player1.currentForm == FORM_BABY) {
 			applyDamage(game.player1.x, game.player1.y, game, Math.abs(amount), game.player1);
 			playSound(drownHurtSound);
 		}
@@ -457,6 +469,22 @@ function playSound(audio) {
 		audio.volume = 0.3;
     audio.currentTime = 0;
     audio.play();
+}
+
+// Plays the given audio at a specific volume
+function playSound(audio, vol) {
+    if (!soundOn) {
+        return;
+    }
+	var oldVol = audio.volume;
+	audio.vol = vol;
+	if (audio.volume === 1) //default volume
+		audio.volume = 0.3;
+    audio.currentTime = 0;
+    audio.play();
+	audio.onended = function() {
+		audio.vol = oldVol;
+	};
 }
 
 // Plays the given audio
@@ -601,7 +629,7 @@ Background.prototype.constructor = Background;
 Background.prototype.update = function () {
 };
 Background.prototype.draw = function (ctx) {
-	if (this.game.currentPhase == GAME_PHASE_EATEN) {
+	if (this.game.currentPhase == GAME_PHASE_EATEN || this.game.currentPhase == GAME_PHASE_ANGLER) {
 		for (var i = 0; i < 30; i++) {
 			for (var j = 0; j < 30; j++) {
 				ctx.drawImage(ASSET_MANAGER.getAsset("./img/BackgroundAngler.png"), -2400 + i * 800, j * 500);
@@ -748,6 +776,16 @@ UI.prototype.draw = function (ctx) { //draw ui
         ctx.textAlign = "right"; 
         ctx.fillText(this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 300 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
     }
+    if (this.game.currentPhase === GAME_PHASE_ANGLER && this.game.currentBoss.currentHealth > 1) {
+        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
+        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
+        ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBar.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealth / this.game.currentBoss.maxHealth), this.bossHealthHeight);
+    	//ctx.drawImage(ASSET_MANAGER.getAsset("./img/Enemy/brandong_portrait.png"), this.bossPortraitX + this.game.liveCamera.x, this.bossPortraitY + this.game.liveCamera.y, this.bossPortraitWidth, this.bossPortraitHeight);
+        ctx.textAlign = "left"; 
+        ctx.fillText("Anglerfish Spirit", this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
+        ctx.textAlign = "right"; 
+        ctx.fillText(this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 300 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
+    }
     /*if (this.game.currentPhase === 2 || this.game.currentPhase === 14 || this.game.currentPhase === 21) {
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/HealthBarLight.png"), this.bossHealthX + this.game.liveCamera.x, this.bossHealthY + this.game.liveCamera.y, this.bossHealthWidth * (this.game.currentBoss.currentHealthTemp / this.game.currentBoss.maxHealth), this.bossHealthHeight);
@@ -765,8 +803,13 @@ UI.prototype.draw = function (ctx) { //draw ui
             ctx.globalAlpha = this.gameOverTransparency;
         }
         ctx.font = "100px Calibri";
-        ctx.fillStyle = "white";
         ctx.textAlign = "center"; 
+        ctx.fillStyle = "black";
+        ctx.fillText("Defeat",400 + this.game.liveCamera.x + 3,250 + this.game.liveCamera.y + 3);
+        ctx.font = "30px Calibri";
+		ctx.fillText("Continue? Press [R] to be revived",400 + this.game.liveCamera.x + 3,350 + this.game.liveCamera.y + 3);
+        ctx.fillStyle = "white";
+        ctx.font = "100px Calibri";
         ctx.fillText("Defeat",400 + this.game.liveCamera.x,250 + this.game.liveCamera.y);
         ctx.font = "30px Calibri";
 		ctx.fillText("Continue? Press [R] to be revived",400 + this.game.liveCamera.x,350 + this.game.liveCamera.y);
@@ -822,10 +865,12 @@ UI.prototype.draw = function (ctx) { //draw ui
         document.getElementById("image").src = "img/UI/MusicOn.png";
         startMusic.volume = 0.3;
         bossMusic.volume = 0.1;
+        bossMusic2.volume = 0.1;
     } else {
         document.getElementById("image").src = "img/UI/MusicOff.png";
         startMusic.volume = 0;
         bossMusic.volume = 0;
+        bossMusic2.volume = 0;
         
     }
     Entity.prototype.draw.call(this);	
@@ -2512,6 +2557,7 @@ function Character(game) {
     this.bindAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_binded.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
     this.wokeAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_woke.png"), 0, 0, 64, 64, 1, 1, false, false, 32, 32);
     this.wokeAnimation2 = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_woke2.png"), 0, 0, 64, 64, 0.3, 2, true, false, 32, 32);
+    this.pushAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_push_right.png"), 0, 0, 64, 64, 0.3, 2, false, false, 32, 32);
     this.channelAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_channel_left.png"), 0, 0, 64, 144, 1, 1, false, false, 32, -48);
     this.channelAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Jelly/babyjelly_channel_right.png"), 0, 0, 64, 144, 1, 1, false, false, 32, -48);
     this.channelAnimation = this.channelAnimationRight;
@@ -2795,9 +2841,15 @@ Character.prototype.update = function () {
 		if (gameStarted) {
 			//game phase management
 			if (this.game.currentPhase < 1) {
-				//startMusic.play();
+				startMusic.play();
 				var chat = new TextBox(this.game, "./img/Chat/JellySquare.png", "awawawa!");
 				this.game.addEntity(new InfoBox(this.game, "Press ↑↓←→ to move."));
+				var laser = new GrowLaser(this.game, this.x + 300, this.y - 100, this.x + 300, this.y - 500, 30, "#ffffed", 10, 60, 30, 0.2);
+				laser.playerTarget = true;
+				laser.singleTarget = true;
+				laser.setWaitTime(30);
+				laser.extend = true;
+				//this.game.addEntity(laser);
 				this.game.step = 0;
 				//this.game.addEntity(this.game.movieAngler);
 				//this.game.addEntity(chat);
@@ -3077,11 +3129,17 @@ Character.prototype.update = function () {
 					}
 				}
 				this.healing = false;
-				if (this.attackInput == 3 && this.canControl) {
+				if ((!this.canControl && this.game.currentPhase == GAME_PHASE_ANGLER && this.game.absorbEntity != null) ||
+					this.attackInput == 3 && this.canControl) {
 					this.running = false;
 					var maxDiff = 100 + Math.min(300, this.healTime * 10);
 					var chosenX = this.x - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.offsetX;
 					var chosenY =  this.y - maxDiff / 2 + Math.random() * maxDiff + this.hitBoxDef.height + this.hitBoxDef.offsetY;
+					if (this.game.absorbEntity != null) {
+						chosenX = this.game.absorbEntity.getXMidpoint() - maxDiff / 2 + Math.random() * maxDiff;
+						chosenY = this.game.absorbEntity.getYMidpoint() - maxDiff / 2 + Math.random() * maxDiff;
+						this.game.absorbEntity.absorbCount++;
+					}
 					var theDistance = getDistance(chosenX, chosenY, this.game.player1.x, this.game.player1.y);
 					var newParticle = new Particle(PART_SECONDARY, chosenX, chosenY, 
 							-2, 2, -2, 2, 0, 0.3, 0, 0, 0, 80, .3, .15, true, this.game);
@@ -3099,17 +3157,16 @@ Character.prototype.update = function () {
 						this.game.cameraShakeAmount = Math.min(15, 1 + this.healTime / 2);
 						this.game.cameraShakeDecay = 5;
 					}
-					console.log("heal time: " + this.healTime);
-					if (this.healTime >= 60 && this.healTime % 30 == 0) {
-						addEnergy(this.game, -30);
-						if (this.currentStamina < 30)
+					if (this.game.absorbEntity == null && this.healTime >= 60 && this.healTime % 30 == 0) {
+						addEnergy(this.game, -33);
+						if (this.currentStamina < 33)
 							this.attackInput = 0; //stop healing
 						playSound(healSound);
 						
 						var damageParticle = new Particle(TEXT_PART, this.game.player1.hitBox.x, this.game.player1.hitBox.y, 
 								0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, this.game);
 						var damageText = new TextElement("", "Lucida Console", 25, "#ADFF2F", "black");
-						var damage = 30;
+						var damage = 20;
 						damageText.text = damage;
 						damageParticle.other = damageText;
 						this.game.addEntity(damageParticle);
@@ -3583,6 +3640,12 @@ Character.prototype.draw = function (ctx) {
 		} else if (this.stunned) {
 			this.currentAnimation = this.hurtAnimation;
 		} else if (!this.canControl) {
+			if (this.game.currentPhase == GAME_PHASE_ANGLER) {
+				if (this.game.currentBoss.deathStage == 5)
+					this.currentAnimation = this.idleAnimationBabyRight;
+				else
+					this.currentAnimation = this.pushAnimation;
+			}
 			if (this.game.currentPhase == GAME_PHASE_POSTCLAM) {
 				this.currentAnimation = this.attackAnimationBabyGroundRight;
 				if (this.phaseTick >= 30) {
@@ -3621,962 +3684,6 @@ Character.prototype.draw = function (ctx) {
 		}
 	    drawHitBox(this, ctx);
 	}
-    Entity.prototype.draw.call(this);
-};
-
-function Chicken(game, x, y, hspeed, vspeed, haccel, vaccel, mode) {
-	// Number Variables
-	this.game = game;
-	this.x = x;
-	this.y = y;
-	this.hspeed = hspeed || 0;
-	this.vspeed = vspeed || 0;
-	this.haccel = haccel || -0.05;
-	this.vaccel = vaccel || 0;
-	this.mode = mode || 0; //1 = wave up, 2 = wave down
-	if (mode !== 0)
-		this.haccel = 0;
-	this.alpha = 1;
-	this.step = 0;
-    this.walkSpeed = 5;
-    this.autoDamage = 15;
-    this.spawnCount = 0;
-    this.spawnTimer = 0;
-    this.destinationX = -1;
-    this.attackIndex = 0;
-    this.attackCount = 0;
-    this.hurtTimer = 0;
-    this.energy = 0; //denotes if an attack is charged
-	this.scoreValue = 100;
-    this.idleTimerMax = 110;
-    this.idleTimer = this.idleTimerMax;
-    this.maxHealth = 10.0;
-    this.currentHealth = this.maxHealth;
-    this.currentHealthTemp = this.currentHealth;   
-    // String Variables
-    this.state = "idle";
-	this.lastDirection = "Left";    
-    // Boolean Variables
-    this.attackEnabled = false;
-    this.dead = false;
-    this.solid = false;
-    this.attackable = true;
-	this.activated = false;
-	this.bounceCd = 0;
-	this.hit = false;
-	this.movementTimer = 30;
-
-
-    this.cooldown = [];
-    
-    // Animations
-	this.idleLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/chicken.png"), 0, 0, 64, 64, 0.25, 2, true, false, 0, 0);
-    this.idleAnimation = this.idleLeft;
-    this.currentAnimation = this.idleLeft;
-    
-    this.hitBoxDef = {
-    	width: 46, height: 46, offsetX: 9, offsetY: 9, growthX: 0, growthY: 0
-    };
-    drawHitBox(this);
-}
-
-Chicken.prototype.update = function() {
-    for (i = 0; i < this.cooldown.length; i++) {
-        if (this.cooldown[i] > 0)
-            this.cooldown[i]--;
-    }
-	if (this.hurtTimer > 0)
-		this.hurtTimer--;
-	if (this.bounceCd > 0)
-		this.bounceCd--;
-	if (!onYBoundary(this) && this.activated && this.bounceCd === 0 && this.mode === 0) {
-		this.vspeed *= -1;
-		this.vaccel *= -1;
-		this.bounceCd = 30;
-	}
-	if (this.vspeed >= 10)
-		this.vspeed = 10;
-	if (this.vspeed <= -10)
-		this.vspeed = -10;
-	if (readyToMove(this)) {
-		this.step++;
-		/*if (this.step >= 30) {
-			this.hspeed += this.haccel;
-			this.vspeed += this.vaccel;
-			this.x += this.hspeed;
-			this.y += this.vspeed;
-		}
-		if (this.mode !== 0 && !this.activated) {
-			if (this.mode === 1) {
-				this.vspeed = -5;
-				this.vaccel = 0.25;
-			} else {
-				this.vspeed = 5;
-				this.vaccel = -0.25;
-			}
-		}
-		if (this.mode === 1 && this.vspeed >= 5) {
-			this.vaccel = -0.25;
-			this.mode = 2;
-		} else if (this.mode === 2 && this.vspeed <= -5){
-			this.vaccel = 0.25;
-			this.mode = 1;
-		}*/
-		this.activated = true;
-		if (checkCollision(this, this.game.player1) && !this.game.player1.hitByAttack) {
-			if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-				this.game.player1.vulnerable = false;
-				applyDamage(this.game.player1.x, this.game.player1.y, this.game, this.autoDamage, this.game.player1);
-				this.game.player1.hitByAttack = true;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-				playSound(hitSound);
-				if (this.game.player1.lastDirection == "Left") {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-				} else {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-				}
-			}
-		}
-	}
-	
-	if (this.currentHealth <= 0) {
-		this.dead = true;
-	    this.removeFromWorld = true;
-		addScore(this.game, this.scoreValue);
-	}
-}
-
-Chicken.prototype.draw = function (ctx) {
-    if (!this.dead) {
-		this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY, 1, false, this.hurtTimer > 0 ? "red" : null);
-		this.currentAnimation = this.idleAnimation;
-	}
-    
-    drawHitBox(this, ctx);
-    
-    Entity.prototype.draw.call(this);
-};
-
-function Boar(game, x, y) {
-	// Number Variables
-	this.game = game;
-	this.x = x;
-	this.y = y;
-	this.hspeed = 0;
-	this.vspeed = 0;
-	this.alpha = 1;
-	this.step = 0;
-    this.walkSpeed = 5;
-    this.autoDamage = 25;
-    this.spawnCount = 0;
-    this.spawnTimer = 0;
-    this.destinationX = -1;
-    this.attackIndex = 0;
-    this.attackCount = 0;
-    this.hurtTimer = 0;
-    this.energy = 0; //denotes if an attack is charged
-	this.scoreValue = 300;
-    this.idleTimerMax = 110;
-    this.idleTimer = this.idleTimerMax;
-    this.maxHealth = 50.0;
-    this.currentHealth = this.maxHealth;
-    this.currentHealthTemp = this.currentHealth;   
-    // String Variables
-    this.state = "idle";
-	this.lastDirection = "Left";    
-    // Boolean Variables
-    this.attackEnabled = false;
-    this.dead = false;
-    this.solid = false;
-    this.attackable = true;
-	this.activated = false;
-	this.hit = false;
-	this.phase = 1;
-	this.speedCap = 16;
-
-    this.cooldown = [];
-    
-    // Animations
-	this.idleLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/boar_idle.png"), 0, 0, 96, 77, 1, 1, true, false, 0, 0);
-	this.prepAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/boar_prep.png"), 0, 0, 96, 77, 1, 1, true, false, 0, 0);
-	this.chargeAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/boar_charge.png"), 0, 0, 96, 77, 1, 1, true, false, 0, 0);
-    this.idleAnimation = this.idleLeft;
-    this.currentAnimation = this.idleLeft;
-    
-    this.hitBoxDef = {
-    	width: 64, height: 46, offsetX: 16, offsetY: 15, growthX: 0, growthY: 0
-    };
-    drawHitBox(this);
-}
-
-Boar.prototype.update = function() {
-    for (i = 0; i < this.cooldown.length; i++) {
-        if (this.cooldown[i] > 0)
-            this.cooldown[i]--;
-    }
-	if (this.bounceCd > 0)
-		this.bounceCd--;
-	if (this.hurtTimer > 0)
-		this.hurtTimer--;
-	if (readyToMove(this)) {
-		this.step++;
-		if (this.step >= 100 && this.phase === 1) { //prepare charge
-			this.phase = 2;
-		}
-		if (this.step >= 200 && this.phase === 2) { //charge!
-			this.phase = 3;
-			if (!this.game.player1.dead) {
-				var dx = this.game.player1.x - this.x;
-				var dy = this.game.player1.y - this.y;
-				this.vspeed = dy / 50;
-				this.hspeed = dx / 50;
-				if (this.hspeed > -10)
-					this.hspeed = -10;
-			} else {
-				this.hspeed = -16;
-			}
-			
-		}
-		this.x += this.hspeed;
-		this.y += this.vspeed;
-		this.activated = true;
-		if (checkCollision(this, this.game.player1) && !this.game.player1.hitByAttack) {
-			if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-				this.game.player1.vulnerable = false;
-				applyDamage(this.game.player1.x, this.game.player1.y, this.game, this.autoDamage, this.game.player1);
-				this.game.player1.hitByAttack = true;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-				if (this.phase === 3)
-					this.game.player1.xVelocity = -3;
-				playSound(hitSound);
-				if (this.game.player1.lastDirection == "Left") {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-				} else {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-				}
-			}
-		}
-	}
-	
-	if (this.currentHealth <= 0) {
-		this.dead = true;
-	    this.removeFromWorld = true;
-		addScore(this.game, this.scoreValue);
-	}
-}
-
-Boar.prototype.draw = function (ctx) {
-    if (!this.dead) {
-		if (this.phase === 3)
-			this.chargeAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.chargeAnimation.offsetX, this.y + this.chargeAnimation.offsetY);
-		else if (this.phase === 2)
-			this.prepAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.prepAnimation.offsetX, this.y + this.prepAnimation.offsetY);
-		else
-			this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY);
-	}
-    
-    drawHitBox(this, ctx);
-    
-    Entity.prototype.draw.call(this);
-};
-
-function Aya(game, x, y) {
-	// Number Variables
-	this.game = game;
-	this.x = x;
-	this.y = y;
-	this.hspeed = 0;
-	this.vspeed = 0;
-	this.alpha = 1;
-	this.step = 0;
-    this.walkSpeed = 5;
-    this.autoDamage = 25;
-    this.spawnCount = 0;
-    this.spawnTimer = 0;
-    this.destinationX = -1;
-    this.attackIndex = 0;
-    this.attackCount = 0;
-    this.hurtTimer = 0;
-    this.energy = 0; //denotes if an attack is charged
-	this.scoreValue = 750;
-    this.idleTimerMax = 110;
-    this.idleTimer = this.idleTimerMax;
-    this.maxHealth = 120.0;
-    this.currentHealth = this.maxHealth;
-    this.currentHealthTemp = this.currentHealth;   
-    // String Variables
-    this.state = "idle";
-	this.lastDirection = "Left";    
-    // Boolean Variables
-    this.attackEnabled = false;
-    this.dead = false;
-    this.solid = false;
-    this.attackable = true;
-	this.activated = false;
-	this.hit = false;
-	this.phase = 1;
-	this.shootFrames = 0;
-
-    this.cooldown = [120];
-    
-    // Animations
-	this.idleLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/aya.png"), 0, 0, 192, 128, 1, 1, true, false, 0, 0);
-	this.shootAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/aya_shoot.png"), 0, 0, 192, 128, 1, 1, true, false, 0, 0);
-    this.idleAnimation = this.idleLeft;
-    this.currentAnimation = this.idleLeft;
-    
-    this.hitBoxDef = {
-    	width: 90, height: 80, offsetX: 93, offsetY: 18, growthX: 0, growthY: 0
-    };
-    drawHitBox(this);
-}
-
-Aya.prototype.update = function() {
-	if (readyToMove(this) || this.activated) {
-		for (i = 0; i < this.cooldown.length; i++) {
-			if (this.cooldown[i] > 0)
-				this.cooldown[i]--;
-		}
-		if (this.step >= 90 && this.hspeed === 0) {
-			this.hspeed = 2;
-		} else if (this.step >= 450) {
-			this.hspeed = -4;
-		}
-		this.shootFrames--;
-		this.step++;
-		if (this.cooldown[0] === 0) { //bang bang
-			this.shootFrames = 10;
-			if (this.phase === 1) {
-				playSound(ayaSound);
-				this.cooldown[0] = 15; 
-				this.phase = 2;
-			} else {
-				this.cooldown[0] = 180; 
-				this.phase = 3;				
-			}
-			var bulletHSpeed = 0;
-			var bulletVSpeed = 0;
-			var newParticle = new Particle(PART_SECONDARY, this.x + 5, this.y + 70, 
-					bulletHSpeed, bulletHSpeed, bulletVSpeed, bulletVSpeed, 0, 0, 0, 0, 0, 120, .8, .1, false, this.game);
-			element = new CircleElement(8 + Math.random() * 3, "#ff4e21", "#ff7c2b");
-			newParticle.other = element;
-			newParticle.attackId = AYA_SHOT;
-			newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2;
-			newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2;
-			newParticle.targetSpeed = 14;
-			this.game.addEntity(newParticle);
-		} else if (this.cooldown[0] <= 150 && this.phase === 3) {
-			this.phase = 1;
-		}
-		this.x += this.hspeed;
-		this.y += this.vspeed;
-		this.activated = true;
-		if (checkCollision(this, this.game.player1) && !this.game.player1.hitByAttack) {
-			if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-				this.game.player1.vulnerable = false;
-				applyDamage(this.game.player1.x, this.game.player1.y, this.game, this.autoDamage, this.game.player1);
-				this.game.player1.hitByAttack = true;
-                this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-				playSound(hitSound);
-				if (this.game.player1.lastDirection == "Left") {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-				} else {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-				}
-			}
-		}
-	}
-	
-	if (!isOnScreen(this) && this.activated) {
-		this.dead = true;
-	    this.removeFromWorld = true;
-	}
-	if (this.currentHealth <= 0) {
-		this.dead = true;
-	    this.removeFromWorld = true;
-		addScore(this.game, this.scoreValue);
-	}
-}
-
-Aya.prototype.draw = function (ctx) {
-    if (!this.dead) {
-		if (this.shootFrames > 0)
-			this.shootAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.shootAnimation.offsetX, this.y + this.shootAnimation.offsetY);
-		else
-			this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY);
-	}
-    
-    drawHitBox(this, ctx);
-    
-    Entity.prototype.draw.call(this);
-};
-
-
-function Brandong(game, x, y) {
-	// Number Variables
-	this.alpha = 1;
-	this.step = 0;
-    this.walkSpeed = 4;
-    this.autoDamage = 50;
-    this.meteorCount = 0;
-    this.spawnCount = 0;
-    this.spawnTimer = 0;
-    this.destinationX = -1;
-    this.attackIndex = 0;
-    this.attackCount = 0;
-    this.hurtTimer = 0;
-    this.energy = 0; //denotes if an attack is charged
-    this.idleTimerMax = 110;
-    this.idleTimer = this.idleTimerMax;
-    this.maxHealth = 80.0;
-    this.currentHealth = this.maxHealth;
-    this.currentHealthTemp = this.currentHealth;   
-    // String Variables
-    this.state = "walking";
-	this.lastDirection = "Right";    
-    // Boolean Variables
-    this.attackEnabled = false;
-    this.dead = false;
-    this.solid = false;
-    this.attackable = true;
-    this.walkToDestination = false;
-    this.firstMeteor = true;
-	
-	this.game = game;
-	this.x = x;
-	this.y = y;
-    
-    this.cooldown = [];
-    
-    // Animations
-	
-	this.idleRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandong.png"), 0, 0, 207, 519, 1, 1, true, false, 0, -20);
-	this.idleLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandong_left.png"), 0, 0, 207, 519, 1, 1, true, false, 0, -20);
-    this.idleAnimation = this.idleRight;
-	this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandong_right_slow.png"), 0, 0, 207, 519, 0.05, 8, true, false, 0, -20);
-	this.walkAnimationFast = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandong_right_fast.png"), 0, 0, 207, 519, 0.05, 4, true, false, 0, -20);
-    this.walkAnimation = this.walkAnimationRight;
-    this.currentAnimation = this.walkAnimationRight;
-    
-    this.hitBoxDef = {
-    	width: 180, height: 500, offsetX: 10, offsetY: 10, growthX: 0, growthY: 0
-    };
-    drawHitBox(this);
-}
-
-Brandong.prototype.update = function() {
-}
-
-Brandong.prototype.draw = function (ctx) {
-    if (!this.dead) {
-		if (isOnScreen(this)) {
-			if (this.state === "idle") {
-				this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY);
-				this.currentAnimation = this.idleAnimation;
-			} else if (this.state === "walking") {
-				this.walkAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.walkAnimation.offsetX, this.y + this.walkAnimation.offsetY);
-				this.currentAnimation = this.walkAnimation;
-			} else if (this.state === "running") {
-				this.walkAnimationFast.drawFrame(this.game.clockTick, ctx, this.x + this.walkAnimationFast.offsetX, this.y + this.walkAnimationFast.offsetY);
-				this.currentAnimation = this.walkAnimationFast;
-			}
-		} else {
-			/*if (this.game.currentPhase === 5 && this.x < this.game.liveCamera.x) {
-				ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BrandongTracker.png"), 50 + this.game.liveCamera.x, 200 + this.game.liveCamera.y, 100, 100);
-				ctx.font = "20px Calibri"; 
-				ctx.fillStyle = "white";
-				ctx.align = "Left";
-				ctx.fillText(Math.round(this.game.liveCamera.x - this.x) - this.hitBoxDef.width, 50 + this.game.liveCamera.x, 300 + this.game.liveCamera.y);
-			}*/
-			
-		}
-    }
-    
-    drawHitBox(this, ctx);
-    
-    Entity.prototype.draw.call(this);
-};
-
-
-function BrandongBoss(game, x, y) {
-	// Number Variables
-	this.alpha = 1;
-	this.step = 0;
-    this.walkSpeed = 3;
-    this.autoDamage = 50;
-    this.meteorCount = 0;
-    this.spawnCount = 0;
-    this.spawnTimer = 0;
-    this.destinationX = -1;
-	this.destinationY = -1;
-    this.attackIndex = 0;
-    this.attackCount = 0;
-    this.hurtTimer = 0;
-    this.energy = 0; //denotes if an attack is charged
-    this.idleTimerMax = 150;
-    this.idleTimer = this.idleTimerMax;
-	if (mode === "easy") {
-		this.maxHealth = 3000.0;
-	} else if (mode === "medium") {
-		this.maxHealth = 4000.0;
-	} else {
-		this.maxHealth = 5000.0;
-	}
-	this.scoreValue = 15000;
-	this.scoreValueMin = this.scoreValue / 3;
-    this.currentHealth = this.maxHealth;
-    this.currentHealthTemp = this.currentHealth;   
-    // String Variables
-    this.state = "walking";
-	this.lastDirection = "Right";    
-    // Boolean Variables
-    this.attackEnabled = true;
-    this.dead = false;
-    this.solid = false;
-    this.attackable = true;
-	this.phaseTimer = 0;
-	this.phase = 1;
-	this.rapidCount = 0;
-	
-	
-	this.game = game;
-	this.x = x;
-	this.y = y;
-    
-    this.cooldown = [0, 0, 0, 0];
-    
-    // Animations
-	
-	this.idleRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandongboss_idle_right.png"), 0, 0, 160, 160, 1, 1, true, false, 0, -20);
-	this.idleLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandongboss_idle_left.png"), 0, 0, 160, 160, 1, 1, true, false, 0, -20);
-    this.idleAnimation = this.idleLeft;
-	this.walkAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandongboss_walk_right.png"), 0, 0, 160, 160, 0.05, 8, true, false, 0, -20);
-	this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandongboss_walk_left.png"), 0, 0, 160, 160, 0.05, 8, true, false, 0, -20);
-    this.walkAnimation = this.walkAnimationLeft;
-    this.currentAnimation = this.walkAnimationLeft;
-    
-    this.hitBoxDef = {
-    	width: 140, height: 140, offsetX: 10, offsetY: 10, growthX: 0, growthY: 0
-    };
-    drawHitBox(this);
-}
-
-BrandongBoss.prototype.update = function() {
-    for (i = 0; i < this.cooldown.length; i++) {
-        if (this.cooldown[i] > 0)
-            this.cooldown[i]--;
-    }
-	if (this.phaseTimer > 0) {
-		this.phaseTimer--;
-		if (this.phaseTimer === 0) {
-			playSound(explodeSound);
-			this.game.player1.phaseTimer = 180;
-			this.game.currentBoss = null;
-			this.removeFromWorld = true;
-			this.game.addEntity(new Particle(BRANDONG_SPIN, this.x, this.y, 0, 0, 0, 0, 0, 0, 0, 50, 0, 50, 1, 0, false, this.game,
-					new Animation(ASSET_MANAGER.getAsset("./img/Misc/brandong_explosion.png"), 0, 0, 150, 150, .05, 16, false, false, 0, 0)));
-		}
-	}
-	if (this.currentHealth === 0 && this.game.currentPhase === 8) {
-		addScore(this.game, Math.max(this.scoreValueMin, this.scoreValue));
-		this.game.currentPhase = 9;
-		this.game.player1.destinationX = 15280;
-		this.game.player1.destinationY = 230;
-        this.game.player1.canControl = false;
-        this.game.player1.vulnerable = true;
-        this.game.player1.xVelocity = 0;
-		this.game.player1.yVelocity = 0;
-		this.destinationX = 15800;
-		this.destinationY = 200;
-		this.energy = 100;
-		bossMusic.pause();
-	}
-	if (this.energy === 101) { //brandong SPECIAL MOVE!
-		cutEffect(this.game, "Blue Viper", "./img/Particle/brandong_cut.png");
-		var that = this;
-		setTimeout(
-			function() {
-				var particle = new Particle(BRANDONG_WHIP,
-						that.hitBox.x + that.hitBox.width / 2,
-						that.hitBox.y + that.hitBox.height / 2, 
-						-8, -8, 0, 0, 0, 0, 0, 62, 0, 0, 0, 0, false, that.game);
-				var element = new SquareElement(15, 15, "#fff8b8", "#fff8b8");
-				crisisMusic.pause();
-				particle.other = element;
-				particle.extra = 100;
-				playSound(lenoxHookSound);
-				that.game.addEntity(particle);
-			}, 1000);
-		this.energy = 0;
-	}
-	if (this.destinationX !== -1 || this.destinationY !== -1) {
-		this.state = "walking";
-		if (this.destinationX !== -1) {
-			if (this.destinationX > this.x)
-				this.x = Math.min(this.destinationX, this.x + this.walkSpeed);
-			else
-				this.x = Math.max(this.destinationX, this.x - this.walkSpeed);
-			if (this.x === this.destinationX)
-				this.destinationX = -1;
-		}
-		if (this.destinationY !== -1) {
-			if (this.destinationY > this.y)
-				this.y = Math.min(this.destinationY, this.y + this.walkSpeed);
-			else
-				this.y = Math.max(this.destinationY, this.y - this.walkSpeed);
-			if (this.y === this.destinationY)
-				this.destinationY = -1;
-		}
-		if (this.destinationX === -1 && this.destinationY === -1) {
-			if (this.energy === 100) {
-				var chat = new TextBox(this.game, "./img/Chat/BrandongSquare.png", "Stop griefing me at tree!");
-				this.game.addEntity(chat);
-				this.currentAnimation = this.idleLeft;
-				this.state = "idle";
-				this.energy = 0;
-				this.game.cameraShakeTime = 40;
-				this.game.cameraShakeAmount = 40;
-				this.game.cameraShakeDecay = 1;
-				crisisMusic.play();
-			}
-		}
-	} else if (this.game.currentPhase === 8) {
-		this.scoreValue--;
-		if (this.currentHealth < (0.75) * this.maxHealth && (mode === "medium" || mode === "hard") && this.phase === 1) {
-			this.walkSpeed = 3.8;
-			this.phase = 2;
-		} if (this.currentHealth < (0.5) * this.maxHealth && mode === "hard" && this.phase === 2) {
-			this.walkSpeed = 4.5;
-			this.phase = 3;
-			this.cooldown[2] = 10000;
-		}
-		if (this.idleTimer > 0) {
-			this.idleTimer--;
-			this.state = "idle";
-		} else if (this.energy !== 0) { //attack charged up
-			switch(this.energy) {
-				case 1: //whip wall
-					var minYSpeed = -20;
-					if (this.phase === 3)
-						minYSpeed = -18;
-					var particle = new Particle(BRANDONG_WHIP,
-							this.hitBox.x + this.hitBox.width / 2,
-							this.hitBox.y + this.hitBox.height / 2, 
-							-16, -16, minYSpeed, -12, 0, 0, 0, 1000, 0, 0, 0, 0, false, this.game);
-							
-					var element = new SquareElement(10 + Math.random() * 10, 10 + Math.random() * 10, "#cfc251", "#b0a64d");
-					particle.other = element;
-					if (this.phase === 2)
-						particle.extra = 1;
-					if (this.phase === 3)
-						particle.extra = 2;
-					this.game.addEntity(particle);
-					playSound(shootSound);
-					this.idleTimer = this.idleTimerMax;
-				break;
-				case 2: //whip line
-					playSound(lenoxWSound);
-					var amount = 3;
-					if (this.phase === 2)
-						amount = 4;
-					if (this.phase === 3)
-						amount = 5;
-					for (var i = 0; i < amount; i++) {
-						var particle = new Particle(BRANDONG_WHIP,
-								this.hitBox.x + this.hitBox.width / 2 + 200,
-								this.hitBox.y + this.hitBox.height / 2 - (Math.floor(amount / 2) * 16) + i * 16, 
-								-16, -16, 0, 0, 0, 0, 0, 120, 0, 0, 0, 0, false, this.game);
-						var element = new SquareElement(10 + Math.random() * 10, 10 + Math.random() * 10, "#fff8b8", "#fff8b8");
-						particle.other = element;
-						this.game.addEntity(particle);
-					}
-					this.idleTimer = this.idleTimerMax;
-				break;
-				case 3: //whip circle
-					playSound(lenoxQSound);
-					if (this.rapidCount > 0) {
-						this.rapidCount--;
-						this.idleTimer = 50;
-						this.cooldown[3] = 0; //reset
-					} else {
-						this.idleTimer = this.idleTimerMax;
-					}
-					this.game.addEntity(new Particle(BRANDONG_SPIN, this.x - 75, this.y - 75, 0, 0, 0, 0, 0, 0, 0, 10, 0, 10, 0.5, 0, false, this.game,
-							new Animation(ASSET_MANAGER.getAsset("./img/Enemy/brandong_spin.png"), 0, 0, 300, 300, .02, 10, true, false, 0, 0)));
-				break;
-			}
-			this.energy = 0;
-		} else if (this.cooldown[0] === 0) { //whip wall
-			this.cooldown[0] = 1200;
-			this.destinationX = 15800;
-			this.destinationY = 200;
-			this.energy = 1;
-			this.rapidCount = 0;
-			this.cooldown[2] = 0;
-		} else if (this.cooldown[1] === 0) { //whip line
-			this.cooldown[1] = 500;
-			this.destinationX = Math.min(this.game.player1.x + 300, 15800);
-			this.destinationY = this.game.player1.y - 20;
-			this.energy = 2;
-			this.rapidCount = 0;
-		} else if (this.cooldown[2] === 0 && this.phase === 3) { //rapid barrage of whips
-			this.cooldown[2] = 1200;
-			this.rapidCount = 3;
-			playSound(bounceSound);
-			this.destinationX = this.game.player1.x + 100;
-			this.destinationY = this.game.player1.y - 20;
-			this.energy = 3;
-		} else if (this.cooldown[3] === 0) {
-			this.cooldown[3] = 150;
-			this.destinationX = this.game.player1.x + 100;
-			this.destinationY = this.game.player1.y - 20;
-			this.energy = 3;
-		}
-	}
-}
-
-BrandongBoss.prototype.draw = function (ctx) {
-    if (!this.dead) {
-		if (this.state === "idle") {
-			this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY);
-			this.currentAnimation = this.idleAnimation;
-		} else if (this.state === "walking") {
-			this.walkAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.walkAnimation.offsetX, this.y + this.walkAnimation.offsetY);
-			this.currentAnimation = this.walkAnimation;
-		}
-    }
-    
-    drawHitBox(this, ctx);
-    
-    Entity.prototype.draw.call(this);
-};
-
-function Alpha(game, x, y) {
-	// Number Variables
-	this.alpha = 1;
-	this.step = 0;
-    this.walkSpeed = 3;
-    this.autoDamage = 20;
-    this.meteorCount = 0;
-    this.spawnCount = 0;
-    this.spawnTimer = 0;
-    this.destinationX = -1;
-	this.destinationY = -1;
-    this.attackIndex = 0;
-    this.attackCount = 0;
-    this.hurtTimer = 0;
-    this.energy = 0; //denotes if an attack is charged
-    this.idleTimerMax = 150;
-    this.idleTimer = this.idleTimerMax;
-	if (mode === "easy") {
-		this.maxHealth = 1000.0;
-	} else if (mode === "medium") {
-		this.maxHealth = 1500.0;
-	} else {
-		this.maxHealth = 2000.0;
-	}
-	this.scoreValue = 7500;
-	this.scoreValueMin = this.scoreValue / 3;
-    this.currentHealth = this.maxHealth;
-    this.currentHealthTemp = this.currentHealth;   
-    // String Variables
-    this.state = "idle";
-	this.lastDirection = "Right";    
-    // Boolean Variables
-    this.attackEnabled = true;
-    this.dead = false;
-    this.solid = false;
-    this.attackable = true;
-	this.phaseTimer = 0;
-	this.phase = 1;
-	this.rapidCount = 0;
-	
-	
-	this.game = game;
-	this.x = x;
-	this.y = y;
-    
-    this.cooldown = [0, 0, 0, 0];
-    
-    // Animations
-	
-    this.idleAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/alpha_idle.png"), 0, 0, 400, 273, 1, 1, true, false, 0, -0);
-	this.attackAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/alpha_lunge.png"), 0, 0, 400, 273, 1, 1, true, false, 0, 0);
-	this.prepAnimation =  new Animation(ASSET_MANAGER.getAsset("./img/Enemy/alpha_prep.png"), 0, 0, 400, 273, 1, 1, true, false, 0, 0);
-	this.swingAnimation =  new Animation(ASSET_MANAGER.getAsset("./img/Enemy/alpha_swing.png"), 0, 0, 400, 273, 1, 1, true, false, 0, 0);
-	this.deadAnimation =  new Animation(ASSET_MANAGER.getAsset("./img/Enemy/alpha_dead.png"), 0, 0, 400, 273, .05, 15, false, false, 0, 0);
-    
-    this.hitBoxDef = {
-    	width: 80, height: 160, offsetX: 208, offsetY: 40, growthX: 0, growthY: 0
-    };
-    drawHitBox(this);
-}
-
-Alpha.prototype.update = function() {
-    for (i = 0; i < this.cooldown.length; i++) {
-        if (this.cooldown[i] > 0)
-            this.cooldown[i]--;
-    }
-	if (this.x + 300 < this.game.liveCamera.x + this.game.liveCamera.width && this.game.currentPhase === 13) { //alpha!
-		this.game.currentBoss = this;
-		this.game.currentPhase = 14;
-		this.game.cameraLock = false;
-		this.game.camera.minX = 19800;
-		this.game.camera.maxX = 19800;
-	}
-	if (this.currentHealth === 0 && this.game.currentPhase === 14) {
-		addScore(this.game, Math.max(this.scoreValueMin, this.scoreValue));
-		this.game.currentPhase = 15;
-		this.phaseTimer = 100;
-		this.attackable = false;
-	}
-	if (this.phaseTimer > 0) {
-		this.phaseTimer--;
-		var particle = new Particle(SHAPE_PART, this.x + this.hitBoxDef.offsetX + Math.random() * this.hitBoxDef.width,
-			this.y + this.hitBoxDef.offsetY + Math.random() * this.hitBoxDef.height, -2, 2, 0, -4, 0, 0.1, 0, 5, 0, 50, 0.5, 0.2, true, this.game);
-		var element;
-		element = new SquareElement(16 + Math.random() * 8, 16 + Math.random() * 8, "#ab58cc", "#ab58cc");
-		particle.other = element;
-		this.game.addEntity(particle);
-		if (this.phaseTimer === 0) {
-			this.game.addEntity(new Powerup(this.game, this.x + 120, this.game.liveCamera.height / 2 - 64, 13));
-			this.removeFromWorld = true;
-			for (var i = 0; i < 20; i++) {
-				var particle = new Particle(SHAPE_PART, this.x + 120 + 64 + Math.random() * 64, this.game.liveCamera.height / 2 + Math.random() * 64, -2, 2, 0, -4, 0, 0.1, 0, 5, 0, 50, 0.5, 0.2, true, this.game);
-				var element;
-				element = new SquareElement(20 + Math.random() * 5, 20 + Math.random() * 5, "#9e45d1", "#9e45d1");
-				particle.other = element;
-				this.game.addEntity(particle);
-			}
-		}
-	}
-	if (this.destinationX !== -1 || this.destinationY !== -1) {
-		if (this.destinationX !== -1) {
-			if (this.destinationX > this.x)
-				this.x = Math.min(this.destinationX, this.x + this.walkSpeed);
-			else
-				this.x = Math.max(this.destinationX, this.x - this.walkSpeed);
-			if (this.x === this.destinationX)
-				this.destinationX = -1;
-		}
-		if (this.destinationY !== -1) {
-			if (this.destinationY > this.y)
-				this.y = Math.min(this.destinationY, this.y + this.walkSpeed);
-			else
-				this.y = Math.max(this.destinationY, this.y - this.walkSpeed);
-			if (this.y === this.destinationY)
-				this.destinationY = -1;
-		}
-	} else if (this.game.currentPhase === 14) {
-		this.scoreValue--;
-		if (this.idleTimer > 0) {
-			this.idleTimer--;
-			if (this.idleTimer === 0 && this.energy === 0)
-				this.state = "idle";
-		} else if (this.energy !== 0) { //attack charged up
-			var bulletHSpeed = -10;
-			var bulletVSpeed = -15;
-			if (mode === "hard") {
-				this.idleTimer = 3;
-				bulletVSpeed += this.energy * bulletVSpeed / -10;
-			} else if (mode === "medium") {
-				this.idleTimer = 4;
-				bulletVSpeed += this.energy * bulletVSpeed / -7.5;
-			} else {
-				this.idleTimer = 5;
-				bulletVSpeed += this.energy * bulletVSpeed / -5;
-			}
-			var newParticle = new Particle(PART_SECONDARY, this.x + 145, this.y + 110, 
-					bulletHSpeed, bulletHSpeed, bulletVSpeed, bulletVSpeed, 0, 0, 0, 0, 0, 120, .8, .1, false, this.game);
-			element = new CircleElement(12, "#ab58cc", "#ab58cc");
-			newParticle.other = element;
-			newParticle.attackId = ALPHA_SHOT;
-			this.game.addEntity(newParticle);
-			this.energy--;
-			if (this.energy === 0)
-				this.state = "idle";
-			else
-				this.state = "swing";
-			playSound(shootSound);
-		} else if (this.cooldown[0] === 0) { //conal barrage
-			this.cooldown[0] = 600;
-			if (mode === "hard")
-				this.energy = 20;
-			else if (mode === "medium")
-				this.energy = 15;
-			else
-				this.energy = 10;
-			this.idleTimer = 90;
-			this.state = "prep";
-			this.destinationY = this.game.player1.y - 100;
-		} else if (this.cooldown[1] === 0) { //bullet
-			this.state = "attacking";
-			this.cooldown[1] = 60;
-			this.idleTimer = 30;
-			var bulletHSpeed = 0;
-			var bulletVSpeed = 0;
-			var newParticle = new Particle(PART_SECONDARY, this.x + 55, this.y + 124, 
-					bulletHSpeed, bulletHSpeed, bulletVSpeed, bulletVSpeed, 0, 0, 0, 0, 0, 120, .8, .1, false, this.game);
-			element = new CircleElement(12, "#ab58cc", "#ab58cc");
-			newParticle.other = element;
-			newParticle.attackId = ALPHA_SHOT;
-			newParticle.targetX = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + 6;
-			newParticle.targetY = this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + 6;
-			if (mode === "hard")
-				newParticle.targetSpeed = 18;
-			else if (mode === "medium")
-				newParticle.targetSpeed = 15;
-			else
-				newParticle.targetSpeed = 13;
-			this.game.addEntity(newParticle);
-		} else if (this.cooldown[2] === 0 && this.destinationY === -1) { //walk to top or bottom
-			this.cooldown[2] = 240;
-			if (this.y > this.game.liveCamera.y + this.game.liveCamera.height / 2 - 50)
-				this.destinationY = this.game.liveCamera.y;
-			else
-				this.destinationY = this.game.liveCamera.y + 240;
-		}
-	}
-	if (checkCollision(this, this.game.player1) && !this.game.player1.hitByAttack) {
-		if (this.game.player1.vulnerable && this.game.player1.invincTimer === 0) {
-			this.game.player1.vulnerable = false;
-			applyDamage(this.game.player1.x, this.game.player1.y, this.game, this.autoDamage, this.game.player1);
-			this.game.player1.hitByAttack = true;
-			this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
-			this.game.player1.xVelocity = -3;
-			playSound(hitSound);
-			if (this.game.player1.lastDirection == "Left") {
-				this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-			} else {
-				this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-			}
-		}
-	}
-}
-
-Alpha.prototype.draw = function (ctx) {
-	if (this.phaseTimer > 0)
-		this.deadAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.deadAnimation.offsetX, this.y + this.deadAnimation.offsetY);
-	else {
-		if (!this.dead) {
-			if (this.state === "attacking") {
-				this.attackAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.attackAnimation.offsetX, this.y + this.attackAnimation.offsetY);
-				this.currentAnimation = this.attackAnimation;
-			} else if (this.state === "prep") {
-				this.prepAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.prepAnimation.offsetX, this.y + this.prepAnimation.offsetY);
-				this.currentAnimation = this.prepAnimation;
-			} else if (this.state === "swing") {
-				this.swingAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.swingAnimation.offsetX, this.y + this.swingAnimation.offsetY);
-				this.currentAnimation = this.swingAnimation;
-			} else {
-				this.idleAnimation.drawFrame(this.game.clockTick, ctx, this.x + this.idleAnimation.offsetX, this.y + this.idleAnimation.offsetY);
-				this.currentAnimation = this.idleAnimation;
-			}
-		}
-	}
-    
-    drawHitBox(this, ctx);
-    
     Entity.prototype.draw.call(this);
 };
 
@@ -4653,6 +3760,7 @@ ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_hurt_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_hurt_right.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_walk_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_walk_right.png");
+ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_push_right.png");
 
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_attack_air_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/babyjelly_attack_air_right.png");
@@ -4741,6 +3849,8 @@ ASSET_MANAGER.queueDownload("./img/Enemy/clam_vulnerable.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/clam_open.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/clam_close.png");
 ASSET_MANAGER.queueDownload("./img/Enemy/clam_dead.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/anglerspirit_idle.png");
+ASSET_MANAGER.queueDownload("./img/Enemy/anglerspirit_idle2.png");
 
 ASSET_MANAGER.queueDownload("./img/Misc/ship.png");
 ASSET_MANAGER.queueDownload("./img/Misc/ship_contact.png");
@@ -4785,17 +3895,14 @@ ASSET_MANAGER.downloadAll(function () {
     var character = new Character(gameEngine);
     var map = new Map(gameEngine);
     var ui = new UI(gameEngine);
-    var boss = new Brandong(gameEngine, -50000, 0);
     
     gameEngine.addEntity(bg);
     gameEngine.addEntity(map);
     gameEngine.addEntity(character);
-    gameEngine.addEntity(boss);
     gameEngine.addEntity(ui);
 
     gameEngine.init(ctx);
     gameEngine.setPlayer1(character);
-    gameEngine.setBoss(boss);
     gameEngine.setMap(map);
     gameEngine.setUI(ui);
     gameEngine.start();

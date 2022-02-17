@@ -49,6 +49,7 @@ GameEngine.prototype.init = function (ctx) {
 	});
 
 	this.movieAngler = new Movie(this, "Movie_Angler", "movie", 299);
+	this.movieAttack = new Movie(this, "Movie_Attack", "attack", 99);
 	this.highPriority = 1000;
 	this.score = 0;
 	this.cameraShakeAmount = 0;
@@ -58,6 +59,7 @@ GameEngine.prototype.init = function (ctx) {
     this.surfaceWidth = this.ctx.canvas.width;
     this.surfaceHeight = this.ctx.canvas.height;
     this.startInput();
+	this.absorbEntity = null;
     this.timer = new Timer();
     this.player1 = null;
 	this.player1AttackIndex = 0; //the actual skill being used
@@ -116,6 +118,7 @@ var GAME_PHASE_CLAM = 5;
 var GAME_PHASE_POSTCLAM = 6;
 var GAME_PHASE_AFTER_CLAM = 7;
 var GAME_PHASE_EATEN = 8;
+var GAME_PHASE_ANGLER = 9;
 
 GameEngine.prototype.showTip = function (idx) {
 	if (!this.tipsShown[idx]) {
@@ -140,9 +143,12 @@ GameEngine.prototype.startInput = function () {
     var that = this;
 	var buttonOptions = ["↑","↓","←","→","x","z","c"];
 	var buttonKeys = ['&','(','%','\'' ,'X','Z','C'];
-	
     this.ctx.canvas.addEventListener("keydown", function (e) {
 		if (that.buttonChallenge != null) {
+			if (that.buttonChallenge.awawa) {
+				buttonOptions = ["a", "w"];
+				buttonKeys = ["A", "W"];
+			}
 			if (that.buttonChallenge.cooldown == 0) {
 				for (var i = 0; i < buttonOptions.length; i++) {
 					if (that.buttonChallenge.currentButtons.length > 0) {
@@ -158,41 +164,87 @@ GameEngine.prototype.startInput = function () {
 					}
 				}
 			}
-		}
-		if (String.fromCharCode(e.which) === '\'' ) { 
-			that.player1.rightDown = true;
-		} else if (String.fromCharCode(e.which) === '%') {
-			that.player1.leftDown = true;
-		}
-		if (String.fromCharCode(e.which) === '&') {
-			that.player1.upDown = true;
-		}
-		if (String.fromCharCode(e.which) === '(') {
-			that.player1.downDown = true;
-		}
-		if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
-			that.player1.jumpDown = true;
-            that.textSpeed = 1;
-			that.spaceDown = true;
-		}
-		if (String.fromCharCode(e.which) === 'T') {
-			that.interactDown = true;
-		}
-		if (String.fromCharCode(e.which) === 'S') {
-			//that.player1.hitSpike();
-					//	that.player1.x = 5574 - 128;
-					//	that.player1.y = 32;
-		}
-		if (String.fromCharCode(e.which) === 'E') {
-			that.player1.x += 96;
-		}
-		if (String.fromCharCode(e.which) === 'C') {
-			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER) { //dash
-				that.player1.attackInput = 2;
+		} else {
+			if (String.fromCharCode(e.which) === '\'' ) { 
+				that.player1.rightDown = true;
+			} else if (String.fromCharCode(e.which) === '%') {
+				that.player1.leftDown = true;
 			}
-        } else if (String.fromCharCode(e.which) === 'Z') {
-			that.player1.attackInput = 1;
-        } else if (String.fromCharCode(e.which) === 'R') {
+			if (String.fromCharCode(e.which) === '&') {
+				that.player1.upDown = true;
+			}
+			if (String.fromCharCode(e.which) === '(') {
+				that.player1.downDown = true;
+			}
+			if (String.fromCharCode(e.which) === ' ' || String.fromCharCode(e.which) === 'X') {
+				that.player1.jumpDown = true;
+				that.textSpeed = 1;
+				that.spaceDown = true;
+			}
+			if (String.fromCharCode(e.which) === 'T') {
+				that.interactDown = true;
+			}
+			if (String.fromCharCode(e.which) === 'S') {
+				//that.player1.hitSpike();
+						//	that.player1.x = 5574 - 128;
+						//	that.player1.y = 32;
+			}
+			if (String.fromCharCode(e.which) === 'E') {
+				that.player1.x += 96;
+			}
+			if (String.fromCharCode(e.which) === 'C') {
+				if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER) { //dash
+					that.player1.attackInput = 2;
+				}
+			} else if (String.fromCharCode(e.which) === 'Z') {
+				that.player1.attackInput = 1;
+			} else if (String.fromCharCode(e.which) === 'C') {
+				that.player1.attackInput = 2;
+			} else if (String.fromCharCode(e.which) === 'A') {
+				if (that.player1.currentStamina >= 30 && that.player1.currentForm >= FORM_HEAL) {
+					that.player1.attackInput = 3;
+					that.player1.jumpDown = false;
+				}
+			} else if (String.fromCharCode(e.which) === 'D') {
+				if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER && that.player1.currentStamina >= 100) { //ulti
+					that.player1.currentStamina = 0;
+					cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
+				}
+			} else if (String.fromCharCode(e.which) === 'Q') {
+				that.advancePhase(GAME_PHASE_EATEN);
+				that.changeMap(GAME_EATENPART);
+			} else if (String.fromCharCode(e.which) === 'W') {
+				that.camera = {
+					x: 2520,
+					y: 3360,
+					minX: 2520,
+					maxX: 2520,
+					minY: 3360,
+					maxY: 3360,
+					width: 800,
+					height: 500
+				};
+				that.player1.teleportToX = 2520;
+				that.player1.teleportToY = 3360;
+			}
+			if (String.fromCharCode(e.which) === 'O') {
+				playSound(healSound);
+				var damageParticle = new Particle(TEXT_PART, that.player1.hitBox.x, that.player1.hitBox.y, 
+						0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, that);
+				var damageText = new TextElement("", "Lucida Console", 25, "#ffd43a", "black");
+				damageText.text = "Attack range upgraded!";
+				damageParticle.other = damageText;
+				that.addEntity(damageParticle);
+				that.player1.equipment[LONG_RANGE] = true;
+				that.player1.notBaby();
+				that.player1.longRangeAnimations();
+			}
+			if (String.fromCharCode(e.which) === 'R') {
+				that.player1.jumping = true;
+				that.player1.yVelocity = 6;
+			}
+		}
+		if (String.fromCharCode(e.which) === 'R') {
 			if (that.player1.dead) { //revive
 				that.player1.dead = false;
 				that.player1.currentHealth = that.player1.maxHealth;
@@ -212,52 +264,8 @@ GameEngine.prototype.startInput = function () {
 				that.player1.teleportToY = that.player1.lastSafeY - 3;
 				
 				that.player1.displacementXSpeed = 0;
-				that.score = Math.round(that.score / 2);
+				that.score = Math.round(that.score * 0.8);
 			}
-        } else if (String.fromCharCode(e.which) === 'C') {
-			that.player1.attackInput = 2;
-        } else if (String.fromCharCode(e.which) === 'A') {
-			if (that.player1.currentStamina >= 30) {
-				that.player1.attackInput = 3;
-				that.player1.jumpDown = false;
-			}
-        } else if (String.fromCharCode(e.which) === 'D') {
-			if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER && that.player1.currentStamina >= 100) { //ulti
-				that.player1.currentStamina = 0;
-				cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
-			}
-        } else if (String.fromCharCode(e.which) === 'Q') {
-			that.advancePhase(GAME_PHASE_EATEN);
-			that.changeMap(GAME_EATENPART);
-        } else if (String.fromCharCode(e.which) === 'W') {
-			that.camera = {
-				x: 2730,
-				y: 3136,
-				minX: -2200,
-				maxX: 10000,
-				minY: 0,
-				maxY: 5000,
-				width: 800,
-				height: 500
-			};
-			that.player1.teleportToX = 2730;
-			that.player1.teleportToY = 3136;
-        }
-        if (String.fromCharCode(e.which) === 'O') {
-			playSound(healSound);
-			var damageParticle = new Particle(TEXT_PART, that.player1.hitBox.x, that.player1.hitBox.y, 
-					0.2, -0.2, -3, -3, 0, 0.1, 0, 5, 10, 50, 1, 0, false, that);
-			var damageText = new TextElement("", "Lucida Console", 25, "#ffd43a", "black");
-			damageText.text = "Attack range upgraded!";
-			damageParticle.other = damageText;
-			that.addEntity(damageParticle);
-			that.player1.equipment[LONG_RANGE] = true;
-			that.player1.notBaby();
-			that.player1.longRangeAnimations();
-		}
-        if (String.fromCharCode(e.which) === 'R') {
-			that.player1.jumping = true;
-			that.player1.yVelocity = 6;
 		}
         e.preventDefault();
     }, false);
@@ -448,7 +456,6 @@ GameEngine.prototype.draw = function () {
 			}
 		}
 	}
-	//playVideo(); //video??
     this.ctx.restore();
 };
 
@@ -513,13 +520,30 @@ GameEngine.prototype.update = function () {
 				this.advancePhase(GAME_PHASE_CLAM);
 
 				startMusic.pause();
-				//bossMusic.play();
-				var chat = new TextBox(this, "./img/Chat/JellySquare.png", "That looks like trouble...");
+				bossMusic.play();
+				var chat = new TextBox(this, "./img/Chat/JellySquare.png", "That looks like trouble...", true);
 				this.addEntity(chat);
 			}
 		}
-		if (this.currentPhase === 13) { //starting game phase: scroll to the right
-            this.camera.x = 15200 + (this.step) * 2;
+		if (this.currentPhase == GAME_PHASE_EATEN) {
+			if (this.player1.x >= 2520 && this.player1.y >= 3360) {
+				this.camera = {
+					x: 2520,
+					y: 3360,
+					minX: 2520,
+					maxX: 2520,
+					minY: 3360,
+					maxY: 3360,
+					width: 800,
+					height: 500
+				};
+				this.advancePhase(GAME_PHASE_ANGLER);
+
+				startMusic.pause();
+				bossMusic2.play();
+				var chat = new TextBox(this, "./img/Chat/JellySquare.png", "This must be the spirit of the anglerfish...", true);
+				this.addEntity(chat);
+			}
 		}
 	    if (this.liveCamera.x != this.camera.x) {
 	    	if (this.liveCamera.x < this.camera.x) {

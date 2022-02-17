@@ -51,6 +51,8 @@ class Enemy {
 		this.invulnFromTop = 0;
 		this.invuln = false;
 		this.mapFlag = false;
+		this.defyDeath = false;
+		this.absorbCount = 0;
 		
 	}
 	
@@ -274,7 +276,7 @@ class Enemy {
 				this.game.player1.yVelocity = 7;
 				this.game.player1.jumping = true;
 				this.game.pauseTime = 8;
-				if (this.lastDirection == "Right") {
+				if (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2 <= this.x1) {
 					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
 					this.game.player1.xVelocity = 2;
 				} else {
@@ -283,7 +285,7 @@ class Enemy {
 				}
 			}
 		}
-		if (this.currentHealth <= 0) {
+		if (this.currentHealth <= 0 && !this.defyDeath) {
 			this.dead = true;
 			this.removeFromWorld = true;
 			if (this.hspeed > 0)
@@ -1231,6 +1233,447 @@ class Squid extends Enemy {
 			this.vspeed = 0;
 		if (this.vspeed > 0 && this.getY() + this.hitBoxDef.height / 2 >= this.game.player1.ground)
 			this.vspeed = 0;
+		super.update();
+	}
+}
+
+class AnglerSpirit extends Enemy {
+	
+	constructor(game, x, y) {
+		super(game, x, y);
+		
+		this.scoreValue = 2000;
+		this.maxHealth = 500.0;
+		this.autoDamage = 25;
+		this.currentHealth = this.maxHealth;
+		this.currentHealthTemp = this.currentHealth;
+		this.displacementFriction = 500; //basically, how "heavy" a mob is
+		this.hFriction = 0.05;
+		this.defyDeath = true;
+		
+		this.attackSequence = -1;
+		this.attackStep = 0;
+		this.actionStep = 0;
+		this.actionCount = 0;
+		this.lastSafeLeft = -1;
+		this.lastSafeRight = -1;
+		this.laserAmount = 0;
+		this.interval = 0;
+		this.attackY = []; 
+		this.attacksAvailable = [];
+		this.attackHistory = [];
+		this.deathStage = 0;
+		this.laser = null;
+		this.laser2 = null;
+		
+		// Animations
+		this.walkAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerspirit_idle2.png"), 0, 0, 300, 300, 0.03, 29, true, false, 0, 0);
+		this.walkAnimationRight = this.walkAnimationLeft;
+		this.idleAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerspirit_idle.png"), 0, 0, 300, 300, 1, 1, true, false, 0, 0);
+		this.idleAnimationRight = this.walkAnimationLeft;
+		this.deadAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Enemy/anglerspirit_idle2.png"), 0, 0, 300, 300, 0.03, 29, true, false, 0, 0);
+		this.deadAnimationRight = this.deadAnimationLeft;
+		this.aniLeft = this.walkAnimationLeft;
+		this.aniRight = this.walkAnimationRight;
+		this.currentAnimation = this.aniLeft;
+		
+		this.hitBoxDef = {
+			width: 160, height: 160, offsetX: 74, offsetY: 44, growthX: 0, growthY: 0
+		};
+		drawHitBox(this);
+	}
+	
+	teleport(x, y) {
+		this.game.addEntity(new Particle(IMG_PART, this.x + this.displacementX, this.y + this.displacementY,
+			0, 0, 0, 0, 0, 0, 0, 30, 0, 10, 0.5, 0, false, this.game, this.currentAnimation));
+		this.x = x;
+		this.y = y;
+		var newParticle = new Particle(PART_SECONDARY, this.getXMidpoint(), this.getYMidpoint(),
+				0, 0, 0, 0, 0, 0, 0, 0, 0, 15, .7, .1, false, this.game);
+		newParticle.grow = true;
+		var element = new CircleElement(300, "#fffcd1", "#fffee8");
+		newParticle.other = element;
+		this.game.addEntity(newParticle);
+		playSound(speedgateSound);
+	}
+	
+	
+	update() {
+		if (this.game.currentPhase != GAME_PHASE_ANGLER)
+			return;
+		else {
+			this.game.currentBoss = this;
+		}
+		if (this.currentHealth <= 0) {
+			this.currentHealth = 1;
+			this.deathStage = 0;
+			this.actionStep = 0;
+			this.autoDamage = 0;
+			this.invuln = true;
+		}
+		if (this.currentHealth == 1) { //absorb
+			if (this.deathStage == 0) {
+				playSound(spawnSound);
+				this.deathStage = 1;
+				this.game.pauseTime = 15;
+				var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 0.75, 0, false, this.game,
+						new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
+				newParticle.highPriority = 5;
+				this.game.addEntity(newParticle);
+				this.game.absorbEntity = this;
+				this.game.addEntity(new InfoBox(this.game, "Press [A] to absorb the spirit."));
+			}
+			if (this.absorbCount >= 90 && this.deathStage == 1) {
+				this.absorbCount = 0;
+				this.deathStage = 2;
+				this.teleport(this.initialX + 200, this.initialY + 200);
+			}
+			if (this.absorbCount >= 60 && this.deathStage == 2) {
+				this.absorbCount = 0;
+				this.deathStage = 3;
+				this.teleport(this.initialX - 200, this.initialY - 100);
+			}
+			if (this.absorbCount >= 60 && this.deathStage == 3) {
+				this.absorbCount = 0;
+				this.deathStage = 4;
+				this.teleport(this.initialX + 300, this.initialY - 100);
+			}
+			if (this.absorbCount >= 30 && this.deathStage == 4) {
+				this.actionStep = 0;
+				this.absorbCount = 0;
+				this.deathStage = 5;
+				var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 60, 1, 0, false, this.game,
+						new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
+				newParticle.highPriority = 5;
+				playSound(boomSound);
+				this.game.addEntity(newParticle);
+				this.game.player1.teleportToX = this.initialX - 200;
+				this.game.player1.teleportToY = this.initialY + 200;
+				this.game.player1.canControl = false;
+			}
+			this.actionStep++;
+			if (this.deathStage == 5 && this.actionStep == 60) {
+				var px = this.game.player1.x + this.game.player1.hitBoxDef.width + this.game.player1.hitBoxDef.offsetX - 20;
+				var py = this.game.player1.y + this.game.player1.hitBoxDef.height + this.game.player1.hitBoxDef.offsetY - 20;
+				playSound(boomSound);
+				playSound(laserSound);
+				playSound(rumbleSound2);
+				this.deathStage = 6;
+				var laser = new GrowLaser(this.game, this.getXMidpoint(), this.getYMidpoint(),
+					px, py, 40, "#ffffed", 10, 9999999, 10, 0.2);
+				laser.playerTarget = true;
+				laser.singleTarget = true;
+				laser.distanceMultiplier = 0.50;
+				laser.damage = 0;
+				laser.setWaitTime(30);
+				this.game.addEntity(laser);
+				
+				var laser2 = new GrowLaser(this.game, px, py, this.getXMidpoint(), this.getYMidpoint(), 40, "#e3fdff", 10, 9999999, 10, 0.2);
+				laser2.distanceMultiplier = 0.50;
+				laser2.damage = 0;
+				laser2.setWaitTime(30);
+				laser2.special = 1;
+				this.game.addEntity(laser2);
+				
+				var buttonChallenge = new ButtonChallenge(this.game);
+				buttonChallenge.setAwawa(laser, laser2);
+				this.game.buttonChallenge = buttonChallenge;			
+				this.game.addEntity(buttonChallenge);
+				this.laser = laser;
+				this.laser2 = laser2;
+				this.game.addEntity(new InfoBox(this.game, "Overpower the enemy!"));
+			}
+			
+		} else {
+			this.attackStep++;
+			this.actionStep++;
+			var idleTime = 270;
+			if (this.currentHealth <= 0.75 * this.maxHealth) {
+				idleTime = 240;
+			} if (this.currentHealth <= 0.5 * this.maxHealth) {
+				idleTime = 210;
+			} if (this.currentHealth <= 0.25 * this.maxHealth) {
+				idleTime = 180;
+			}
+			if (this.actionStep >= idleTime && this.attackSequence == -1) {
+				this.attacksAvailable = 3;
+				if (this.currentHealth <= 0.75 * this.maxHealth) {
+					this.attacksAvailable = 4;
+				} if (this.currentHealth <= 0.5 * this.maxHealth) {
+					this.attacksAvailable = 5;
+				}
+				var found = false;
+				this.attackSequence = getRandomInt(0, this.attacksAvailable);
+				for (var i = 0; i < this.attackHistory.length; i++) {
+					if (this.attackHistory[i] == this.attackSequence) {
+						found = true;
+						break;
+					}
+				}
+				if (this.attackHistory.length >= this.attacksAvailable)
+					this.attackHistory.splice(0, this.attackHistory.length - 1);
+				while (found) {
+					this.attackSequence = getRandomInt(0, this.attacksAvailable);
+					var found = false;
+					for (var i = 0; i < this.attackHistory.length; i++) {
+						if (this.attackHistory[i] == this.attackSequence) {
+							found = true;
+							break;
+						}
+					}
+				}
+				this.attackHistory.push(this.attackSequence);
+				console.log(this.attackHistory);
+				this.actionStep = 0;
+				this.attackStep = 0;
+				this.actionCount = 0; 
+				this.lastSafeLeft = -1;
+				this.lastSafeRight = -1;
+			}
+			switch(this.attackSequence) {
+				case 0: //targeted
+					if (this.attackStep == 0) {
+						this.interval = 60;
+						this.laserAmount = 3;
+						if (this.currentHealth <= 0.75 * this.maxHealth) {
+							this.laserAmount = 4;
+							this.interval = 54;
+						} if (this.currentHealth <= 0.5 * this.maxHealth) {
+							this.laserAmount = 5;
+							this.interval = 52;
+						} if (this.currentHealth <= 0.25 * this.maxHealth) {
+							this.laserAmount = 6;
+							this.interval = 50;
+						}
+					}
+					if (this.attackStep % this.interval == 0) {
+						
+						var laser = new GrowLaser(this.game, this.getXMidpoint(), this.getYMidpoint(),
+							this.getXMidpoint(), this.getYMidpoint(), 30, "#ffffed", 10, 20, 10, 0.2);
+						laser.playerTarget = true;
+						laser.singleTarget = true;
+						laser.extend = true;
+						laser.damage = 20;
+						laser.setWaitTime(30);
+						this.actionCount++;
+						this.game.addEntity(laser);
+						setTimeout(
+							function() {
+								playSound(laserSound);
+							}, 700);
+						if (this.actionCount >= this.laserAmount) { //attack is done
+							this.attackSequence = -1;
+							this.actionStep = 0;
+							this.attackStep = 0;
+							this.actionCount = 0; 
+						}
+					}
+				break;
+				case 1: //rain
+					if (this.attackStep == 0) {
+						this.interval = 5;
+						if (this.currentHealth <= 0.75 * this.maxHealth)
+							this.interval = 4;
+						if (this.currentHealth <= 0.5 * this.maxHealth)
+							this.interval = 3;
+						if (this.currentHealth <= 0.25 * this.maxHealth)
+							this.interval = 2;
+					}
+					if (this.attackStep % this.interval == 0) {
+						var newParticle = new Particle(PART_SECONDARY, this.getXMidpoint(), this.getYMidpoint(),
+								-10, 10, -8, -12, 0.3, 0.1, 0, 210, 0, 0, .8, .1, false, this.game);
+						var element = new CircleElement(14 + Math.random() * 5, "#fffcd1", "#fffee8");
+						newParticle.other = element;
+						newParticle.attackId = PARTICLE_CLAM_ATTACK;
+						this.game.addEntity(newParticle);
+						playSound(shootSound);
+						if (this.attackStep >= 150) { //attack is done
+							this.attackSequence = -1;
+							this.actionStep = 0;
+							this.attackStep = 0;
+							this.actionCount = 0; 
+						}
+					}
+				break;
+				case 2: //orbital strikes
+					if (this.attackStep == 0) {
+						this.interval = 120;
+						this.laserAmount = 3;
+						if (this.currentHealth <= 0.75 * this.maxHealth) {
+							this.laserAmount = 4;
+							this.interval = 105;
+						} if (this.currentHealth <= 0.5 * this.maxHealth) {
+							this.laserAmount = 5;
+							this.interval = 90;
+						} if (this.currentHealth <= 0.25 * this.maxHealth) {
+							this.laserAmount = 6;
+							this.interval = 75;
+						}
+					}
+					if (this.attackStep % this.interval == 0) {
+						var coords = [-375, -250, -125]; 
+						var coordsRight = [125, 250, 375];
+						var left = coords[getRandomInt(0, coords.length - 1)];
+						while (left == this.lastSafeLeft) { //roll until we hit a different safespot
+							left = coords[getRandomInt(0, coords.length - 1)];
+						}
+						this.lastSafeLeft = left;
+						var right = coordsRight[getRandomInt(0, coordsRight.length - 1)];
+						while (right == this.lastSafeLeft) { //roll until we hit a different safespot
+							right = coordsRight[getRandomInt(0, coordsRight.length - 1)];
+						}
+						this.lastSafeRight = right;
+						for (var i = 0; i < coords.length; i++) {
+							if (coords[i] == left)
+								continue;
+							var laser = new GrowLaser(this.game, this.getXMidpoint() + coords[i], this.game.camera.y,
+								this.getXMidpoint() + coords[i], this.game.camera.y + this.game.camera.height, 60, "#ffffed", 10, 10, 10, 0.2);
+							laser.extend = true;
+							laser.damage = 20;
+							laser.setWaitTime(60);
+							laser.hitBoxLenience = 1.1;
+							this.game.addEntity(laser);
+						}
+						for (var i = 0; i < coordsRight.length; i++) {
+							if (coordsRight[i] == right)
+								continue;
+							var laser = new GrowLaser(this.game, this.getXMidpoint() + coordsRight[i], this.game.camera.y,
+								this.getXMidpoint() + coordsRight[i], this.game.camera.y + this.game.camera.height, 60, "#ffffed", 10, 10, 10, 0.2);
+							laser.extend = true;
+							laser.damage = 20;
+							laser.setWaitTime(60);
+							laser.hitBoxLenience = 1.1;
+							this.game.addEntity(laser);
+						}
+						this.actionCount++;
+						setTimeout(
+							function() {
+								playSound(laserSound, 1.3);
+							}, 1400);
+						if (this.actionCount >= this.laserAmount) { //attack is done
+							this.attackSequence = -1;
+							this.actionStep = 0;
+							this.attackStep = 0;
+							this.actionCount = 0; 
+						}
+					}
+				break;
+				case 3: //horizontal beams
+					if (this.attackStep == 0) {
+						this.attackY = [0, 130, 260]; 
+						this.interval = 120;
+						if (this.currentHealth <= 0.75 * this.maxHealth) {
+							this.interval = 105;
+						} if (this.currentHealth <= 0.5 * this.maxHealth) {
+							this.interval = 90;
+						} if (this.currentHealth <= 0.25 * this.maxHealth) {
+							this.interval = 75;
+						}
+					}
+					if (this.attackStep % this.interval == 0) {
+						if (this.attackY.length == 0) {
+							this.teleport(this.initialX, this.initialY);
+							this.attackSequence = -1;
+							this.actionStep = 0;
+							this.attackStep = 0;
+							this.actionCount = 0; 
+						} else {
+							var index = getRandomInt(0, this.attackY.length - 1);
+							var dy = this.attackY[index];
+							this.teleport(this.initialX, this.initialY + dy);
+							this.attackY.splice(index, 1);
+							var laser = new GrowLaser(this.game, this.game.camera.x, this.getYMidpoint(),
+								 this.game.camera.x + this.game.camera.width, this.getYMidpoint(), 60, "#ffffed", 10, 10, 10, 0.2);
+							laser.extend = true;
+							laser.damage = 20;
+							laser.setWaitTime(60);
+							laser.hitBoxLenience = 1.1;
+							this.game.addEntity(laser);
+							this.actionCount++;
+							setTimeout(
+								function() {
+									playSound(laserSound, 1.3);
+								}, 1400);
+						}
+					}
+				break;
+				case 4: //tracer
+					if (this.attackStep == 0) {
+						this.teleport(this.initialX, this.initialY - 200);
+						var laserSpeed = 3;
+						if (this.currentHealth <= 0.75 * this.maxHealth) {
+							laserSpeed = 3;
+						} if (this.currentHealth <= 0.5 * this.maxHealth) {
+							laserSpeed = 3.5;
+						} if (this.currentHealth <= 0.25 * this.maxHealth) {
+							laserSpeed = 4;
+						}
+						var laser = new GrowLaser(this.game, this.getXMidpoint(), this.getYMidpoint(),
+							this.getXMidpoint(), this.getYMidpoint(), 30, "#ffffed", 30, 1200 / (laserSpeed + 3), 10, 0.2);
+						laser.playerTarget = true;
+						laser.singleTarget = true;
+						laser.trace = true;
+						laser.traceSpeed = laserSpeed;
+						laser.extend = true;
+						laser.damage = 20;
+						laser.setWaitTime(60);
+						laser.traceWaitTime = 30;
+						this.actionCount++;
+						this.game.addEntity(laser);
+						setTimeout(
+							function() {
+								playSound(laserSound);
+							}, 700);
+					}
+					if (this.attackStep >= 300) { //attack is done
+						this.attackSequence = -1;
+						this.actionStep = 0;
+						this.attackStep = 0;
+						this.actionCount = 0; 
+						this.teleport(this.initialX, this.initialY);
+					}
+				break;
+				case 5: //light burst
+					this.aniLeft = this.idleAnimationLeft;
+					this.aniRight = this.idleAnimationRight;
+					if (this.attackStep == 0) {
+						this.game.movieAttack.rewind();
+						this.game.addEntity(this.game.movieAttack);
+						playSound(voidGateSound);
+					}
+					if (this.attackStep >= 90) { //attack is done
+						playSound(airHitSound);
+						var px = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
+						if (getDistance(px, this.game.player1.y + this.game.player1.hitBoxDef.height / 2 + this.game.player1.hitBoxDef.offsetY, this.getXMidpoint(), this.getYMidpoint()) <= 300) {
+							this.game.player1.vulnerable = false;
+							applyDamage(this.game.player1.x, this.game.player1.y, this.game, 40, this.game.player1);
+							this.game.player1.invulnTimer = this.game.player1.invulnTimerMax;
+							this.game.player1.hitByAttack = true;
+							this.game.player1.stunTimer = 60;
+							this.game.player1.stunned = true;
+							this.game.player1.canControl = false;
+							playSound(hitSound);
+						}
+						if ((px < this.getXMidpoint() && this.game.player1.lastDirection == "Right") ||
+						(px > this.getXMidpoint() && this.game.player1.lastDirection == "Left")) {
+							var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+									0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 1, 0, false, this.game,
+									new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
+							newParticle.highPriority = 5;
+							this.game.addEntity(newParticle);
+						}
+						this.attackSequence = -1;
+						this.actionStep = 0;
+						this.attackStep = 0;
+						this.actionCount = 0; 
+						this.aniLeft = this.walkAnimationLeft;
+						this.aniRight = this.walkAnimationRight;
+					}
+				break;
+			}
+		}
 		super.update();
 	}
 }
