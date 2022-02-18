@@ -193,7 +193,10 @@ class BigInfoBox extends InfoBox {
 					this.imageOpacity -= 0.01;
 					if (this.descOpacity <= 0) {
 						this.removeFromWorld = true;
-						startMusic.play();
+						if (this.game.currentPhase == GAME_PHASE_AFTER_CLAM)
+							ambienceMusic.play();
+						else
+							startMusic.play();
 					}
 				}
 			break;
@@ -243,6 +246,8 @@ class BlackScreenFade extends InfoBox {
 		this.opacity = 0;
 		this.highPriority = 5;
 		this.blackStart = blackStart || false;
+		this.color = "#000000";
+		this.linger = 0;
 	}
 	
 	update() {
@@ -261,15 +266,19 @@ class BlackScreenFade extends InfoBox {
 				this.nextMap = 0;
 			}
 			this.game.pauseTime = 0;
-			this.opacity -= 1 / this.fadeTime;
-			if (this.opacity <= 0) {
-				this.removeFromWorld = true;
+			if (this.linger > 0)
+				this.linger--;
+			else {
+				this.opacity -= 1 / this.fadeTime;
+				if (this.opacity <= 0) {
+					this.removeFromWorld = true;
+				}
 			}
 		}
 	}
 	
 	draw(ctx) {
-		ctx.fillStyle = "#000000";
+		ctx.fillStyle = this.color;
 		ctx.globalAlpha = this.opacity;
 		if (this.blackStart && this.stage == 0)
 			ctx.globalAlpha = 1;
@@ -328,6 +337,10 @@ class Movie extends InfoBox {
 				playSound(suspenseSound2);
 			if (this.tick == 270)
 				playSound(getEatenSound);
+			if (this.tick == 298) {
+				ambienceMusic.pause();
+				anglerMusic.play();
+			}
 		}
 		if (this.tick >= this.frames) {
 			this.tick = 0;

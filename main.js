@@ -71,6 +71,13 @@ var startMusic = new Audio("./sounds/bgm_start.mp3");
 startMusic.loop = true;
 startMusic.volume = 0.3;
 
+var anglerMusic = new Audio("./sounds/bgm_angler.mp3");
+anglerMusic.loop = true;
+anglerMusic.volume = 0.2;
+var ambienceMusic = new Audio("./sounds/ambience.mp3");
+ambienceMusic.loop = true;
+ambienceMusic.volume = 0.2;
+
 var earthRumble = new Audio("./sounds/earth_rumble.wav");
 earthRumble.loop = true;
 earthRumble.volume = 0.4;
@@ -784,7 +791,7 @@ UI.prototype.draw = function (ctx) { //draw ui
         ctx.textAlign = "left"; 
         ctx.fillText("Anglerfish Spirit", this.bossPortraitX + 80 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
         ctx.textAlign = "right"; 
-        ctx.fillText(this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 300 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
+        ctx.fillText(this.game.currentBoss.currentHealth + " / " + this.game.currentBoss.maxHealth, this.bossPortraitX + 450 + this.game.liveCamera.x, 45 + this.game.liveCamera.y);
     }
     /*if (this.game.currentPhase === 2 || this.game.currentPhase === 14 || this.game.currentPhase === 21) {
         ctx.drawImage(ASSET_MANAGER.getAsset("./img/UI/BarBack.png"), this.bossBarX + this.game.liveCamera.x, this.bossBarY + this.game.liveCamera.y, this.bossBarWidth, this.bossBarHeight);
@@ -807,12 +814,12 @@ UI.prototype.draw = function (ctx) { //draw ui
         ctx.fillStyle = "black";
         ctx.fillText("Defeat",400 + this.game.liveCamera.x + 3,250 + this.game.liveCamera.y + 3);
         ctx.font = "30px Calibri";
-		ctx.fillText("Continue? Press [R] to be revived",400 + this.game.liveCamera.x + 3,350 + this.game.liveCamera.y + 3);
+		ctx.fillText("Continue? Press [R] to be revived (-20% score)",400 + this.game.liveCamera.x + 3,350 + this.game.liveCamera.y + 3);
         ctx.fillStyle = "white";
         ctx.font = "100px Calibri";
         ctx.fillText("Defeat",400 + this.game.liveCamera.x,250 + this.game.liveCamera.y);
         ctx.font = "30px Calibri";
-		ctx.fillText("Continue? Press [R] to be revived",400 + this.game.liveCamera.x,350 + this.game.liveCamera.y);
+		ctx.fillText("Continue? Press [R] to be revived (-20% score)",400 + this.game.liveCamera.x,350 + this.game.liveCamera.y);
         ctx.globalAlpha = 1.0;
     } else if (this.game.currentBoss !== null && this.game.currentBoss.dead) {
         if (this.gameOverTransparency < 1) {
@@ -864,6 +871,8 @@ UI.prototype.draw = function (ctx) { //draw ui
     if (soundOn) {
         document.getElementById("image").src = "img/UI/MusicOn.png";
         startMusic.volume = 0.3;
+        anglerMusic.volume = 0.2;
+        ambienceMusic.volume = 0.2;
         bossMusic.volume = 0.1;
         bossMusic2.volume = 0.1;
     } else {
@@ -871,6 +880,8 @@ UI.prototype.draw = function (ctx) { //draw ui
         startMusic.volume = 0;
         bossMusic.volume = 0;
         bossMusic2.volume = 0;
+        anglerMusic.volume = 0;
+        ambienceMusic.volume = 0;
         
     }
     Entity.prototype.draw.call(this);	
@@ -2890,6 +2901,17 @@ Character.prototype.update = function () {
 			}
 			if (this.phaseTimer > 0) {
 				this.phaseTimer--;
+				if (this.phaseTimer == 0 && this.game.currentPhase == GAME_PHASE_ANGLER) {
+					rumbleSound2.pause();
+					this.notBaby();
+					this.defaultAnimations();
+					this.game.player1.currentForm = FORM_ANGLER;
+					this.game.player1.canControl = true;
+					this.game.advancePhase(GAME_PHASE_POSTANGLER);
+					this.game.addEntity(new BigInfoBox(this.game, "Evolution Complete", "Consumed the ANGLERFISH SPIRIT",
+						"Attack range and damage is increased with the power of light. Press [↑] or [↓] + [Z] to attack up or down.",
+						new Animation(ASSET_MANAGER.getAsset("./img/UI/jelly_lightning.png"), 0, 0, 384, 192, 1, 1, true, false, -200, -200)));
+				}
 			}
 			if (invincible) {
 				this.currentHealth = 1;
@@ -3734,6 +3756,11 @@ ASSET_MANAGER.queueDownload("./img/Chat/ChatSquare.png");
 ASSET_MANAGER.queueDownload("./img/Chat/JellySquare.png");
 ASSET_MANAGER.queueDownload("./img/Misc/debug.png");
 ASSET_MANAGER.queueDownload("./img/Chat/UnknownSquare.png");
+
+ASSET_MANAGER.queueDownload("./img/Maygi/maygi_idle_left.png");
+ASSET_MANAGER.queueDownload("./img/Maygi/maygi_idle_right.png");
+ASSET_MANAGER.queueDownload("./img/Maygi/maygi_wave_left.png");
+ASSET_MANAGER.queueDownload("./img/Maygi/maygi_wave_right.png");
 
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_idle_left.png");
 ASSET_MANAGER.queueDownload("./img/Jelly/jelly_idle_right.png");

@@ -442,6 +442,15 @@ class ButtonChallenge extends BackgroundObject {
 				this.laser.finish();
 				this.laser2.finish();
 				this.removeFromWorld = true;
+				var screenFade = new BlackScreenFade(this.game, 90, GAME_SANDBOX);
+				screenFade.color = "#ffffff";
+				screenFade.linger = 120;
+				playSound(lightningExSound);
+				this.game.addEntity(screenFade);
+				this.game.player1.phaseTimer = 150;
+				bossMusic2.pause();
+				this.game.absorbEntity = null;
+				this.game.buttonChallenge = null;	
 			}
 		} else
 			this.currentButtons.push(this.buttonOptions[Math.floor(Math.random() * this.buttonOptions.length)]);
@@ -458,6 +467,7 @@ class ButtonChallenge extends BackgroundObject {
 						0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0.3, 0, false, this.game,
 						new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.03, 1, true, false, 0, 0));
 				this.game.addEntity(newParticle);
+				this.game.buttonChallenge = null;	
 				this.removeFromWorld = true;
 			}
 		}

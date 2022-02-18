@@ -119,6 +119,7 @@ var GAME_PHASE_POSTCLAM = 6;
 var GAME_PHASE_AFTER_CLAM = 7;
 var GAME_PHASE_EATEN = 8;
 var GAME_PHASE_ANGLER = 9;
+var GAME_PHASE_POSTANGLER = 10;
 
 GameEngine.prototype.showTip = function (idx) {
 	if (!this.tipsShown[idx]) {
@@ -201,7 +202,7 @@ GameEngine.prototype.startInput = function () {
 			} else if (String.fromCharCode(e.which) === 'C') {
 				that.player1.attackInput = 2;
 			} else if (String.fromCharCode(e.which) === 'A') {
-				if (that.player1.currentStamina >= 30 && that.player1.currentForm >= FORM_HEAL) {
+				if (that.absorbEntity != null || (that.player1.currentStamina >= 30 && that.player1.currentForm >= FORM_HEAL)) {
 					that.player1.attackInput = 3;
 					that.player1.jumpDown = false;
 				}
@@ -210,10 +211,11 @@ GameEngine.prototype.startInput = function () {
 					that.player1.currentStamina = 0;
 					cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
 				}
-			} else if (String.fromCharCode(e.which) === 'Q') {
+			}/* else if (String.fromCharCode(e.which) === 'Q') {
 				that.advancePhase(GAME_PHASE_EATEN);
 				that.changeMap(GAME_EATENPART);
 			} else if (String.fromCharCode(e.which) === 'W') {
+				startMusic.pause();
 				that.camera = {
 					x: 2520,
 					y: 3360,
@@ -226,7 +228,7 @@ GameEngine.prototype.startInput = function () {
 				};
 				that.player1.teleportToX = 2520;
 				that.player1.teleportToY = 3360;
-			}
+			}*/
 			if (String.fromCharCode(e.which) === 'O') {
 				playSound(healSound);
 				var damageParticle = new Particle(TEXT_PART, that.player1.hitBox.x, that.player1.hitBox.y, 
@@ -343,6 +345,7 @@ GameEngine.prototype.advancePhase = function(phase) {
 var GAME_START = 1;
 var GAME_LEVEL2 = 2;
 var GAME_EATENPART = 3;
+var GAME_SANDBOX = 999;
 GameEngine.prototype.changeMap = function (id) {
     for (var i = this.entities.length - 1; i >= 0; --i) {
         if (this.entities[i].mapFlag) {
@@ -354,7 +357,7 @@ GameEngine.prototype.changeMap = function (id) {
     this.setMap(map);
 	this.player1.teleportToX = -2100;
 	this.player1.teleportToY = 300;
-	this.currentMapId = GAME_LEVEL2;
+	this.currentMapId = id;
 	switch(id) {
 		case GAME_LEVEL2:
 			spawnWave(this, GAME_LEVEL2);
@@ -392,6 +395,29 @@ GameEngine.prototype.changeMap = function (id) {
 				maxX: 10000,
 				minY: 0,
 				maxY: 5000,
+				width: 800,
+				height: 500
+			};
+			this.liveCamera = { //where the camera actually is
+				x: -2400,
+				y: 0,
+				width: 800,
+				height: 500
+			};
+			this.addEntity(map);
+		break;
+		case GAME_SANDBOX:
+			spawnWave(this, GAME_SANDBOX);
+			if (this.player1.currentForm < FORM_ANGLER)
+				this.player1.currentForm = FORM_ANGLER;
+			this.player1.ground = 425;
+			this.camera = { //where the camera wants to be
+				x: -2400,
+				y: 0,
+				minX: -2400,
+				maxX: 5800,
+				minY: 0,
+				maxY: 0,
 				width: 800,
 				height: 500
 			};
@@ -539,7 +565,7 @@ GameEngine.prototype.update = function () {
 				};
 				this.advancePhase(GAME_PHASE_ANGLER);
 
-				startMusic.pause();
+				anglerMusic.pause();
 				bossMusic2.play();
 				var chat = new TextBox(this, "./img/Chat/JellySquare.png", "This must be the spirit of the anglerfish...", true);
 				this.addEntity(chat);
@@ -585,7 +611,7 @@ GameEngine.prototype.update = function () {
     var entitiesCount = this.entities.length;
     for (var i = 0; i < entitiesCount; i++) {
         var entity = this.entities[i];
-        if (!entity.removeFromWorld && (this.pauseTime === 0 || (entity.highPriority > 0 || entity instanceof TextBox))) {
+        if (entity != undefined && !entity.removeFromWorld && (this.pauseTime === 0 || (entity.highPriority > 0 || entity instanceof TextBox))) {
             entity.update();
         }
     }

@@ -1243,7 +1243,7 @@ class AnglerSpirit extends Enemy {
 		super(game, x, y);
 		
 		this.scoreValue = 2000;
-		this.maxHealth = 3000.0;
+		this.maxHealth = 1000.0;
 		this.autoDamage = 25;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
@@ -1521,7 +1521,7 @@ class AnglerSpirit extends Enemy {
 						}
 						this.lastSafeLeft = left;
 						var right = coordsRight[getRandomInt(0, coordsRight.length - 1)];
-						while (right == this.lastSafeLeft) { //roll until we hit a different safespot
+						while (right == this.lastSafeRight) { //roll until we hit a different safespot
 							right = coordsRight[getRandomInt(0, coordsRight.length - 1)];
 						}
 						this.lastSafeRight = right;
