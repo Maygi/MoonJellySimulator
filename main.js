@@ -73,7 +73,7 @@ startMusic.volume = 0.3;
 
 var anglerMusic = new Audio("./sounds/bgm_angler.mp3");
 anglerMusic.loop = true;
-anglerMusic.volume = 0.2;
+anglerMusic.volume = 0.15;
 var ambienceMusic = new Audio("./sounds/ambience.mp3");
 ambienceMusic.loop = true;
 ambienceMusic.volume = 0.2;
@@ -83,6 +83,10 @@ earthRumble.loop = true;
 earthRumble.volume = 0.4;
 var fireSound = new Audio("./sounds/fire_burning.wav");
 fireSound.volume = 0.4;
+var powerupSound = new Audio("./sounds/powerup.wav");
+powerupSound.volume = 0.2;
+var clownSound = new Audio("./sounds/clown_horn.wav");
+clownSound.volume = 0.2;
 var healSound = new Audio("./sounds/heal.wav");
 healSound.volume = 0.1;
 var invulnSound = new Audio("./sounds/invulnerable.wav");
@@ -643,13 +647,19 @@ Background.prototype.draw = function (ctx) {
 			}
 		}
 	} else {
-		for (var i = 0; i < 30; i++) {
-			for (var j = 0; j < 30; j++) {
-				ctx.drawImage(ASSET_MANAGER.getAsset("./img/BackgroundSolid.png"), -2400 + i * 800, j * 500);
+		if (this.game.currentMapId == GAME_SANDBOX) {
+			for (var i = 0; i < 30; i++) {
+				ctx.drawImage(ASSET_MANAGER.getAsset("./img/BackgroundSandbox.png"), -2400 + i * 800, 0)
+			};			
+		} else {
+			for (var i = 0; i < 30; i++) {
+				for (var j = 0; j < 30; j++) {
+					ctx.drawImage(ASSET_MANAGER.getAsset("./img/BackgroundSolid.png"), -2400 + i * 800, j * 500);
+				}
 			}
-		}
-		for (var i = 0; i < 30; i++) {
-			ctx.drawImage(ASSET_MANAGER.getAsset("./img/Background.png"), -2400 + i * 800, 0);
+			for (var i = 0; i < 30; i++) {
+				ctx.drawImage(ASSET_MANAGER.getAsset("./img/Background.png"), -2400 + i * 800, 0);
+			}
 		}
 	}
     //ctx.drawImage(ASSET_MANAGER.getAsset("./img/Misc/tree.png"), 1500, -200);
@@ -871,7 +881,7 @@ UI.prototype.draw = function (ctx) { //draw ui
     if (soundOn) {
         document.getElementById("image").src = "img/UI/MusicOn.png";
         startMusic.volume = 0.3;
-        anglerMusic.volume = 0.2;
+        anglerMusic.volume = 0.15;
         ambienceMusic.volume = 0.2;
         bossMusic.volume = 0.1;
         bossMusic2.volume = 0.1;
@@ -1199,6 +1209,7 @@ function TextBox(game, image, text, pause) {
 	this.progress = 0;
 	this.step = 0;
 	this.life = -1;
+	this.sound = null;
 	this.nextText = null;
     Entity.call(this, game, 0, 0);
 }
@@ -1224,6 +1235,10 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
 }
 
 TextBox.prototype.update = function() {
+	if (this.sound != null) {
+		playSound(this.sound);
+		this.sound = null;
+	}
 	if (this.pause)
 		this.game.pauseTime = 2;
 	this.step++;
@@ -1249,7 +1264,7 @@ TextBox.prototype.update = function() {
                 if (soundOn) {
                     var sound = new Audio("./sounds/chat.wav");
                     sound.volume = 0.05;
-                    if (this.image == null || this.image.indexOf("Jelly") !== -1) {
+                    if (this.image == null || this.image.indexOf("Maygi") !== -1 || this.image.indexOf("Jelly") !== -1) {
                         sound = new Audio("./sounds/chat2.wav");
                         sound.volume = 0.05;
                     }
@@ -2241,6 +2256,7 @@ Powerup.prototype.update = function () {
 						chat.nextText = chat2;
 						chat2.nextText = chat3;
 						chat3.nextText = chat4;
+						that.game.jellybait = true;
 						that.game.addEntity(chat);
 						that.game.pauseTime = 100;
 						that.game.player1.teleportToX = 5574 - 128;
@@ -3733,6 +3749,7 @@ ASSET_MANAGER.queueDownload("./img/Particle/brandong_cut.png");
 
 ASSET_MANAGER.queueDownload("./img/BackgroundSolid.png");
 ASSET_MANAGER.queueDownload("./img/BackgroundAngler.png");
+ASSET_MANAGER.queueDownload("./img/BackgroundSandbox.png");
 ASSET_MANAGER.queueDownload("./img/Background.png");
 ASSET_MANAGER.queueDownload("./img/Background2.png");
 ASSET_MANAGER.queueDownload("./img/Background3.png");
@@ -3756,6 +3773,7 @@ ASSET_MANAGER.queueDownload("./img/Chat/ChatSquare.png");
 ASSET_MANAGER.queueDownload("./img/Chat/JellySquare.png");
 ASSET_MANAGER.queueDownload("./img/Misc/debug.png");
 ASSET_MANAGER.queueDownload("./img/Chat/UnknownSquare.png");
+ASSET_MANAGER.queueDownload("./img/Chat/MaygiSquare.png");
 
 ASSET_MANAGER.queueDownload("./img/Maygi/maygi_idle_left.png");
 ASSET_MANAGER.queueDownload("./img/Maygi/maygi_idle_right.png");
@@ -3888,6 +3906,7 @@ ASSET_MANAGER.queueDownload("./img/Misc/virus.png");
 
 ASSET_MANAGER.queueDownload("./img/Platform/invisible_shine.png");
 ASSET_MANAGER.queueDownload("./img/Platform/platform_crumble.png");
+ASSET_MANAGER.queueDownload("./img/Platform/platform_red.png");
 ASSET_MANAGER.queueDownload("./img/Platform/spike_up.png");
 ASSET_MANAGER.queueDownload("./img/Platform/spike_down.png");
 ASSET_MANAGER.queueDownload("./img/Platform/spike_left.png");

@@ -1076,7 +1076,7 @@ class Tentacle extends Enemy {
 		super(game, x, y);
 		
 		this.scoreValue = 200;
-		this.maxHealth = 22200.0;
+		this.maxHealth = 200.0;
 		this.autoDamage = 30;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
@@ -1243,8 +1243,8 @@ class AnglerSpirit extends Enemy {
 		super(game, x, y);
 		
 		this.scoreValue = 2000;
-		this.maxHealth = 1000.0;
-		this.autoDamage = 25;
+		this.maxHealth = 3000.0;
+		this.autoDamage = 20;
 		this.currentHealth = this.maxHealth;
 		this.currentHealthTemp = this.currentHealth;
 		this.displacementFriction = 500; //basically, how "heavy" a mob is

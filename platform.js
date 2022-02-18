@@ -38,6 +38,8 @@ function Platform(game, x, y, hSpeed, vSpeed, switchDelay, specialId, stepOffset
     if (this.specialId === PLATFORM_BREAK) {
         this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/platform_crumble.png");    	
     }
+	if (this.specialId == 0 && game.currentMapId == GAME_EATENPART)
+		this.platformPicture = ASSET_MANAGER.getAsset("./img/Platform/platform_red.png");  
     
     Entity.call(this, game, x, y);
     

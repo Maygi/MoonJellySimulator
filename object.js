@@ -137,6 +137,151 @@ class Spaceship extends BackgroundObject {
 	}
 }
 
+class Maygi extends BackgroundObject {
+	constructor(game, x, y) {
+		super(game, x, y);
+		this.interactText = "Talk";
+		this.interactChat = [];
+		this.idleAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Maygi/maygi_idle_left.png"), 0, 0, 82, 81, 0.2, 5, true, false, 0, 0);
+		this.idleAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Maygi/maygi_idle_right.png"), 0, 0, 82, 81, 0.2, 5, true, false, 0, 0);
+		this.waveAnimationLeft = new Animation(ASSET_MANAGER.getAsset("./img/Maygi/maygi_wave_left.png"), 0, 0, 82, 81, 0.1, 19, false, false, 0, 0);
+		this.waveAnimationRight = new Animation(ASSET_MANAGER.getAsset("./img/Maygi/maygi_wave_right.png"), 0, 0, 82, 81, 0.1, 19, false, false, 0, 0);
+		this.currentAnimation = this.idleAnimationLeft;
+		this.hitBoxDef = {
+			width: 82, height: 81, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
+		};
+		this.pauseTime = 0;
+		this.textDelay = 3000;
+		this.waveCooldown = 0;
+		this.waving = false;
+		this.interacted = false;
+		this.maxScore = 17575;
+		drawHitBox(this);
+		this.chats = [];
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Why am I so smol? Uhh... magic!", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "You know, my DMs are always open! Please leave me any feedback on the game ♥", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "What's that? You want to talk about cheesy lore?", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Here's hoping I don't stop working on this project now that I released part 1...", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "So I spent 4 hours making those tentacles and never used them yet...", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "This game is open source! But don't look at the code, your brain might rot.", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "H-huh? You're approaching me? *blushes in shyness*", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Fun fact... the oxygen system was added as an afterthought for lore-accuracy.", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "You should try out the omnidirectional combat. It's so much better!", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "So, when are we getting Jelly kettle merch?", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "I wrote this before seeing Jelly 2.0 but I LOVE IT SO MUCH.", true));
+		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "You're actually still reading dialogues??", true));
+	}
+	
+	update() {
+		var px = this.game.player1.x + this.game.player1.hitBoxDef.width / 2 + this.game.player1.hitBoxDef.offsetX;
+		if (this.waveCooldown > 0) {
+			this.waveCooldown--;
+			if (this.waveCooldown == 0 &&  Math.abs(px - (this.x + this.hitBoxDef.width / 2)) <= 96)
+				this.waveCooldown = 1; //don't wave again until you walk away
+		}
+		if (Math.abs(px - (this.x + this.hitBoxDef.width / 2)) <= 96 && this.waveCooldown == 0) {
+			this.waving = true;
+			this.waveAnimationLeft.restart();
+			this.waveAnimationRight.restart();
+			this.waveCooldown = 60;
+			if (!this.interacted) {
+				this.interact();
+			}
+		}
+		if (this.x + this.hitBoxDef.width / 2 > px) {
+			if (this.waving)
+				this.currentAnimation = this.waveAnimationLeft;
+			else
+				this.currentAnimation = this.idleAnimationLeft;
+		} else {
+			if (this.waving)
+				this.currentAnimation = this.waveAnimationRight;
+			else
+				this.currentAnimation = this.idleAnimationRight;
+		}
+		if (this.waving && this.currentAnimation.isDone()) {
+			this.waving = false;
+		}
+		super.update();
+	}
+	interact() {
+		if (this.cooldown > 0)
+			return;
+		this.cooldown = 30;
+		if (!this.interacted) {
+			var chat1 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Jelly!! You made it!!", true);
+			var chat2 = new TextBox(this.game, "./img/Chat/JellySquare.png", "What is this place...?", true);
+			var chat3 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "This is an alternate reality. A sandbox of sorts...", true);
+			var chat4 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "In other words, you've beat the game. Thank you so much for playing!! ♥", true);
+			var chat5 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Your total score was " + this.game.score + " out of a maximum possible " + this.maxScore + ".", true);
+			var chat6;
+			
+			if (this.game.score >= this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "IMPRESSIVE! To be able to achieve the perfect score... you deserve the rank of [Princess Jelly]!", true);
+			else if (this.game.score >= 0.97 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Extremely well done !! You missed a little bit of JellyCoin, but you are still a [God Gamer]!", true);
+			else if (this.game.score >= 0.90 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Sugoi !! You missed some JellyCoin, but with a score like this, you are still a [Jelly Champion]!", true);
+			else if (this.game.score >= 0.80 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Very good!! You missed a good amount of JellyCoin but at least you didn't die. Your rank is [Immortal Jelly]!", true);
+			else if (this.game.score >= 0.70 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Not a bad performance at all. Your rank is [Epic Jelly]!", true);
+			else if (this.game.score >= 0.60 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Well... you made it, and that's what matters, right? Your rank is [JellyDrool]!", true);
+			else if (this.game.score >= 0.50 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "I guess you got... a bit more than half?? Your rank is [Jelly15Head]!", true);
+			else if (this.game.score >= 0.40 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "You... didn't even get half. Your rank is [OmegaJelly]!", true);
+			else if (this.game.score >= 0.30 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Mm... I'm glad you're here, either way. Your rank is [JellyREEEE]!", true);
+			else if (this.game.score >= 0.20 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Uhm... are you allergic to JellyCoins?? Your rank is [JellyKEK]!", true);
+			else if (this.game.score >= 0.10 * this.maxScore)
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "It's actually impressive how you died this much. Your rank is [JellyOmegaRoll]!", true);
+			else
+				chat6 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "I'm... not sure what to say. Your rank is [AiRo] - appropriately on the bottom.", true);
+
+			if (this.game.score >= 0.70 * this.maxScore)
+				chat6.sound = powerupSound;
+			else if (this.game.score >= 0.50 * this.maxScore)
+				chat6.sound = energyUpSound;
+			else
+				chat6.sound = clownSound;
+			chat1.nextText = chat2;
+			chat2.nextText = chat3;
+			chat3.nextText = chat4;
+			chat4.nextText = chat5;
+			chat5.nextText = chat6;
+			this.game.addEntity(chat1);
+			this.interacted = true;
+		} else {
+			if (this.game.jellybait) {
+				this.game.jellybait = false;
+				var chat1 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "I still can't believe you actually took the #jellybait.", true);
+				var chat2 = new TextBox(this.game, "./img/Chat/JellySquare.png", "(:", true);
+				var chat3 = new TextBox(this.game, "./img/Chat/MaygiSquare.png", "I expected no less, really!", true);
+				chat1.nextText = chat2;
+				chat2.nextText = chat3;
+				this.game.addEntity(chat1);
+			} else {
+				if (this.chats.length == 0) {
+					if (Math.random() >= 0.66)
+						this.game.addEntity(new TextBox(this.game, "./img/Chat/MaygiSquare.png", ":3"));
+					else if (Math.random() >= 0.66)
+						this.game.addEntity(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "<3"));
+					else
+						this.game.addEntity(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "awawawa~"));
+				} else {
+					var chatIndex = getRandomInt(0, this.chats.length - 1);
+					this.game.addEntity(this.chats[chatIndex]);
+					this.chats.splice(chatIndex, 1);
+				}
+			}
+		}
+		super.interact();
+	}
+}
+
 class Virus extends BackgroundObject {
 	constructor(game, x, y) {
 		super(game, x, y);

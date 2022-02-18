@@ -78,6 +78,7 @@ GameEngine.prototype.init = function (ctx) {
 	this.cutTime = 0; // the time where the black cross-screen cut effect is in play
 	this.pauseTime = 0;
 	this.buttonChallenge = null;
+	this.jellybait = false;
 	this.currentMapId = GAME_START;
 	this.tipsShown = [
 		false, false, false
@@ -190,9 +191,6 @@ GameEngine.prototype.startInput = function () {
 						//	that.player1.x = 5574 - 128;
 						//	that.player1.y = 32;
 			}
-			if (String.fromCharCode(e.which) === 'E') {
-				that.player1.x += 96;
-			}
 			if (String.fromCharCode(e.which) === 'C') {
 				if (that.player1.canControl && that.player1.currentForm >= FORM_ANGLER) { //dash
 					that.player1.attackInput = 2;
@@ -228,7 +226,10 @@ GameEngine.prototype.startInput = function () {
 				};
 				that.player1.teleportToX = 2520;
 				that.player1.teleportToY = 3360;
-			}*/
+			}
+			if (String.fromCharCode(e.which) === 'E') {
+				that.player1.x += 96;
+			}
 			if (String.fromCharCode(e.which) === 'O') {
 				playSound(healSound);
 				var damageParticle = new Particle(TEXT_PART, that.player1.hitBox.x, that.player1.hitBox.y, 
@@ -244,7 +245,7 @@ GameEngine.prototype.startInput = function () {
 			if (String.fromCharCode(e.which) === 'R') {
 				that.player1.jumping = true;
 				that.player1.yVelocity = 6;
-			}
+			}*/
 		}
 		if (String.fromCharCode(e.which) === 'R') {
 			if (that.player1.dead) { //revive

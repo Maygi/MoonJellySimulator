@@ -6,6 +6,84 @@ function spawnWave(game, number) {
 	var instances = [];
 	var enemies = [];
 	switch(number) {
+		case 999:
+			instances = [
+			new Powerup(game, -2136, 352, 0),
+
+new Powerup(game, -2056, 352, 0),
+
+new Powerup(game, -1976, 352, 0),
+
+new Powerup(game, -1896, 352, 0),
+
+new Powerup(game, -1816, 352, 0),
+
+new Powerup(game, -1736, 352, 0),
+
+new Powerup(game, -1048, 368, 0),
+
+new Powerup(game, -1000, 368, 0),
+
+new Powerup(game, -1048, 320, 0),
+
+new Powerup(game, -1000, 320, 0),
+
+new Powerup(game, -264, 336, 0),
+
+new Powerup(game, -216, 336, 0),
+
+new Powerup(game, -264, 384, 0),
+
+new Powerup(game, -216, 384, 0),
+
+new Squid(game, -904, 208),
+
+new Tentacle(game, -552, 304),
+
+new Tentacle(game, -280, 304),
+
+new Tentacle(game, -8, 304),
+
+new ShellSnail(game, -1416, 400, -2, 0),
+
+new ShellSnail(game, -1160, 400, -2, 0),
+
+new TopRamen(game, -664, 320, 2, 32),
+
+new Powerup(game, -1560, 432, ENTITY_MARKER),
+
+new Powerup(game, -1016, 432, ENTITY_MARKER),
+
+new Maygi(game, -1864, 390),
+
+new Platform(game, -1592, 336),
+
+new Platform(game, -1592, 400),
+
+new Wall(game, -1688, 432, 32, 32),
+
+new Wall(game, -1688, 400, 32, 32),
+
+new Wall(game, -1720, 432, 32, 32),
+
+new Wall(game, -1656, 368, 32, 32),
+
+new Wall(game, -1656, 400, 32, 32),
+
+new Wall(game, -1656, 432, 32, 32),
+
+new Wall(game, -1624, 336, 32, 32),
+
+new Wall(game, -1624, 368, 32, 32),
+
+new Wall(game, -1624, 400, 32, 32),
+
+new Wall(game, -1624, 432, 32, 32),
+
+
+			];
+		
+		break;
 		case 3:
 			instances = [
 new Powerup(game, -344, 864, JELLY_COIN),
@@ -17,6 +95,30 @@ new Powerup(game, 504, 2496, JELLY_COIN),
 new Powerup(game, 1016, 2656, JELLY_COIN),
 
 new Powerup(game, 2968, 2800, JELLY_COIN),
+
+new Powerup(game, -472, 1392, JELLY_COIN),
+
+new Powerup(game, -472, 1232, JELLY_COIN),
+
+new Powerup(game, -472, 1088, JELLY_COIN),
+
+new Powerup(game, 984, 1616, JELLY_COIN),
+
+new Powerup(game, -216, 1888, JELLY_COIN),
+
+new Powerup(game, 1416, 2224, JELLY_COIN),
+
+new Powerup(game, 2168, 2112, JELLY_COIN),
+
+new Powerup(game, 2968, 3056, JELLY_COIN),
+
+new Powerup(game, 1864, 3296, JELLY_COIN),
+
+new Powerup(game, 1864, 3248, JELLY_COIN),
+
+new Powerup(game, 2312, 3376, JELLY_COIN),
+
+new Powerup(game, 1992, 3376, JELLY_COIN),
 
 new Powerup(game, -1752, 400, JELLY_COIN_SM),
 
@@ -176,8 +278,6 @@ new Powerup(game, 1208, 2400, JELLY_COIN_SM),
 
 new Powerup(game, 1272, 2304, JELLY_COIN_SM),
 
-new Powerup(game, 1416, 2224, JELLY_COIN_SM),
-
 new Powerup(game, 1656, 2352, JELLY_COIN_SM),
 
 new Powerup(game, 1592, 2352, JELLY_COIN_SM),
@@ -276,8 +376,6 @@ new Powerup(game, -296, 1648, JELLY_COIN_SM),
 
 new Powerup(game, -328, 1616, JELLY_COIN_SM),
 
-new Powerup(game, 2072, 3152, JELLY_COIN_SM),
-
 new Powerup(game, 1496, 2304, ENTITY_MARKER),
 
 new BubbleCurrent(game, 1912, 3232, -8),
@@ -346,7 +444,7 @@ new AnglerSlime(game, -216, 1664),
 
 new AnglerSlime(game, -1400, 1280),
 
-new AnglerSlime(game, 1128, 1600),
+new AnglerSlime(game, 1208, 1600),
 
 new AnglerSlime(game, -568, 2080),
 
@@ -1904,9 +2002,9 @@ new Platform(game, -488, 1552, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, -488, 1632, 0, 0, 0, PLATFORM_BREAK),
 
-new Platform(game, -744, 928, 0, 0, 0, PLATFORM_FADE, 0),
+new Platform(game, 1208, 1664, 0, 0, 0, PLATFORM_BREAK),
 
-new Platform(game, 1208, 1664, 0, 0, 0, PLATFORM_FADE, 0),
+new Platform(game, -744, 928, 0, 0, 0, PLATFORM_FADE, 0),
 
 new Platform(game, 2456, 2688, 0, 0, 0, PLATFORM_FADE, 0),
 
@@ -2265,8 +2363,6 @@ new Wall(game, 1976, 3280, 32, 32, WALL_SPIKE_UP, 0, 0),
 new Wall(game, 2008, 3280, 32, 32, WALL_SPIKE_UP, 0, 0),
 
 new Wall(game, 2040, 3152, 32, 32, WALL_SPIKE_UP, 1, 0),
-
-new Wall(game, 2072, 3152, 32, 32, WALL_SPIKE_UP, 0, 0),
 
 new Wall(game, 2104, 3152, 32, 32, WALL_SPIKE_UP, 1, 0),
 
@@ -4028,24 +4124,506 @@ new Wall(game, 2072, 3264, 32, 32, WALL_NOCHECKPOINT),
 
 new Wall(game, 2104, 3264, 32, 32, WALL_NOCHECKPOINT),
 
+new Wall(game, -360, 1376, 32, 32, WALL_NOCHECKPOINT),
+
 
 
 			];
 		break;
 		case 1:
 			objects = [		
-				new Spaceship(game, -2400, 370),
+				new Spaceship(game, -2100, 370),
 				new LivingKelp(game, 6168, 224),
 			];
 			powerups = [
 			];
-			platforms = [
+			instances = [
 /*new Platform(game, -2144, 400, 0, 0, 0, PLATFORM_FADE, 0),
 new Platform(game, -2144 + 64, 400, 0, 0, 0, PLATFORM_FADE, 0),
 new Platform(game, -2144, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64, 400 - 48, 0, 0, 0, PLATFORM_BREAK, 170),
 new Platform(game, -2144 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),
 new Platform(game, -2144 + 64 + 64 + 64 + 64, 400 - 48, 2, 0, 170, PLATFORM_FIRE, 170),*/
+
+new Powerup(game, -168, 384, 0),
+
+new Powerup(game, 1176, 80, 0),
+
+new Powerup(game, 2616, 384, 0),
+
+new Powerup(game, 2472, 128, 0),
+
+new Powerup(game, 4232, 208, 0),
+
+new Powerup(game, 4712, 272, 0),
+
+new SeaSlug(game, -1480, 432, -1, 32),
+
+new SeaSlug(game, -1320, 432, 1, 32),
+
+new SeaSlug(game, -840, 272, -1, 0),
+
+new SeaSlug(game, -136, 176, -1, 0),
+
+new SeaSlug(game, -328, 176, -1, 0),
+
+new SeaSlug(game, -376, 272, -1, 0),
+
+new SeaSlug(game, -184, 272, -1, 0),
+
+new SeaSlug(game, 456, 432, -1, 0),
+
+new SeaSlug(game, 136, 432, -1, 0),
+
+new SeaSlug(game, 1592, 432, -1, 32),
+
+new SeaSlug(game, 1688, 432, -1, 32),
+
+new SeaSlug(game, 2952, 432, 1, 0),
+
+new SeaSlug(game, 3048, 432, 1, 0),
+
+new SeaSlug(game, 3192, 432, 1, 0),
+
+new Uni(game, 2456, 176),
+
+new Pirahna(game, -744, 400, 1, 0),
+
+new Pirahna(game, -280, 400, -1, 0),
+
+new Pirahna(game, 2216, 64, -1, 0),
+
+new Pirahna(game, 2504, 64, 1, 0),
+
+new Pirahna(game, 2424, 112, 1, 0),
+
+new Pirahna(game, 776, 400, 1, 0),
+
+new Pirahna(game, 1048, 400, 1, 0),
+
+new Powerup(game, -1400, 432, JELLY_COIN),
+
+new Powerup(game, -952, 400, JELLY_COIN),
+
+new Powerup(game, -760, 432, JELLY_COIN),
+
+new Powerup(game, -760, 400, JELLY_COIN),
+
+new Powerup(game, -760, 368, JELLY_COIN),
+
+new Powerup(game, 584, 32, JELLY_COIN),
+
+new Powerup(game, 936, 176, JELLY_COIN),
+
+new Powerup(game, 936, 224, JELLY_COIN),
+
+new Powerup(game, 2360, 304, JELLY_COIN),
+
+new Powerup(game, 2456, 304, JELLY_COIN),
+
+new Powerup(game, 2552, 304, JELLY_COIN),
+
+new Powerup(game, 4344, 112, JELLY_COIN),
+
+new Powerup(game, 4904, 416, JELLY_COIN),
+
+new Powerup(game, 5576, 432, JELLY_COIN),
+
+new Powerup(game, -1784, 416, JELLY_COIN_SM),
+
+new Powerup(game, -1704, 416, JELLY_COIN_SM),
+
+new Powerup(game, -1864, 416, JELLY_COIN_SM),
+
+new Powerup(game, -1464, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1320, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1048, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1016, 368, JELLY_COIN_SM),
+
+new Powerup(game, -1048, 400, JELLY_COIN_SM),
+
+new Powerup(game, -1016, 400, JELLY_COIN_SM),
+
+new Powerup(game, -1016, 432, JELLY_COIN_SM),
+
+new Powerup(game, -1048, 432, JELLY_COIN_SM),
+
+new Powerup(game, -840, 368, JELLY_COIN_SM),
+
+new Powerup(game, -840, 400, JELLY_COIN_SM),
+
+new Powerup(game, -840, 432, JELLY_COIN_SM),
+
+new Powerup(game, -872, 432, JELLY_COIN_SM),
+
+new Powerup(game, -872, 400, JELLY_COIN_SM),
+
+new Powerup(game, -872, 368, JELLY_COIN_SM),
+
+new Powerup(game, 40, 128, JELLY_COIN_SM),
+
+new Powerup(game, 56, 96, JELLY_COIN_SM),
+
+new Powerup(game, 40, 64, JELLY_COIN_SM),
+
+new Powerup(game, 56, 32, JELLY_COIN_SM),
+
+new Powerup(game, -568, 80, JELLY_COIN_SM),
+
+new Powerup(game, -440, 80, JELLY_COIN_SM),
+
+new Powerup(game, -312, 80, JELLY_COIN_SM),
+
+new Powerup(game, -184, 80, JELLY_COIN_SM),
+
+new Powerup(game, -456, 176, JELLY_COIN_SM),
+
+new Powerup(game, -344, 176, JELLY_COIN_SM),
+
+new Powerup(game, -232, 176, JELLY_COIN_SM),
+
+new Powerup(game, -136, 176, JELLY_COIN_SM),
+
+new Powerup(game, 216, 128, JELLY_COIN_SM),
+
+new Powerup(game, 264, 112, JELLY_COIN_SM),
+
+new Powerup(game, 312, 128, JELLY_COIN_SM),
+
+new Powerup(game, 360, 176, JELLY_COIN_SM),
+
+new Powerup(game, 392, 224, JELLY_COIN_SM),
+
+new Powerup(game, 168, 176, JELLY_COIN_SM),
+
+new Powerup(game, 664, 80, JELLY_COIN_SM),
+
+new Powerup(game, 664, 128, JELLY_COIN_SM),
+
+new Powerup(game, 664, 176, JELLY_COIN_SM),
+
+new Powerup(game, 664, 224, JELLY_COIN_SM),
+
+new Powerup(game, 1128, 288, JELLY_COIN_SM),
+
+new Powerup(game, 1032, 288, JELLY_COIN_SM),
+
+new Powerup(game, 120, 432, JELLY_COIN_SM),
+
+new Powerup(game, 200, 432, JELLY_COIN_SM),
+
+new Powerup(game, 280, 432, JELLY_COIN_SM),
+
+new Powerup(game, 360, 432, JELLY_COIN_SM),
+
+new Powerup(game, 440, 432, JELLY_COIN_SM),
+
+new Powerup(game, 504, 432, JELLY_COIN_SM),
+
+new Powerup(game, 40, 432, JELLY_COIN_SM),
+
+new Powerup(game, -40, 432, JELLY_COIN_SM),
+
+new Powerup(game, 1352, 112, JELLY_COIN_SM),
+
+new Powerup(game, 1368, 176, JELLY_COIN_SM),
+
+new Powerup(game, 1368, 256, JELLY_COIN_SM),
+
+new Powerup(game, 1272, 96, JELLY_COIN_SM),
+
+new Powerup(game, 840, 96, JELLY_COIN_SM),
+
+new Powerup(game, 888, 96, JELLY_COIN_SM),
+
+new Powerup(game, 1032, 96, JELLY_COIN_SM),
+
+new Powerup(game, 1112, 96, JELLY_COIN_SM),
+
+new Powerup(game, 1944, 96, JELLY_COIN_SM),
+
+new Powerup(game, 1992, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2040, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2088, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2136, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2184, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2232, 96, JELLY_COIN_SM),
+
+new Powerup(game, 1896, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2280, 96, JELLY_COIN_SM),
+
+new Powerup(game, 2312, 432, JELLY_COIN_SM),
+
+new Powerup(game, 2280, 352, JELLY_COIN_SM),
+
+new Powerup(game, 2296, 384, JELLY_COIN_SM),
+
+new Powerup(game, 2408, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2376, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2440, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2536, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2568, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2600, 224, JELLY_COIN_SM),
+
+new Powerup(game, 2840, 368, JELLY_COIN_SM),
+
+new Powerup(game, 2696, 320, JELLY_COIN_SM),
+
+new Powerup(game, 2840, 256, JELLY_COIN_SM),
+
+new Powerup(game, 2696, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2840, 128, JELLY_COIN_SM),
+
+new Powerup(game, 2920, 48, JELLY_COIN_SM),
+
+new Powerup(game, 3032, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3208, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3384, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3496, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3544, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3592, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3640, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3704, 112, JELLY_COIN_SM),
+
+new Powerup(game, 3768, 96, JELLY_COIN_SM),
+
+new Powerup(game, 3832, 112, JELLY_COIN_SM),
+
+new Powerup(game, 3896, 176, JELLY_COIN_SM),
+
+new Powerup(game, 3960, 176, JELLY_COIN_SM),
+
+new Powerup(game, 4024, 176, JELLY_COIN_SM),
+
+new Powerup(game, 4088, 176, JELLY_COIN_SM),
+
+new Powerup(game, 4152, 176, JELLY_COIN_SM),
+
+new Powerup(game, 2856, 368, JELLY_COIN_SM),
+
+new Powerup(game, 2680, 320, JELLY_COIN_SM),
+
+new Powerup(game, 2856, 256, JELLY_COIN_SM),
+
+new Powerup(game, 2680, 192, JELLY_COIN_SM),
+
+new Powerup(game, 2856, 128, JELLY_COIN_SM),
+
+new Powerup(game, 888, 288, JELLY_COIN_SM),
+
+new Powerup(game, 808, 288, JELLY_COIN_SM),
+
+new Powerup(game, 4872, 432, JELLY_COIN_SM),
+
+new Powerup(game, 4952, 432, JELLY_COIN_SM),
+
+new Powerup(game, 5096, 176, JELLY_COIN_SM),
+
+new Powerup(game, 5112, 128, JELLY_COIN_SM),
+
+new Powerup(game, 5160, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5304, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5368, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5432, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5496, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5656, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5720, 112, JELLY_COIN_SM),
+
+new Powerup(game, 5752, 256, JELLY_COIN_SM),
+
+new Powerup(game, 5736, 304, JELLY_COIN_SM),
+
+new Powerup(game, 5736, 208, JELLY_COIN_SM),
+
+new Powerup(game, 5752, 352, JELLY_COIN_SM),
+
+new Powerup(game, -520, 176, ENTITY_MARKER),
+
+new Powerup(game, -72, 176, ENTITY_MARKER),
+
+new Powerup(game, -72, 272, ENTITY_MARKER),
+
+new Powerup(game, -488, 272, ENTITY_MARKER),
+
+new Powerup(game, -792, 352, ENTITY_MARKER),
+
+new Powerup(game, -792, 384, ENTITY_MARKER),
+
+new Powerup(game, -792, 416, ENTITY_MARKER),
+
+new Powerup(game, -584, 352, ENTITY_MARKER),
+
+new Powerup(game, -584, 384, ENTITY_MARKER),
+
+new Powerup(game, -584, 416, ENTITY_MARKER),
+
+new Powerup(game, -488, 352, ENTITY_MARKER),
+
+new Powerup(game, -488, 384, ENTITY_MARKER),
+
+new Powerup(game, -488, 416, ENTITY_MARKER),
+
+new Powerup(game, -120, 352, ENTITY_MARKER),
+
+new Powerup(game, -120, 384, ENTITY_MARKER),
+
+new Powerup(game, -120, 416, ENTITY_MARKER),
+
+new Powerup(game, -1128, 272, ENTITY_MARKER),
+
+new Powerup(game, -776, 272, ENTITY_MARKER),
+
+new Powerup(game, 56, 432, ENTITY_MARKER),
+
+new Powerup(game, 584, 432, ENTITY_MARKER),
+
+new Powerup(game, 952, 80, ENTITY_MARKER),
+
+new Powerup(game, 1848, 48, ENTITY_MARKER),
+
+new Powerup(game, 1848, 80, ENTITY_MARKER),
+
+new Powerup(game, 1848, 112, ENTITY_MARKER),
+
+new Powerup(game, 1848, 144, ENTITY_MARKER),
+
+new Powerup(game, 1848, 176, ENTITY_MARKER),
+
+new Powerup(game, 1848, 208, ENTITY_MARKER),
+
+new Powerup(game, 1848, 240, ENTITY_MARKER),
+
+new Powerup(game, 1848, 272, ENTITY_MARKER),
+
+new Powerup(game, 2312, 48, ENTITY_MARKER),
+
+new Powerup(game, 2312, 80, ENTITY_MARKER),
+
+new Powerup(game, 2312, 112, ENTITY_MARKER),
+
+new Powerup(game, 2312, 176, ENTITY_MARKER),
+
+new Powerup(game, 2312, 144, ENTITY_MARKER),
+
+new Powerup(game, 2312, 64, ENTITY_MARKER),
+
+new Powerup(game, 2312, 96, ENTITY_MARKER),
+
+new Powerup(game, 2312, 128, ENTITY_MARKER),
+
+new Powerup(game, 2632, 64, ENTITY_MARKER),
+
+new Powerup(game, 2632, 96, ENTITY_MARKER),
+
+new Powerup(game, 2632, 128, ENTITY_MARKER),
+
+new Powerup(game, 2632, 160, ENTITY_MARKER),
+
+new Powerup(game, 2632, 192, ENTITY_MARKER),
+
+new Powerup(game, 2904, 432, ENTITY_MARKER),
+
+new Powerup(game, 3304, 448, ENTITY_MARKER),
+
+new Powerup(game, 2312, 272, ENTITY_MARKER),
+
+new Powerup(game, 2312, 240, ENTITY_MARKER),
+
+new Powerup(game, 2312, 208, ENTITY_MARKER),
+
+new Powerup(game, 2312, 160, ENTITY_MARKER),
+
+new Powerup(game, 584, 400, ENTITY_MARKER),
+
+new Powerup(game, 1272, 400, ENTITY_MARKER),
+
+new Powerup(game, 1272, 432, ENTITY_MARKER),
+
+new Kelp(game, -56, -48),
+
+new Kelp(game, -1928, 224),
+
+new Kelp(game, 664, 208),
+
+new Kelp(game, 1336, 208),
+
+new Kelp(game, 1368, 208),
+
+new Kelp(game, 2280, 208),
+
+new Kelp(game, 3416, -32),
+
+new Kelp(game, 2584, 0),
+
+new Kelp(game, -952, 192),
+
+new Kelp(game, 4472, 208),
+
+new Kelp(game, 5208, -96),
+
+new Kelp(game, 6040, 224),
+
+new Kelp(game, 6072, 224),
+
+new Kelp(game, 6008, 224),
+
+new Kelp(game, 6104, 224),
+
+new Kelp(game, 6136, 224),
+
+new Kelp(game, 6200, 224),
+
+new Kelp(game, -8, 208),
+
+new Kelp(game, 2248, 208),
+
+new Kelp(game, 2760, 224),
+
+new Powerup(game, -1624, 288, TIP_MARKER, 1),
+
+new Powerup(game, -1096, 112, TIP_MARKER, 2),
+
+new TunaChargeDropper(game, 936, 0, 0),
+
+new TunaChargeDropper(game, 2760, 0, 0),
+
+new TunaChargeDropper(game, 3656, 0, 0),
+
+new BubbleCurrent(game, 3320, 160, -8),
+
+new BubbleCurrent(game, 4456, 96, -8),
+
+new BubbleCurrent(game, 4760, 320, 8),
+
+new Powerup(game, 5576, 448, JELLYBAIT),
 
 new Platform(game, -1544, 400),
 
@@ -4102,10 +4680,6 @@ new Platform(game, 4280, 160),
 new Platform(game, 4280, 224),
 
 new Platform(game, 4216, 272),
-
-new Platform(game, 4920, 384),
-
-new Platform(game, 4856, 384),
 
 new Platform(game, 5272, 160, 2, 0, 64),
 
@@ -5279,6 +5853,10 @@ new Platform(game, 3000, 224, 0, 0, 0, PLATFORM_BREAK),
 
 new Platform(game, 2936, 224, 0, 0, 0, PLATFORM_BREAK),
 
+new Platform(game, 4856, 384, 0, 0, 0, PLATFORM_BREAK),
+
+new Platform(game, 4920, 384, 0, 0, 0, PLATFORM_BREAK),
+
 new Platform(game, 120, 208, 0, 0, 0, PLATFORM_FADE, 0),
 
 new Platform(game, 24, 144, 0, 0, 0, PLATFORM_FADE, 0),
@@ -5295,119 +5873,119 @@ new Platform(game, 2664, 224, 0, 0, 0, PLATFORM_FADE, 0),
 
 new Platform(game, 2824, 160, 0, 0, 0, PLATFORM_FADE, 60),
 
-new Wall(game, 2024, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2024, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2056, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2056, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2088, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2088, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2120, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2120, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2152, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2152, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2360, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2360, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2456, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2456, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2552, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2552, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3704, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3704, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3736, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3736, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3768, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3768, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3800, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3800, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3832, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3832, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3864, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3864, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3896, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3896, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3928, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3928, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3960, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3960, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 3992, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 3992, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4024, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4024, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4056, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4056, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4088, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4088, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4120, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4120, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4152, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4152, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4184, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4184, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4216, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4216, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4248, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4248, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4280, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4280, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 4312, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 4312, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 1992, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 1992, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 1960, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 1960, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 1928, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 1928, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 1896, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 1896, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 2184, 416, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 2184, 416, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5272, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5272, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5304, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5304, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5336, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5336, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5368, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5368, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5400, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5400, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5432, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5432, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5464, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5464, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5496, 432, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5496, 432, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5720, 400, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5720, 400, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5752, 400, 32, 32, WALL_SPIKE_UP),
+new Wall(game, 5752, 400, 32, 32, WALL_SPIKE_UP, 0, 0),
 
-new Wall(game, 5192, 336, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, 5192, 336, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, 5192, 304, 32, 32, WALL_SPIKE_LEFT),
+new Wall(game, 5192, 304, 32, 32, WALL_SPIKE_LEFT, 0, 0),
 
-new Wall(game, 2312, 288, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 2312, 288, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 2408, 288, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 2408, 288, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 2504, 288, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 2504, 288, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 2600, 288, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 2600, 288, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 4856, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 4856, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 4888, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 4888, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 4920, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 4920, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 4952, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 4952, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 4984, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 4984, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 5016, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 5016, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 5144, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 5144, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
-new Wall(game, 5176, 224, 32, 32, WALL_SPIKE_DOWN),
+new Wall(game, 5176, 224, 32, 32, WALL_SPIKE_DOWN, 0, 0),
 
 new Wall(game, 4760, 384, 32, 32, WALL_NOCHECKPOINT),
 
@@ -5430,495 +6008,6 @@ new Wall(game, 5144, 384, 32, 32, WALL_NOCHECKPOINT),
 new Wall(game, 5176, 384, 32, 32, WALL_NOCHECKPOINT),
 
 new Wall(game, 5208, 384, 32, 32, WALL_NOCHECKPOINT),
-
-
-
-
-
-
-			];
-			enemies = [
-
-
-new Powerup(game, -168, 384, 0),
-
-new Powerup(game, 1176, 80, 0),
-
-new Powerup(game, 2616, 384, 0),
-
-new Powerup(game, 2472, 128, 0),
-
-new Powerup(game, 4232, 208, 0),
-
-new Powerup(game, 4712, 272, 0),
-
-new SeaSlug(game, -1480, 432, -1, 32),
-
-new SeaSlug(game, -1320, 432, 1, 32),
-
-new SeaSlug(game, -840, 272, -1, 0),
-
-new SeaSlug(game, -136, 176, -1, 0),
-
-new SeaSlug(game, -328, 176, -1, 0),
-
-new SeaSlug(game, -376, 272, -1, 0),
-
-new SeaSlug(game, -184, 272, -1, 0),
-
-new SeaSlug(game, 456, 432, -1, 0),
-
-new SeaSlug(game, 136, 432, -1, 0),
-
-new SeaSlug(game, 1592, 432, -1, 32),
-
-new SeaSlug(game, 1688, 432, -1, 32),
-
-new SeaSlug(game, 2952, 432, 1, 0),
-
-new SeaSlug(game, 3048, 432, 1, 0),
-
-new SeaSlug(game, 3192, 432, 1, 0),
-
-new Uni(game, 2456, 176),
-
-new Pirahna(game, -744, 400, 1, 0),
-
-new Pirahna(game, -280, 400, -1, 0),
-
-new Pirahna(game, 2216, 64, -1, 0),
-
-new Pirahna(game, 2504, 64, 1, 0),
-
-new Pirahna(game, 2424, 112, 1, 0),
-
-new Pirahna(game, 776, 400, 1, 0),
-
-new Pirahna(game, 1048, 400, 1, 0),
-
-new Powerup(game, -1400, 432, JELLY_COIN),
-
-new Powerup(game, -952, 400, JELLY_COIN),
-
-new Powerup(game, -760, 432, JELLY_COIN),
-
-new Powerup(game, -760, 400, JELLY_COIN),
-
-new Powerup(game, -760, 368, JELLY_COIN),
-
-new Powerup(game, 584, 32, JELLY_COIN),
-
-new Powerup(game, 936, 176, JELLY_COIN),
-
-new Powerup(game, 936, 224, JELLY_COIN),
-
-new Powerup(game, 2360, 304, JELLY_COIN),
-
-new Powerup(game, 2456, 304, JELLY_COIN),
-
-new Powerup(game, 2552, 304, JELLY_COIN),
-
-new Powerup(game, 4344, 112, JELLY_COIN),
-
-new Powerup(game, 4904, 416, JELLY_COIN),
-
-new Powerup(game, 5576, 432, JELLY_COIN),
-
-new Powerup(game, -1784, 416, JELLY_COIN_SM),
-
-new Powerup(game, -1704, 416, JELLY_COIN_SM),
-
-new Powerup(game, -1864, 416, JELLY_COIN_SM),
-
-new Powerup(game, -1464, 368, JELLY_COIN_SM),
-
-new Powerup(game, -1320, 368, JELLY_COIN_SM),
-
-new Powerup(game, -1048, 368, JELLY_COIN_SM),
-
-new Powerup(game, -1016, 368, JELLY_COIN_SM),
-
-new Powerup(game, -1048, 400, JELLY_COIN_SM),
-
-new Powerup(game, -1016, 400, JELLY_COIN_SM),
-
-new Powerup(game, -1016, 432, JELLY_COIN_SM),
-
-new Powerup(game, -1048, 432, JELLY_COIN_SM),
-
-new Powerup(game, -840, 368, JELLY_COIN_SM),
-
-new Powerup(game, -840, 400, JELLY_COIN_SM),
-
-new Powerup(game, -840, 432, JELLY_COIN_SM),
-
-new Powerup(game, -872, 432, JELLY_COIN_SM),
-
-new Powerup(game, -872, 400, JELLY_COIN_SM),
-
-new Powerup(game, -872, 368, JELLY_COIN_SM),
-
-new Powerup(game, 40, 128, JELLY_COIN_SM),
-
-new Powerup(game, 56, 96, JELLY_COIN_SM),
-
-new Powerup(game, 40, 64, JELLY_COIN_SM),
-
-new Powerup(game, 56, 32, JELLY_COIN_SM),
-
-new Powerup(game, -568, 80, JELLY_COIN_SM),
-
-new Powerup(game, -440, 80, JELLY_COIN_SM),
-
-new Powerup(game, -312, 80, JELLY_COIN_SM),
-
-new Powerup(game, -184, 80, JELLY_COIN_SM),
-
-new Powerup(game, -456, 176, JELLY_COIN_SM),
-
-new Powerup(game, -344, 176, JELLY_COIN_SM),
-
-new Powerup(game, -232, 176, JELLY_COIN_SM),
-
-new Powerup(game, -136, 176, JELLY_COIN_SM),
-
-new Powerup(game, 216, 128, JELLY_COIN_SM),
-
-new Powerup(game, 264, 112, JELLY_COIN_SM),
-
-new Powerup(game, 312, 128, JELLY_COIN_SM),
-
-new Powerup(game, 360, 176, JELLY_COIN_SM),
-
-new Powerup(game, 392, 224, JELLY_COIN_SM),
-
-new Powerup(game, 168, 176, JELLY_COIN_SM),
-
-new Powerup(game, 664, 80, JELLY_COIN_SM),
-
-new Powerup(game, 664, 128, JELLY_COIN_SM),
-
-new Powerup(game, 664, 176, JELLY_COIN_SM),
-
-new Powerup(game, 664, 224, JELLY_COIN_SM),
-
-new Powerup(game, 1128, 288, JELLY_COIN_SM),
-
-new Powerup(game, 1032, 288, JELLY_COIN_SM),
-
-new Powerup(game, 120, 432, JELLY_COIN_SM),
-
-new Powerup(game, 200, 432, JELLY_COIN_SM),
-
-new Powerup(game, 280, 432, JELLY_COIN_SM),
-
-new Powerup(game, 360, 432, JELLY_COIN_SM),
-
-new Powerup(game, 440, 432, JELLY_COIN_SM),
-
-new Powerup(game, 504, 432, JELLY_COIN_SM),
-
-new Powerup(game, 40, 432, JELLY_COIN_SM),
-
-new Powerup(game, -40, 432, JELLY_COIN_SM),
-
-new Powerup(game, 1352, 112, JELLY_COIN_SM),
-
-new Powerup(game, 1368, 176, JELLY_COIN_SM),
-
-new Powerup(game, 1368, 256, JELLY_COIN_SM),
-
-new Powerup(game, 1272, 96, JELLY_COIN_SM),
-
-new Powerup(game, 840, 96, JELLY_COIN_SM),
-
-new Powerup(game, 888, 96, JELLY_COIN_SM),
-
-new Powerup(game, 1032, 96, JELLY_COIN_SM),
-
-new Powerup(game, 1112, 96, JELLY_COIN_SM),
-
-new Powerup(game, 1944, 96, JELLY_COIN_SM),
-
-new Powerup(game, 1992, 96, JELLY_COIN_SM),
-
-new Powerup(game, 2040, 96, JELLY_COIN_SM),
-
-new Powerup(game, 2088, 96, JELLY_COIN_SM),
-
-new Powerup(game, 2136, 96, JELLY_COIN_SM),
-
-new Powerup(game, 2184, 96, JELLY_COIN_SM),
-
-new Powerup(game, 2232, 96, JELLY_COIN_SM),
-
-new Powerup(game, 1896, 96, JELLY_COIN_SM),
-
-new Powerup(game, 2280, 96, JELLY_COIN_SM),
-
-new Powerup(game, 2312, 432, JELLY_COIN_SM),
-
-new Powerup(game, 2280, 352, JELLY_COIN_SM),
-
-new Powerup(game, 2296, 384, JELLY_COIN_SM),
-
-new Powerup(game, 2408, 192, JELLY_COIN_SM),
-
-new Powerup(game, 2376, 224, JELLY_COIN_SM),
-
-new Powerup(game, 2440, 224, JELLY_COIN_SM),
-
-new Powerup(game, 2536, 224, JELLY_COIN_SM),
-
-new Powerup(game, 2568, 192, JELLY_COIN_SM),
-
-new Powerup(game, 2600, 224, JELLY_COIN_SM),
-
-new Powerup(game, 2840, 368, JELLY_COIN_SM),
-
-new Powerup(game, 2696, 320, JELLY_COIN_SM),
-
-new Powerup(game, 2840, 256, JELLY_COIN_SM),
-
-new Powerup(game, 2696, 192, JELLY_COIN_SM),
-
-new Powerup(game, 2840, 128, JELLY_COIN_SM),
-
-new Powerup(game, 2920, 48, JELLY_COIN_SM),
-
-new Powerup(game, 3032, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3208, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3384, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3496, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3544, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3592, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3640, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3704, 112, JELLY_COIN_SM),
-
-new Powerup(game, 3768, 96, JELLY_COIN_SM),
-
-new Powerup(game, 3832, 112, JELLY_COIN_SM),
-
-new Powerup(game, 3896, 176, JELLY_COIN_SM),
-
-new Powerup(game, 3960, 176, JELLY_COIN_SM),
-
-new Powerup(game, 4024, 176, JELLY_COIN_SM),
-
-new Powerup(game, 4088, 176, JELLY_COIN_SM),
-
-new Powerup(game, 4152, 176, JELLY_COIN_SM),
-
-new Powerup(game, 2856, 368, JELLY_COIN_SM),
-
-new Powerup(game, 2680, 320, JELLY_COIN_SM),
-
-new Powerup(game, 2856, 256, JELLY_COIN_SM),
-
-new Powerup(game, 2680, 192, JELLY_COIN_SM),
-
-new Powerup(game, 2856, 128, JELLY_COIN_SM),
-
-new Powerup(game, 888, 288, JELLY_COIN_SM),
-
-new Powerup(game, 808, 288, JELLY_COIN_SM),
-
-new Powerup(game, 4872, 432, JELLY_COIN_SM),
-
-new Powerup(game, 4952, 432, JELLY_COIN_SM),
-
-new Powerup(game, 5096, 176, JELLY_COIN_SM),
-
-new Powerup(game, 5112, 128, JELLY_COIN_SM),
-
-new Powerup(game, 5160, 112, JELLY_COIN_SM),
-
-new Powerup(game, 5304, 112, JELLY_COIN_SM),
-
-new Powerup(game, 5368, 112, JELLY_COIN_SM),
-
-new Powerup(game, 5432, 112, JELLY_COIN_SM),
-
-new Powerup(game, 5496, 112, JELLY_COIN_SM),
-
-new Powerup(game, 5656, 112, JELLY_COIN_SM),
-
-new Powerup(game, 5720, 112, JELLY_COIN_SM),
-
-new Powerup(game, 5752, 256, JELLY_COIN_SM),
-
-new Powerup(game, 5736, 304, JELLY_COIN_SM),
-
-new Powerup(game, 5736, 208, JELLY_COIN_SM),
-
-new Powerup(game, 5752, 352, JELLY_COIN_SM),
-
-new Powerup(game, -520, 176, ENTITY_MARKER),
-
-new Powerup(game, -72, 176, ENTITY_MARKER),
-
-new Powerup(game, -72, 272, ENTITY_MARKER),
-
-new Powerup(game, -488, 272, ENTITY_MARKER),
-
-new Powerup(game, -792, 352, ENTITY_MARKER),
-
-new Powerup(game, -792, 384, ENTITY_MARKER),
-
-new Powerup(game, -792, 416, ENTITY_MARKER),
-
-new Powerup(game, -584, 352, ENTITY_MARKER),
-
-new Powerup(game, -584, 384, ENTITY_MARKER),
-
-new Powerup(game, -584, 416, ENTITY_MARKER),
-
-new Powerup(game, -488, 352, ENTITY_MARKER),
-
-new Powerup(game, -488, 384, ENTITY_MARKER),
-
-new Powerup(game, -488, 416, ENTITY_MARKER),
-
-new Powerup(game, -120, 352, ENTITY_MARKER),
-
-new Powerup(game, -120, 384, ENTITY_MARKER),
-
-new Powerup(game, -120, 416, ENTITY_MARKER),
-
-new Powerup(game, -1128, 272, ENTITY_MARKER),
-
-new Powerup(game, -776, 272, ENTITY_MARKER),
-
-new Powerup(game, 56, 432, ENTITY_MARKER),
-
-new Powerup(game, 584, 432, ENTITY_MARKER),
-
-new Powerup(game, 952, 80, ENTITY_MARKER),
-
-new Powerup(game, 1848, 48, ENTITY_MARKER),
-
-new Powerup(game, 1848, 80, ENTITY_MARKER),
-
-new Powerup(game, 1848, 112, ENTITY_MARKER),
-
-new Powerup(game, 1848, 144, ENTITY_MARKER),
-
-new Powerup(game, 1848, 176, ENTITY_MARKER),
-
-new Powerup(game, 1848, 208, ENTITY_MARKER),
-
-new Powerup(game, 1848, 240, ENTITY_MARKER),
-
-new Powerup(game, 1848, 272, ENTITY_MARKER),
-
-new Powerup(game, 2312, 48, ENTITY_MARKER),
-
-new Powerup(game, 2312, 80, ENTITY_MARKER),
-
-new Powerup(game, 2312, 112, ENTITY_MARKER),
-
-new Powerup(game, 2312, 176, ENTITY_MARKER),
-
-new Powerup(game, 2312, 144, ENTITY_MARKER),
-
-new Powerup(game, 2312, 64, ENTITY_MARKER),
-
-new Powerup(game, 2312, 96, ENTITY_MARKER),
-
-new Powerup(game, 2312, 128, ENTITY_MARKER),
-
-new Powerup(game, 2632, 64, ENTITY_MARKER),
-
-new Powerup(game, 2632, 96, ENTITY_MARKER),
-
-new Powerup(game, 2632, 128, ENTITY_MARKER),
-
-new Powerup(game, 2632, 160, ENTITY_MARKER),
-
-new Powerup(game, 2632, 192, ENTITY_MARKER),
-
-new Powerup(game, 2904, 432, ENTITY_MARKER),
-
-new Powerup(game, 3304, 448, ENTITY_MARKER),
-
-new Powerup(game, 2312, 272, ENTITY_MARKER),
-
-new Powerup(game, 2312, 240, ENTITY_MARKER),
-
-new Powerup(game, 2312, 208, ENTITY_MARKER),
-
-new Powerup(game, 2312, 160, ENTITY_MARKER),
-
-new Powerup(game, 584, 400, ENTITY_MARKER),
-
-new Powerup(game, 1272, 400, ENTITY_MARKER),
-
-new Powerup(game, 1272, 432, ENTITY_MARKER),
-
-new Kelp(game, -56, -48),
-
-new Kelp(game, -1928, 224),
-
-new Kelp(game, 664, 208),
-
-new Kelp(game, 1336, 208),
-
-new Kelp(game, 1368, 208),
-
-new Kelp(game, 2280, 208),
-
-new Kelp(game, 3416, -32),
-
-new Kelp(game, 2584, 0),
-
-new Kelp(game, -952, 192),
-
-new Kelp(game, 4472, 208),
-
-new Kelp(game, 5208, -96),
-
-new Kelp(game, 6040, 224),
-
-new Kelp(game, 6072, 224),
-
-new Kelp(game, 6008, 224),
-
-new Kelp(game, 6104, 224),
-
-new Kelp(game, 6136, 224),
-
-new Kelp(game, 6200, 224),
-
-new Kelp(game, -8, 208),
-
-new Kelp(game, 2248, 208),
-
-new Kelp(game, 2760, 224),
-
-new Powerup(game, -1624, 288, TIP_MARKER, 1),
-
-new Powerup(game, -1096, 112, TIP_MARKER, 2),
-
-new TunaChargeDropper(game, 936, 0),
-
-new TunaChargeDropper(game, 2760, 0),
-
-new TunaChargeDropper(game, 3656, 0),
-
-new BubbleCurrent(game, 3320, 160, -8),
-
-new BubbleCurrent(game, 4456, 96, -8),
-
-new BubbleCurrent(game, 4760, 320, 8),
-
-new Powerup(game, 5576, 448, JELLYBAIT),
 /*
 			new SeaSlug(game, -1944, 426, 1, 96),
 			new Isopod(game, -1844, 426 - 32, 1, 96),
