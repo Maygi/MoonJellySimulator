@@ -668,11 +668,12 @@ class ButtonChallenge extends BackgroundObject {
 }
 
 class BubbleCurrent extends BackgroundObject {
-	constructor(game, x, y, pushHspeed) {
+	constructor(game, x, y, pushHspeed, distance) {
 		super(game, x, y);
 		this.backgroundObject = true;
 		this.currentAnimation = null;
 		this.pushHspeed = pushHspeed;
+		this.distance = distance || 500;
 		this.hitBoxDef = {
 			width: 32, height: 64, offsetX: 0, offsetY: 0, growthX: 0, growthY: 0
 		};
@@ -692,8 +693,8 @@ class BubbleCurrent extends BackgroundObject {
 				this.cooldown = 120;
 			}
 			var xDist = this.xToPlayer();
-			var inXPushRange = (xDist < 0 && xDist >= -500 && this.pushHspeed > 0 ||
-				xDist > 0 && xDist <= 500 && this.pushHspeed < 0);
+			var inXPushRange = (xDist < 0 && xDist >= -1 * this.distance && this.pushHspeed > 0 ||
+				xDist > 0 && xDist <= this.distance && this.pushHspeed < 0);
 			var inYPushRange = Math.abs((this.y + this.hitBoxDef.height/2) - 
 				(this.game.player1.y + this.game.player1.hitBoxDef.offsetY + this.game.player1.hitBoxDef.height / 2)) < 60;
 			if (inYPushRange && inXPushRange) { //push

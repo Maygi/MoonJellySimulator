@@ -4617,7 +4617,7 @@ new TunaChargeDropper(game, 2760, 0, 0),
 
 new TunaChargeDropper(game, 3656, 0, 0),
 
-new BubbleCurrent(game, 3320, 160, -8),
+new BubbleCurrent(game, 3320, 160, -8, 450),
 
 new BubbleCurrent(game, 4456, 96, -8),
 

@@ -2977,7 +2977,7 @@ Character.prototype.update = function () {
 						this.destinationY = -1;
 				}
 			}
-			if (!this.dead && gameStarted && this.currentForm == FORM_BABY && this.game.step % 30 == 0) { //baby drowns
+			if (!this.dead && gameStarted && this.currentForm == FORM_BABY && (this.game.step % 30 == 0) && this.game.tipsShown[TIP_KELP]) { //baby drowns
 				addEnergy(this.game, -2);
 			}
 			if (this.currentHealth <= 0 && !this.dead) {
