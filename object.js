@@ -286,8 +286,8 @@ class Virus extends BackgroundObject {
 	constructor(game, x, y) {
 		super(game, x, y);
 		this.interactText = "Communicate";
-		var text = new TextBox(this.game, null, "It's an alien cell. It doesn't belong here either...");
-		text.nextText = new TextBox(this.game, null, "The cell sends a command, manipulating mass to create a mobile wall...");
+		var text = new TextBox(this.game, null, "The alien cell sends a command, manipulating mass to create a mobile wall...");
+		//text.nextText = new TextBox(this.game, null, "The cell sends a command, manipulating mass to create a mobile wall...");
 		this.interactChat = [text];
 		this.baseAnimation = new Animation(ASSET_MANAGER.getAsset("./img/Misc/virus.png"), 0, 0, 32, 32, 0.5, 2, true, false, 0, 0);
 		this.currentAnimation = this.baseAnimation;
@@ -301,17 +301,19 @@ class Virus extends BackgroundObject {
 	interact() {
 		var that = this;
 		var platforms = [
-			new Wall(that.game, that.x + 32, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
+			/*new Wall(that.game, that.x + 32, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
 			new Wall(that.game, that.x + 32 * 2, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
-			new Wall(that.game, that.x + 32 * 3, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),
+			new Wall(that.game, that.x + 32 * 3, that.y + 32 * 4, 32, 32, WALL_NOCHECKPOINT),*/
 		];
-		for (var i = -9; i < 4; i += 2) {
+		for (var i = -9; i < 5; i += 2) {
 			platforms.push(new Platform(that.game, that.x + 32, that.y + 32 * i));
+			platforms.push(new Platform(that.game, that.x + 96, that.y + 32 * i));
 		}
-		for (var i = -9; i < 4; i++) {
+		/*for (var i = -9; i < 4; i++) {
 			platforms.push(new Wall(that.game, that.x + 32 * 4, that.y + 32 * i, 32, 32, WALL_NOCHECKPOINT));
-		}
+		}*/
 		platforms.forEach(function(currentPlatform) {
+			currentPlatform.temporary = true;
 			that.game.currentMap.platforms.push(currentPlatform);
 		});
 		setTimeout(

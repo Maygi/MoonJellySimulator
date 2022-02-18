@@ -146,7 +146,7 @@ GameEngine.prototype.startInput = function () {
 	var buttonOptions = ["↑","↓","←","→","x","z","c"];
 	var buttonKeys = ['&','(','%','\'' ,'X','Z','C'];
     this.ctx.canvas.addEventListener("keydown", function (e) {
-		if (that.buttonChallenge != null) {
+		if (that.buttonChallenge != null && !that.player1.isDead) {
 			if (that.buttonChallenge.awawa) {
 				buttonOptions = ["a", "w"];
 				buttonKeys = ["A", "W"];
@@ -416,7 +416,7 @@ GameEngine.prototype.changeMap = function (id) {
 				x: -2400,
 				y: 0,
 				minX: -2400,
-				maxX: 5800,
+				maxX: 0,
 				minY: 0,
 				maxY: 0,
 				width: 800,

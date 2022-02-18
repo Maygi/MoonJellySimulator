@@ -1020,6 +1020,7 @@ class Clam extends Enemy {
 			this.totalAttacks++;
 			this.attackSequence = Math.round(Math.random() * 2);
 			this.meleeInvuln = true;
+			this.autoDamage = 20;
 			this.aniLeft = this.changedAnimationLeft;
 			this.aniRight = this.changedAnimationRight;
 			if (this.totalAttacks >= this.attackMax) {
@@ -1029,6 +1030,7 @@ class Clam extends Enemy {
 				this.meleeInvuln = false;
 				this.aniLeft = this.vulnAnimation;
 				this.aniRight = this.vulnAnimation;
+				this.autoDamage = 1;
 				playSound(breakSound);
 			}
 			this.hitBoxDef = this.hitBoxDefBig;
@@ -1047,6 +1049,7 @@ class Clam extends Enemy {
 				this.aniLeft = this.unchangeAnimationLeft;
 				this.aniRight = this.unchangeAnimationRight;
 				this.meleeInvuln = true;
+				this.autoDamage = 20;
 				this.hitBoxDef = this.hitBoxSmall;
 			}
 		}
@@ -1054,6 +1057,7 @@ class Clam extends Enemy {
 			this.dieTime = 120;
 			this.currentHealth = 1;
 			this.meleeInvuln = true;
+			this.autoDamage = 0;
 			this.unchanging = true;
 			this.aniLeft = this.unchangeAnimationLeft;
 			this.aniRight = this.unchangeAnimationRight;

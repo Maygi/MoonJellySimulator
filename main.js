@@ -864,18 +864,18 @@ UI.prototype.draw = function (ctx) { //draw ui
 		ctx.fillText("More content soonTM",400 + this.game.liveCamera.x,350 + this.game.liveCamera.y);
         ctx.globalAlpha = 1.0;        
     }
-    if (this.game.currentPhase >= 6 && this.game.currentPhase <= 10 || this.game.currentPhase === 17) {
-        var randomness = Math.random() * 100;
+    if (this.game.currentPhase == GAME_PHASE_ANGLER) {
+        var randomness = Math.random() * 100 * (this.game.currentBoss.currentHealth / this.game.currentBoss.maxHealth);
         if (randomness <= 10) {
             var randomSize = 2 + Math.random() * 13;
-            var randomPosition = (800 - randomSize) + Math.random() * (801 + randomSize);
+            var randomPosition = this.game.camera.x + Math.random() * this.game.camera.width;
             var particle = new Particle(SHAPE_PART,
-                                            randomPosition,
-                                            this.game.camera.y - 100, 
-                                            0, 0, -3, -5, 0.3, 0, 0, 100, 0, 10, 1, 0, true, this.game);
-                                    var element = new SquareElement(randomSize, randomSize, "#2A2349", "#272144");
-                                    particle.other = element;
-                                    this.game.addEntity(particle);
+						randomPosition,
+						this.game.camera.y - 100, 
+						0, 0, -3, -5, 0.3, 0, 0, 100, 0, 10, 1, 0, true, this.game);
+				var element = new SquareElement(randomSize, randomSize, "#5e1a1a", "#8c3232");
+				particle.other = element;
+				this.game.addEntity(particle);
         }
 	}
     if (soundOn) {
@@ -3097,7 +3097,11 @@ Character.prototype.update = function () {
 											currentPlatform.step = 0;
 										}
 										platformFound = true;
-										if (currentPlatform.specialId == 0 && currentPlatform.hSpeed == 0 && currentPlatform.vSpeed == 0) {
+										if (!currentPlatform.temporary &&
+											currentPlatform.life == 0 && 
+											currentPlatform.specialId == 0 &&
+											currentPlatform.hSpeed == 0 && 
+											currentPlatform.vSpeed == 0) {
 											that.lastSafeX = that.x;
 											that.lastSafeY = that.y;
 										}
@@ -3430,7 +3434,10 @@ Character.prototype.update = function () {
 								damage = 15;
 							applyDamage(targetEntity.x, targetEntity.y, this.game, damage, targetEntity);
 							playSound(this.currentForm < FORM_ANGLER ? shotHitSound : lightningSound);
-							addEnergy(this.game, this.currentForm >= FORM_HEAL ? damage / 2 : 0);
+							if (targetEntity.maxHealth >= 500)
+								addEnergy(this.game, this.currentForm >= FORM_HEAL ? damage / 6 : 0);
+							else
+								addEnergy(this.game, this.currentForm >= FORM_HEAL ? damage / 2 : 0);
 						}
 						switch(this.game.player1.attackIndex) {
 							case 1: //side hit

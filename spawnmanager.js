@@ -378,11 +378,11 @@ new Powerup(game, -328, 1616, JELLY_COIN_SM),
 
 new Powerup(game, 1496, 2304, ENTITY_MARKER),
 
-new BubbleCurrent(game, 1912, 3232, -8),
+new BubbleCurrent(game, 1912, 3232, -8, 300),
 
-new BubbleCurrent(game, 1912, 3296, -8),
+new BubbleCurrent(game, 1912, 3296, -8, 300),
 
-new BubbleCurrent(game, -984, 928, 8),
+new BubbleCurrent(game, -984, 928, 8, 436),
 
 new BubbleCurrent(game, 632, 1664, 8),
 
@@ -401,8 +401,6 @@ new GasVent(game, 584, 1728, 60, 0),
 new GasVent(game, -488, 2656, 60, 0),
 
 new GasVent(game, -328, 2656, 60, 0),
-
-new GasVent(game, -568, 2656, 60, 30),
 
 new GasVent(game, -408, 2656, 60, 30),
 
@@ -1433,10 +1431,6 @@ new Wall(game, 1880, 2848, 32, 32),
 new Wall(game, 1880, 2816, 32, 32),
 
 new Wall(game, 1880, 2784, 32, 32),
-
-new Wall(game, 1880, 2752, 32, 32),
-
-new Wall(game, 1912, 2752, 32, 32),
 
 new Wall(game, 1912, 2784, 32, 32),
 
@@ -4126,6 +4120,11 @@ new Wall(game, 2104, 3264, 32, 32, WALL_NOCHECKPOINT),
 
 new Wall(game, -360, 1376, 32, 32, WALL_NOCHECKPOINT),
 
+new Wall(game, 1912, 2752, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, 1880, 2752, 32, 32, WALL_NOCHECKPOINT),
+
+
 
 
 			];
@@ -6027,6 +6026,7 @@ new Wall(game, 5208, 384, 32, 32, WALL_NOCHECKPOINT),
 		break;
 		case GAME_LEVEL2:
 		instances = [
+
 new Powerup(game, 296, 1056, 0),
 
 new Powerup(game, -280, 1056, 0),
@@ -9348,10 +9348,6 @@ new Wall(game, 360, 224, 32, 32),
 new Wall(game, 392, 224, 32, 32),
 
 new Wall(game, 424, 224, 32, 32),
-
-new Wall(game, -1128, 400, 32, 32),
-
-new Wall(game, -744, 400, 32, 32),
 
 new Platform(game, -824, 1328, 0, 0, 0, PLATFORM_BOUNCY),
 
