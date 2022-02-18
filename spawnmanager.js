@@ -6055,7 +6055,7 @@ new Isopod(game, -872, 368, -1, 128),
 
 new Eel(game, 168, 384, -1, 0, 160),
 
-new Uni(game, -440, 1264),
+new Uni(game, -408, 1264),
 
 new Pirahna(game, -2104, 848, 1, 64),
 
@@ -6618,16 +6618,6 @@ new Wall(game, -1496, 800, 32, 32),
 new Wall(game, -1464, 800, 32, 32),
 
 new Wall(game, -1432, 800, 32, 32),
-
-new Wall(game, -2088, 1200, 32, 32),
-
-new Wall(game, -2120, 1200, 32, 32),
-
-new Wall(game, -2152, 1200, 32, 32),
-
-new Wall(game, -2184, 1200, 32, 32),
-
-new Wall(game, -2216, 1200, 32, 32),
 
 new Wall(game, -2216, 1168, 32, 32),
 
@@ -9359,6 +9349,10 @@ new Wall(game, 392, 224, 32, 32),
 
 new Wall(game, 424, 224, 32, 32),
 
+new Wall(game, -1128, 400, 32, 32),
+
+new Wall(game, -744, 400, 32, 32),
+
 new Platform(game, -824, 1328, 0, 0, 0, PLATFORM_BOUNCY),
 
 new Platform(game, -344, 1344, 0, 0, 0, PLATFORM_BOUNCY),
@@ -9788,6 +9782,17 @@ new Wall(game, -1672, 1216, 32, 32, WALL_NOCHECKPOINT),
 new Wall(game, -1640, 1248, 32, 32, WALL_NOCHECKPOINT),
 
 new Wall(game, -1608, 1248, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -2088, 1200, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -2120, 1200, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -2152, 1200, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -2184, 1200, 32, 32, WALL_NOCHECKPOINT),
+
+new Wall(game, -2216, 1200, 32, 32, WALL_NOCHECKPOINT),
+
 
 
 
