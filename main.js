@@ -52,7 +52,7 @@ var PARTICLE_GASBUBBLE = 16;
 var gameStarted = false;
 var mode = "hard";
 // Sounds
-var powerupMusic = new Audio("./sounds/noreply.wav");
+var powerupMusic = new Audio("./sounds/noreply.WAV");
 powerupMusic.volume = 0.3;
 var bossMusic = new Audio("./sounds/bgm_boss.mp3");
 bossMusic.loop = true;
