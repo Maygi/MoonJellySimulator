@@ -276,12 +276,22 @@ class Enemy {
 				this.game.player1.yVelocity = 7;
 				this.game.player1.jumping = true;
 				this.game.pauseTime = 8;
-				if (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2 <= this.x1) {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
-					this.game.player1.xVelocity = 2;
+				if (this.hspeed == 0) {
+					if (this.game.player1.x + this.game.player1.hitBoxDef.offsetX + this.game.player1.hitBoxDef.width / 2 > this.getXMidpoint()) {
+						this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
+						this.game.player1.xVelocity = 2;
+					} else {
+						this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
+						this.game.player1.xVelocity = -2;
+					}
 				} else {
-					this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
-					this.game.player1.xVelocity = -2;
+					if (this.hspeed > 0) {
+						this.game.player1.hurtAnimation = this.game.player1.hurtAnimationLeft;
+						this.game.player1.xVelocity = 2;
+					} else {
+						this.game.player1.hurtAnimation = this.game.player1.hurtAnimationRight;
+						this.game.player1.xVelocity = -2;
+					}
 				}
 			}
 		}
@@ -1629,6 +1639,7 @@ class AnglerSpirit extends Enemy {
 						setTimeout(
 							function() {
 								playSound(laserSound);
+								playSound(rumbleSound);
 							}, 700);
 					}
 					if (this.attackStep >= 300) { //attack is done
