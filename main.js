@@ -2145,7 +2145,7 @@ Powerup.prototype.update = function () {
 	if (this.cooldown > 0)
 		this.cooldown--;
 	var that = this;
-	if (isOnScreen(this)) {
+	if (isOnScreen(this) || this.type >= 2 && this.type <= 3) {
 		if (this.type === 0) { //health powerup
 			this.game.addEntity(new Particle(IMG_PART, this.x, this.y - 10, -0.2, 0.2, -0.2, 0.2, 0, 0, 5, 5, 10, 50, 0.7, 0.2, true, this.game,
 				new Animation(ASSET_MANAGER.getAsset("./img/Particle/pink_flare.png"), 0, 0, 64, 64, 0.03, 16, true, false, 0, 0)));
@@ -2210,7 +2210,7 @@ Powerup.prototype.update = function () {
 					this.y += dy / 20;
 				}
 			}
-	        if (checkCollision(this, this.game.player1)) {
+	        if ((this.specialId != 0 && this.step >= 90) || checkCollision(this, this.game.player1)) {
 				addScore(this.game, this.type == 2 ? 100 : 25);
                 playSound(coinSound);
 	            this.removeFromWorld = true;

@@ -155,7 +155,7 @@ class Maygi extends BackgroundObject {
 		this.waveCooldown = 0;
 		this.waving = false;
 		this.interacted = false;
-		this.maxScore = 17575;
+		this.maxScore = 17500;
 		drawHitBox(this);
 		this.chats = [];
 		this.chats.push(new TextBox(this.game, "./img/Chat/MaygiSquare.png", "Why am I so smol? Uhh... magic!", true));
