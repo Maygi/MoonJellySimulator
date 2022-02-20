@@ -209,7 +209,7 @@ GameEngine.prototype.startInput = function () {
 					that.player1.currentStamina = 0;
 					cutEffect(that, "Thunderbolt", "./img/Particle/jelly_cut.png");
 				}
-			} /*else if (String.fromCharCode(e.which) === 'Q') {
+			}/* else if (String.fromCharCode(e.which) === 'Q') {
 				that.advancePhase(GAME_PHASE_EATEN);
 				that.changeMap(GAME_EATENPART);
 			} else if (String.fromCharCode(e.which) === 'W') {
@@ -416,7 +416,7 @@ GameEngine.prototype.changeMap = function (id) {
 				x: -2400,
 				y: 0,
 				minX: -2400,
-				maxX: 0,
+				maxX: 5800,
 				minY: 0,
 				maxY: 0,
 				width: 800,
