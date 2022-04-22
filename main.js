@@ -3739,6 +3739,7 @@ Character.prototype.draw = function (ctx) {
 var ASSET_MANAGER = new AssetManager();
 
 ASSET_MANAGER.queueDownload("./img/Particle/flash.png");
+ASSET_MANAGER.queueDownload("./img/Particle/flashbang.png");
 ASSET_MANAGER.queueDownload("./img/Particle/invuln.png");
 ASSET_MANAGER.queueDownload("./img/Particle/pink_flare.png");
 ASSET_MANAGER.queueDownload("./img/Particle/orange_flare.png");

@@ -1673,9 +1673,16 @@ class AnglerSpirit extends Enemy {
 						}
 						if ((px < this.getXMidpoint() && this.game.player1.lastDirection == "Right") ||
 						(px > this.getXMidpoint() && this.game.player1.lastDirection == "Left")) {
-							var newParticle = new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+							var newParticle;
+							if (Math.random() >= 0.75) {
+								newParticle	= new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
+										0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 1, 0, false, this.game,
+										new Animation(ASSET_MANAGER.getAsset("./img/Particle/flashbang.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
+							} else {
+							newParticle	= new Particle(IMG_PART, this.game.liveCamera.x - 50, this.game.liveCamera.y - 30, 
 									0, 0, 0, 0, 0, 0, 0, 0, 0, 150, 1, 0, false, this.game,
-									new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));
+									new Animation(ASSET_MANAGER.getAsset("./img/Particle/flash.png"), 0, 0, 907, 564, 0.3, 1, true, false, 0, 0));								
+							}
 							newParticle.highPriority = 5;
 							this.game.addEntity(newParticle);
 						}
